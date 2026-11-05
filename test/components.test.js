@@ -32,7 +32,7 @@ function siteError(files) {
 
 function usage(template) {
     const result = propUsage(parseSfc(`<template>${template}</template>`, 'c.alo', 'component'));
-    return { names: [...result.names].sort(), dynamic: result.dynamic };
+    return { names: [...result.props].sort(), dynamic: result.dynamic };
 }
 
 test('ফোল্ডার মানে Dot নাম; kebab ফোল্ডার PascalCase হয়', () => {
@@ -127,19 +127,17 @@ test('tokenize স্ট্রিং আর প্রপার্টি আল�
     );
 });
 
-test('propUsage নাম, props.x আর ডায়নামিক ব্যবহার ধরে', () => {
-    assert.deepEqual(usage(`<h2 class="{{ props.class }}">{{ title }}</h2><p>{{ post.date }}</p>`), {
-        names: ['class', 'post', 'props', 'title'],
+test('propUsage শুধু props.x ধরে, আর পুরো props ব্যবহার হলে ডায়নামিক', () => {
+    assert.deepEqual(usage(`<h2 class="{{ props.class }}">{{ props.title }}</h2><p>{{ post.date }}</p>`), {
+        names: ['class', 'title'],
         dynamic: false,
     });
-    assert.deepEqual(usage(`<template for="tag in tags"><i>{{ tag }}</i></template><template if="featured">*</template>`).names, [
+    assert.deepEqual(usage(`<template for="tag in props.tags"><i>{{ tag }}</i></template><template if="props.featured">*</template>`).names, [
         'featured',
-        'in',
-        'tag',
         'tags',
     ]);
     assert.equal(usage(`{{ props[key] }}`).dynamic, true);
     assert.equal(usage(`{{ JSON.stringify(props) }}`).dynamic, true);
-    assert.equal(usage(`{{ props?.title }}`).dynamic, false);
-    assert.deepEqual(usage(`{{ 'title' }}`).names, []);
+    assert.deepEqual(usage(`{{ props?.title }}`), { names: ['title'], dynamic: false });
+    assert.deepEqual(usage(`{{ 'props.title' }}{{ post.props }}`), { names: [], dynamic: false });
 });

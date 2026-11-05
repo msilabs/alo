@@ -38,24 +38,30 @@ test('প্রপস: স্ট্রিং, অংশ-মানে স্ট�
 });
 
 test('প্রপের স্ট্রিংয়ে entity একবারই decode হয়, আর কম্পোনেন্টে আবার escape হয়', () => {
-    const { body } = site(`<Title text="A &amp; B &lt;3 &#2438;" />`, { Title: '<template><h1>{{ text }}</h1></template>' });
+    const { body } = site(`<Title text="A &amp; B &lt;3 &#2438;" />`, { Title: '<template><h1>{{ props.text }}</h1></template>' });
     assert.equal(body, '<h1>A &amp; B &lt;3 আ</h1>');
 });
 
 test('অংশ-মানের প্রপ escape হয় না, কম্পোনেন্টে একবার escape হয়', () => {
-    const { body } = site(`<Title text="x {{ '<b>' }}" />`, { Title: '<template><h1>{{ text }}</h1></template>' });
+    const { body } = site(`<Title text="x {{ '<b>' }}" />`, { Title: '<template><h1>{{ props.text }}</h1></template>' });
     assert.equal(body, '<h1>x &lt;b&gt;</h1>');
 });
 
-test('প্রপ পড়া যায় নাম ধরে আর props থেকে; class পড়তে হয় props.class দিয়ে', () => {
+test('প্রপ পড়া যায় শুধু props থেকে, class-ও একই নিয়মে', () => {
     const { body } = site(`<Card class="mt-4" title="ক" />`, {
-        Card: '<template><div class="card {{ props.class }}">{{ title }}|{{ props.title }}</div></template>',
+        Card: '<template><div class="card {{ props.class }}">{{ props.title }}</div></template>',
     });
-    assert.equal(body, '<div class="card mt-4">ক|ক</div>');
+    assert.equal(body, '<div class="card mt-4">ক</div>');
+});
+
+test('প্রপের নাম আলাদা ভেরিয়েবল হয় না', () => {
+    const err = siteError(`<Card title="ক" />`, { Card: '<template>{{ title }}</template>' });
+    assert.match(err.message, /`title` নামে কোনো ভেরিয়েবল নেই/);
+    assert.match(err.hint, /`props`/);
 });
 
 test('class আর id নিজে থেকে রুটে বসে না; না পাঠানো প্রপ undefined', () => {
-    const { body } = site(`<Card class="x" id="y" />`, { Card: '<template><div>{{ title ?? "শিরোনাম নেই" }}</div></template>' });
+    const { body } = site(`<Card class="x" id="y" />`, { Card: '<template><div>{{ props.title ?? "শিরোনাম নেই" }}</div></template>' });
     assert.equal(body, '<div>শিরোনাম নেই</div>');
 });
 
@@ -65,25 +71,25 @@ test('কম্পোনেন্ট data, route আর base দেখে, item 
     assert.match(siteError(`<Info />`, { Info: '<template>{{ item }}</template>' }).message, /`item` নামে কোনো ভেরিয়েবল নেই/);
 });
 
-test('না পাঠানো প্রপ undefined, অব্যবহৃত গ্লোবাল আগের মতোই কাজ করে', () => {
-    const { body } = site('<Card />', { Card: '<template>{{ typeof title }}|{{ Math.max(1, 2) }}|{{ JSON.stringify([1]) }}</template>' });
+test('না পাঠানো প্রপ undefined; গ্লোবালের নামে প্রপ থাকলেও গোলমাল নেই', () => {
+    const { body } = site('<Card />', { Card: '<template>{{ typeof props.navigator }}|{{ Math.max(1, 2) }}|{{ JSON.stringify([1]) }}</template>' });
     assert.equal(body, 'undefined|2|[1]');
 });
 
-test('সংরক্ষিত নামে প্রপ পাঠালে এরর', () => {
-    for (const name of ['data', 'route', 'base', 'props', 'item']) {
-        const err = siteError(`<Card ${name}="x" />`, { Card: '<template>{{ props }}</template>' });
-        assert.match(err.message, new RegExp(`\`${name}\` নামে প্রপ পাঠানো যায় না`));
-    }
+test('data, item বা props নামের প্রপও সাধারণ প্রপ, স্কোপের ভেরিয়েবল ঢাকে না', () => {
+    const { body } = site(`<Card data="ক" item="খ" props="গ" />`, {
+        Card: '<template>{{ props.data }}{{ props.item }}{{ props.props }}|{{ typeof data }}</template>',
+    });
+    assert.equal(body, 'কখগ|object');
 });
 
 test('অ্যাট্রিবিউটে {{{ }}} প্রপেও এরর', () => {
-    assert.match(siteError(`<Card t="{{{ 'x' }}}" />`, { Card: '<template>{{ t }}</template>' }).message, /`\{\{\{ \}\}\}` চলে না/);
+    assert.match(siteError(`<Card t="{{{ 'x' }}}" />`, { Card: '<template>{{ props.t }}</template>' }).message, /`\{\{\{ \}\}\}` চলে না/);
 });
 
 test('স্লট: কনটেন্ট বসে, প্যারেন্টের স্কোপে রেন্ডার হয়', () => {
     const { body } = site(`<template for="name in ['ক']"><Card title="T"><b>{{ name }}</b></Card></template>`, {
-        Card: '<template><div><h2>{{ title }}</h2><slot /></div></template>',
+        Card: '<template><div><h2>{{ props.title }}</h2><slot /></div></template>',
     });
     assert.equal(body, '<div><h2>T</h2><b>ক</b></div>');
 });
@@ -142,35 +148,35 @@ test('সার্কুলার ডিপেন্ডেন্সিতে প
 
 test('কম্পোনেন্টের ভেতরের এররে ডাকার জায়গা থাকে', () => {
     const err = siteError('\n\n<Blog.PostCard />', {
-        'blog/PostCard': '<template>\n  <a href="/blog/{{ post.slug }}/">x</a>\n</template>',
+        'blog/PostCard': '<template>\n  <a href="/blog/{{ props.post.slug }}/">x</a>\n</template>',
     });
     assert.equal(err.file, 'components/blog/PostCard.alo');
     assert.equal(err.line, 2);
-    assert.equal(err.message, '`post` হলো `undefined`, তাই `.slug` পড়া যায় না।');
+    assert.equal(err.message, '`props.post` হলো `undefined`, তাই `.slug` পড়া যায় না।');
     assert.deepEqual(err.calledFrom, { file: 'pages/page.alo', line: 3, column: 1 });
 });
 
 test('নেস্টেড কম্পোনেন্টের এররে সবচেয়ে কাছের ডাকার জায়গা', () => {
     const err = siteError('<Outer />', {
         Outer: '<template>\n<Inner />\n</template>',
-        Inner: '<template>{{ nope.x }}</template>',
+        Inner: '<template>{{ props.nope.x }}</template>',
     });
     assert.equal(err.file, 'components/Inner.alo');
-    assert.equal(err.message, '`nope` হলো `undefined`, তাই `.x` পড়া যায় না।');
+    assert.equal(err.message, '`props.nope` হলো `undefined`, তাই `.x` পড়া যায় না।');
     assert.deepEqual(err.calledFrom, { file: 'components/Outer.alo', line: 2, column: 1 });
 });
 
 test('প্রপের টাইপোতে সতর্কবার্তা আর পরামর্শ', () => {
-    const { warnings } = site('<Card titel="x" class="c" id="i" />', { Card: '<template><h2>{{ title }}</h2></template>' });
+    const { warnings } = site('<Card titel="x" class="c" id="i" />', { Card: '<template><h2>{{ props.title }}</h2></template>' });
     assert.equal(warnings.length, 1);
     assert.equal(warnings[0].message, '`<Card>`-এ `titel` কোথাও ব্যবহার হয়নি।');
     assert.equal(warnings[0].hint, 'তুমি কি `title` বোঝাতে চেয়েছিলে?');
     assert.equal(warnings[0].file, 'pages/page.alo');
 });
 
-test('props.x বা লুপে ব্যবহার করা প্রপে সতর্কবার্তা নেই; props[x] থাকলে যাচাই বন্ধ', () => {
+test('props.x হিসেবে কোথাও পড়া প্রপে সতর্কবার্তা নেই; props[x] থাকলে যাচাই বন্ধ', () => {
     const used = site('<Card subtitle="a" tags="{{ [1] }}" />', {
-        Card: '<template>{{ props.subtitle }}<template for="t in tags">{{ t }}</template></template>',
+        Card: '<template>{{ props.subtitle }}<template for="t in props.tags">{{ t }}</template></template>',
     });
     assert.equal(used.warnings.length, 0);
 
@@ -179,6 +185,6 @@ test('props.x বা লুপে ব্যবহার করা প্রপ�
 });
 
 test('অব্যবহৃত প্রপের কাছাকাছি নাম না থাকলে ব্যবহারের ইঙ্গিত', () => {
-    const { warnings } = site('<Card color="red" />', { Card: '<template><p>{{ title }}</p></template>' });
-    assert.match(warnings[0].hint, /components\/Card\.alo-এ `\{\{ color \}\}` লিখে ব্যবহার করো/);
+    const { warnings } = site('<Card color="red" />', { Card: '<template><p>{{ props.title }}</p></template>' });
+    assert.match(warnings[0].hint, /components\/Card\.alo-এ `\{\{ props\.color \}\}` লিখে ব্যবহার করো/);
 });

@@ -136,21 +136,19 @@ function tokenize(code, tokens = []) {
     return tokens;
 }
 
-// Records which names an expression reads: plain identifiers, `props.x` members,
-// and whether `props` is used as a whole (`props[x]`, `{{ props }}`), which turns the typo check off.
-function collectNames(code, usage) {
+function isDot(token) {
+    return Boolean(token) && token.type === 'punct' && token.value === '.';
+}
+
+// Records which `props.x` members an expression reads, and whether `props` is used as a whole
+// (`props[x]`, `{{ props }}`), which turns the typo check off.
+function collectProps(code, usage) {
     const tokens = tokenize(code);
     tokens.forEach((token, k) => {
-        if (token.type !== 'ident') return;
-        const before = tokens[k - 1];
-        if (before && before.type === 'punct' && before.value === '.') {
-            const owner = tokens[k - 2];
-            if (owner && owner.type === 'ident' && owner.value === 'props') usage.names.add(token.value);
-            return;
-        }
-        usage.names.add(token.value);
-        const after = tokens[k + 1];
-        if (token.value === 'props' && !(after && after.type === 'punct' && after.value === '.')) usage.dynamic = true;
+        if (token.type !== 'ident' || token.value !== 'props' || isDot(tokens[k - 1])) return;
+        const member = tokens[k + 2];
+        if (isDot(tokens[k + 1]) && member && member.type === 'ident') usage.props.add(member.value);
+        else usage.dynamic = true;
     });
 }
 
@@ -159,25 +157,25 @@ const LOGIC = ['for', 'if', 'else-if'];
 function collectFromNodes(nodes, usage) {
     for (const node of nodes) {
         if (node.type === 'text') {
-            for (const part of node.parts) if (part.type === 'expr') collectNames(part.code, usage);
+            for (const part of node.parts) if (part.type === 'expr') collectProps(part.code, usage);
             continue;
         }
         if (node.type !== 'element') continue;
         for (const attr of node.attrs) {
             if (attr.value === null) continue;
             if (node.name === 'template' && LOGIC.includes(attr.name)) {
-                collectNames(attr.value, usage);
+                collectProps(attr.value, usage);
                 continue;
             }
-            for (const part of attr.parts) if (part.type === 'expr') collectNames(part.code, usage);
+            for (const part of attr.parts) if (part.type === 'expr') collectProps(part.code, usage);
         }
         collectFromNodes(node.children, usage);
     }
 }
 
-// Every name a component's template reads, for the "prop is never used" warning.
+// Every `props.x` a component's template reads, for the "prop is never used" warning.
 function propUsage(sfc) {
-    const usage = { names: new Set(), dynamic: false };
+    const usage = { props: new Set(), dynamic: false };
     if (sfc.template) collectFromNodes(sfc.template.children, usage);
     return usage;
 }

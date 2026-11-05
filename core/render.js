@@ -7,15 +7,7 @@ const { isStatic, isWholeExpression, wholeValueOutcome, decodeEntities, propName
 const { LOGIC_ATTRIBUTES, isLogicTemplate } = require('./sfc.js');
 const { expectedPath } = require('./components.js');
 
-const RESERVED_PROPS = ['data', 'route', 'base', 'props', 'item'];
 const UNCHECKED_PROPS = ['class', 'id'];
-const JS_RESERVED = new Set(
-    (
-        'break case catch class const continue debugger default delete do else enum export extends false finally for ' +
-        'function if implements import in instanceof interface let new null package private protected public return ' +
-        'static super switch this throw true try typeof var void while with yield await arguments eval undefined'
-    ).split(' '),
-);
 
 const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 const FOR_PATTERN = /^\s*(?:([A-Za-z_$][\w$]*)|\(\s*([A-Za-z_$][\w$]*)\s*,\s*([A-Za-z_$][\w$]*)\s*\))\s+in\s+([\s\S]+)$/;
@@ -121,10 +113,6 @@ function checkElementLogic(node, ctx) {
     }
 }
 
-function isIdentifier(name) {
-    return /^[A-Za-z_$][\w$]*$/.test(name) && !JS_RESERVED.has(name);
-}
-
 function hasContent(nodes) {
     return nodes.some((node) => !isSkippable(node));
 }
@@ -160,17 +148,17 @@ function checkPropUsage(node, entry, sfc, ctx) {
     const usage = ctx.project.usage(sfc);
     if (usage.dynamic) return;
 
-    const known = [...usage.names].filter((name) => isIdentifier(name) && !RESERVED_PROPS.includes(name));
     for (const attr of node.attrs) {
         const name = propName(attr.name);
-        if (UNCHECKED_PROPS.includes(name) || usage.names.has(name)) continue;
-        const close = suggest(name, known);
+        if (UNCHECKED_PROPS.includes(name) || usage.props.has(name)) continue;
+        const close = suggest(name, [...usage.props]);
+        const access = /^[A-Za-z_$][\w$]*$/.test(name) ? `props.${name}` : `props['${name}']`;
         ctx.warn({
             ...location(ctx, attr),
             message: `\`<${node.name}>\`-এ \`${name}\` কোথাও ব্যবহার হয়নি।`,
             hint: close
                 ? `তুমি কি \`${close}\` বোঝাতে চেয়েছিলে?`
-                : `${entry.file}-এ \`{{ ${isIdentifier(name) ? name : `props['${name}']`} }}\` লিখে ব্যবহার করো, নয়তো প্রপটা সরাও।`,
+                : `${entry.file}-এ \`{{ ${access} }}\` লিখে ব্যবহার করো, নয়তো প্রপটা সরাও।`,
         });
     }
 }
@@ -186,13 +174,7 @@ function renderComponent(node, ctx) {
 
     const sfc = ctx.project.loadComponent(entry);
     const props = {};
-    for (const attr of node.attrs) {
-        const name = propName(attr.name);
-        if (RESERVED_PROPS.includes(name)) {
-            fail(ctx, attr, `\`${attr.name}\` নামে প্রপ পাঠানো যায় না।`, '`data`, `route`, `base`, `props` আর `item` সংরক্ষিত নাম। অন্য নাম দাও, যেমন `post="{{ item }}"`।');
-        }
-        props[name] = propValue(attr, ctx);
-    }
+    for (const attr of node.attrs) props[propName(attr.name)] = propValue(attr, ctx);
     checkPropUsage(node, entry, sfc, ctx);
 
     const content = hasContent(node.children);
@@ -204,18 +186,8 @@ function renderComponent(node, ctx) {
         });
     }
 
-    const scope = { data: ctx.scope.data, route: ctx.scope.route, base: ctx.scope.base };
-    for (const [name, value] of Object.entries(props)) {
-        if (isIdentifier(name)) scope[name] = value;
-    }
-    // Props are never declared, so any name the template reads that is not a global counts as a prop
-    // that was not passed: it is `undefined`, which lets `{{ title ?? 'শিরোনাম নেই' }}` work.
-    for (const name of ctx.project.usage(sfc).names) {
-        if (isIdentifier(name) && !RESERVED_PROPS.includes(name) && !(name in scope) && !(name in globalThis)) {
-            scope[name] = undefined;
-        }
-    }
-    scope.props = Object.freeze(props);
+    // Props are read only through `props`, so a prop that was not passed is simply `undefined`.
+    const scope = { data: ctx.scope.data, route: ctx.scope.route, base: ctx.scope.base, props: Object.freeze(props) };
 
     if (!sfc.template) return '';
     const childCtx = {

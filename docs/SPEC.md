@@ -15,7 +15,7 @@
 
 1. **পেইজ:** `pages/about/page.alo` মানে `/about/`।
 2. **লেআউট:** `layout.alo` তার ফোল্ডারের সব পেইজকে মোড়ায়। পেইজ বসে `<slot />`-এর জায়গায়।
-3. **কম্পোনেন্ট:** `components/Card.alo` থাকলে লেখা যায় `<Card title="হ্যালো" />`। অ্যাট্রিবিউটই প্রপস।
+3. **কম্পোনেন্ট:** `components/Card.alo` থাকলে লেখা যায় `<Card title="হ্যালো" />`। অ্যাট্রিবিউটই প্রপস; কম্পোনেন্টের ভেতরে পড়ো `{{ props.title }}`।
 4. **ডেটা:** `data/team.json` হয় `data.team`। `data/blog/` ফোল্ডারের JSON বা Markdown ফাইলগুলো হয় `data.blog` অ্যারে।
 5. **টেমপ্লেট:** `{{ }}` দিয়ে মান বসানো। লুপ আর শর্ত লেখা হয় শুধু `<template>` ট্যাগে: `for`, `if`, `else-if`, `else`।
 6. **CSS:** `<style>`-এর CSS শুধু সেই ফাইলে খাটে। `global/` ফোল্ডারের CSS খাটে সব পেইজে।
@@ -105,6 +105,7 @@ reactivity, state, store, `bind:`/`on:` ধাঁচের বাইন্ডি
 | কম্পোনেন্ট ট্যাগে লজিক (`<Card for>`)            | `<template for><Card /></template>`         | এক নিয়ম, কোনো ব্যতিক্রম নেই; `for`-এর মতো নাম প্রপের সাথে মেশে না     |
 | `else-if` ছাড়া শুধু নেস্টিং                     | `<template else-if>`                        | সবাই if / else if / else চেনে; নেস্টিং পড়তে খারাপ                     |
 | `:prop="expr"`                                   | `prop="{{ expr }}"`                         | একটাই সিনট্যাক্স (`{{ }}`) সব জায়গায়; নতুন চিহ্ন শিখতে হয় না        |
+| নাম ধরে প্রপ পড়া (`{{ title }}`)               | `{{ props.title }}`                         | এক নিয়ম; `class`-এর ব্যতিক্রম নেই; লুপ ভেরিয়েবল বা গ্লোবালের সাথে মেশে না |
 | `$props` আর পেইজে JSON                           | `data-*` অ্যাট্রিবিউট + `$el.dataset`       | খাঁটি HTML; কোনো লুকানো রানটাইম ডেটা নেই                               |
 | `:global(.x)`                                    | `<style global>` বা `class` প্রপ            | CSS-এ নতুন সিনট্যাক্স নেই                                              |
 | `_` দিয়ে প্রাইভেট কম্পোনেন্ট                    | সব কম্পোনেন্ট সব জায়গায়                   | ছোট সাইটে লাগে না, অথচ নিয়মটা জটিল                                    |
@@ -270,8 +271,8 @@ my-site/
 ```html
 <template>
     <div class="faq">
-        <button>{{ question }}</button>
-        <p>{{ answer }}</p>
+        <button>{{ props.question }}</button>
+        <p>{{ props.answer }}</p>
     </div>
 </template>
 
@@ -421,7 +422,7 @@ my-site/
 | জায়গা       | ভেরিয়েবল                                                                          |
 | ------------ | ---------------------------------------------------------------------------------- |
 | page, layout | `data`, `route`, `base`, `item` (শুধু ডায়নামিক পেইজে), লুপ ভেরিয়েবল              |
-| component    | `data`, `route`, `base`, নিজের প্রপস (নাম ধরে, আর `props` অবজেক্টে), লুপ ভেরিয়েবল |
+| component    | `data`, `route`, `base`, `props` (পাঠানো সব প্রপ), লুপ ভেরিয়েবল                     |
 
 - `route`: `{ path: "/blog/hello-world/" }`। base path ছাড়া পাথ।
 - `base`: `--base` ফ্ল্যাগের মান, ডিফল্ট `"/"`। খুব কম দরকার হয়, কারণ base নিজে থেকে বসে (অংশ ১৪)।
@@ -468,12 +469,12 @@ my-site/
 
 আরও নিয়ম:
 
-- কম্পোনেন্টের ভেতরে প্রপ পড়া যায় নাম ধরে (`{{ title }}`) আর `props` অবজেক্ট থেকে (`{{ props.class }}`)। `class` JS-এর কীওয়ার্ড, তাই এটা পড়তে হয় `props.class` দিয়ে।
+- কম্পোনেন্টের ভেতরে প্রপ পড়া যায় শুধু `props` অবজেক্ট থেকে: `{{ props.title }}`, `{{ props.class }}`, `{{ props.post.slug }}`। প্রপের নাম আলাদা ভেরিয়েবল হয় না, তাই প্রপ কখনো লুপ ভেরিয়েবল, `data` বা JS-এর গ্লোবালের সাথে মেশে না।
 - সব অ্যাট্রিবিউটই প্রপ। `class` বা `id` নিজে থেকে রুট এলিমেন্টে বসে না; কম্পোনেন্ট চাইলে নিজে বসায়: `class="card {{ props.class }}"`।
-- না পাঠানো প্রপ `undefined`। ডিফল্ট মান: `{{ title ?? 'শিরোনাম নেই' }}`।
-- `data`, `route`, `base`, `props`, `item` নামে প্রপ পাঠালে এরর (রিজার্ভড)।
-- **টাইপো ধরা:** পাঠানো প্রপের নাম কম্পোনেন্টের কোনো এক্সপ্রেশনে না থাকলে (নাম হিসেবে বা `props.<নাম>` হিসেবে) সতর্কবার্তা, সাথে কাছাকাছি নাম: "`<Card>`-এ `titel` কোথাও ব্যবহার হয়নি। তুমি কি `title` বোঝাতে চেয়েছিলে?" `class` আর `id`-এ এই সতর্কবার্তা আসে না। কম্পোনেন্ট `props`-কে পুরোটা বা ডায়নামিকভাবে ব্যবহার করলে (`props[x]`, `{{ props }}`) এই যাচাই বন্ধ থাকে।
-- **কোথা থেকে ডাকা হয়েছে:** কম্পোনেন্টের ভেতরে এরর হলে মেসেজে ডাকার জায়গাটাও থাকে: "`post` হলো `undefined`। `<Blog.PostCard>` ডাকা হয়েছে `pages/(site)/page.alo:12`-এ।"
+- না পাঠানো প্রপ `undefined`। ডিফল্ট মান: `{{ props.title ?? 'শিরোনাম নেই' }}`।
+- প্রপের নামে কোনো নিষেধ নেই; `data` বা `item` নামের প্রপও শুধু `props.data`, `props.item`।
+- **টাইপো ধরা:** পাঠানো প্রপ কম্পোনেন্টের কোনো এক্সপ্রেশনে `props.<নাম>` হিসেবে না থাকলে সতর্কবার্তা, সাথে কাছাকাছি নাম: "`<Card>`-এ `titel` কোথাও ব্যবহার হয়নি। তুমি কি `title` বোঝাতে চেয়েছিলে?" `class` আর `id`-এ এই সতর্কবার্তা আসে না। কম্পোনেন্ট `props`-কে পুরোটা বা ডায়নামিকভাবে ব্যবহার করলে (`props[x]`, `{{ props }}`) এই যাচাই বন্ধ থাকে।
+- **কোথা থেকে ডাকা হয়েছে:** কম্পোনেন্টের ভেতরে এরর হলে মেসেজে ডাকার জায়গাটাও থাকে: "`props.post` হলো `undefined`। `<Blog.PostCard>` ডাকা হয়েছে `pages/(site)/page.alo:12`-এ।"
 
 ### স্লট
 
@@ -489,11 +490,11 @@ my-site/
 <!-- components/blog/PostCard.alo -->
 <template>
     <Card class="post-card">
-        <h3><a href="/blog/{{ post.slug }}/">{{ post.title }}</a></h3>
-        <time>{{ post.date }}</time>
-        <template if="post.tags">
+        <h3><a href="/blog/{{ props.post.slug }}/">{{ props.post.title }}</a></h3>
+        <time>{{ props.post.date }}</time>
+        <template if="props.post.tags">
             <ul class="tags">
-                <template for="tag in post.tags"><li>{{ tag }}</li></template>
+                <template for="tag in props.post.tags"><li>{{ tag }}</li></template>
             </ul>
         </template>
     </Card>
@@ -744,7 +745,7 @@ CommonMark-এর কাছাকাছি, সাথে GFM-এর কয়ে
 
     ```html
     <template>
-        <div class="counter" data-start="{{ start ?? 0 }}">
+        <div class="counter" data-start="{{ props.start ?? 0 }}">
             <button>+</button> <span></span>
         </div>
     </template>
@@ -1047,7 +1048,7 @@ alo/
 
 | Blade                                 | Alo                                                        |
 | ------------------------------------- | ---------------------------------------------------------- |
-| `{{ $title }}`                        | `{{ title }}`                                              |
+| `{{ $title }}` (কম্পোনেন্টে)          | `{{ props.title }}`                                        |
 | `{!! $html !!}`                       | `{{{ html }}}`                                             |
 | `@if` / `@elseif` / `@else`           | `<template if>` / `<template else-if>` / `<template else>` |
 | `@foreach ($posts as $post)`          | `<template for="post in posts">`                           |
@@ -1074,7 +1075,7 @@ alo/
 
 > **কম্পোনেন্টের প্রপ JS-এ কীভাবে পাব?**
 >
-> সাধারণ HTML-এর মতো: `data-count="{{ count }}"` লেখো, আর JS-এ পড়ো `$el.dataset.count` দিয়ে।
+> সাধারণ HTML-এর মতো: `data-count="{{ props.count }}"` লেখো, আর JS-এ পড়ো `$el.dataset.count` দিয়ে।
 
 > **কনফিগ ফাইল নেই, তাহলে GitHub Pages-এর সাব-পাথ কীভাবে দেব?**
 >
@@ -1121,7 +1122,7 @@ alo/
     - কম্পোনেন্ট ট্যাগে লজিক থাকলে এরর আর ইঙ্গিত।
     - `<li if>`-এ সতর্কবার্তা; `<label for="x">`-এ সতর্কবার্তা নেই; `<div for="x in y">`-এ সতর্কবার্তা।
     - মোড়ক ছাড়া একাধিক এলিমেন্ট আউটপুট; লজিক ছাড়া `<template>` হুবহু থাকা; `<head>`-এ `<template if>`।
-- **render:** প্রপস (স্ট্রিং, পুরো-মান `{{ }}`-এ আসল মান, অংশ-মানে স্ট্রিং, boolean, kebab→camel, রিজার্ভড নাম); স্লট আর ফলব্যাক; স্লট প্যারেন্টের স্কোপে; একাধিক `<slot>` থাকলে এরর; নেস্টেড কম্পোনেন্ট; সার্কুলার এরর; এররে `calledFrom`।
+- **render:** প্রপস (স্ট্রিং, পুরো-মান `{{ }}`-এ আসল মান, অংশ-মানে স্ট্রিং, boolean, kebab→camel, শুধু `props` দিয়ে পড়া, না পাঠানো প্রপ `undefined`); স্লট আর ফলব্যাক; স্লট প্যারেন্টের স্কোপে; একাধিক `<slot>` থাকলে এরর; নেস্টেড কম্পোনেন্ট; সার্কুলার এরর; এররে `calledFrom`।
 - **components:** Dot নাম, kebab ফোল্ডার থেকে PascalCase, অজানা নামের পরামর্শ, `<DIV>` ইঙ্গিত, অব্যবহৃত কম্পোনেন্টের তালিকা, প্রপের টাইপোতে সতর্কবার্তা (আর `props[x]` থাকলে বন্ধ)।
 - **data:**
     - ফাইল/অ্যারে/অবজেক্ট ম্যাপিং; JSON আর MD মেশানো; camelCase।
