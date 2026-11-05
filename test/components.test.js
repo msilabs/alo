@@ -15,14 +15,14 @@ function scan(files) {
 }
 
 function site(files) {
-    const result = compile({ reader: createMemoryReader(files) });
+    const result = compile({ reader: createMemoryReader(files), mode: 'dev' });
     const html = result.files.find((f) => f.path === 'index.html').contents;
     return { body: html.slice(html.indexOf('<body>\n') + 7, html.indexOf('\n</body>')), warnings: result.warnings };
 }
 
 function siteError(files) {
     try {
-        compile({ reader: createMemoryReader(files) });
+        compile({ reader: createMemoryReader(files), mode: 'dev' });
     } catch (err) {
         assert.ok(err instanceof AloError, String(err));
         return err;

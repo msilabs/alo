@@ -7,7 +7,7 @@ const { AloError } = require('../core/errors.js');
 const { createMemoryReader } = require('./helpers/memfs.js');
 
 function build(files) {
-    const result = compile({ reader: createMemoryReader(files) });
+    const result = compile({ reader: createMemoryReader(files), mode: 'dev' });
     const pages = {};
     for (const file of result.files) {
         const html = file.contents;

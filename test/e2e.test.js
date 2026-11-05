@@ -112,20 +112,33 @@ test('example/-এর রাউট, রাউট গ্রুপ, লেআউ�
     assert.doesNotMatch(notFound, /site-header/);
 });
 
-test('example/-এর CSS: global/ আগে, স্কোপড স্টাইল, প্রতিটা পেইজে লিংক', (t) => {
+// Asset names carry a content hash in build mode: style.3f9a1c2e.css → style.css
+function unhash(url) {
+    return url.replace(/\.[0-9a-f]{8}(\.[a-z]+)$/, '$1');
+}
+
+function linkedAssets(html) {
+    return [...html.matchAll(/<(?:script src|link rel="stylesheet" href)="([^"]+)"/g)].map((m) => m[1]);
+}
+
+test('example/-এর CSS: global/ আগে, স্কোপড স্টাইল, মিনিফাই, প্রতিটা পেইজে লিংক', (t) => {
     const dir = tempProject(t, EXAMPLE);
     assert.equal(alo(dir, ['build']).code, 0);
-    const css = fs.readFileSync(path.join(dir, 'dist', 'assets', 'style.css'), 'utf8');
-    const home = fs.readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8');
+    const read = (file) => fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8');
+    const home = read('index.html');
+    const href = /<link rel="stylesheet" href="(\/assets\/style\.[0-9a-f]{8}\.css)">\n<\/head>/.exec(home);
+    assert.ok(href, 'হ্যাশসহ stylesheet লিংক থাকা দরকার');
+    const css = read(href[1].slice(1));
 
-    assert.ok(css.indexOf('/* global/base/01-reset.css */') < css.indexOf('/* global/theme.css */'));
-    assert.ok(css.indexOf('/* global/theme.css */') < css.indexOf('/* components/'));
+    assert.ok(css.indexOf('box-sizing') < css.indexOf('--color-text'), 'reset আগে, theme পরে');
+    assert.ok(css.indexOf('--color-text') < css.indexOf('.site-header['), 'global/ আগে, কম্পোনেন্ট পরে');
+    assert.doesNotMatch(css, /\/\* global/, 'build-এ কমেন্ট থাকে না');
+    assert.doesNotMatch(css.trimEnd(), /\n/, 'build-এ CSS এক লাইনে');
     const header = /<header class="site-header" (data-a-[0-9a-f]{6})[ >]/.exec(home);
     assert.ok(header, 'হেডারে স্কোপ অ্যাট্রিবিউট থাকা দরকার');
-    assert.match(css, new RegExp(`\\.site-header\\[${header[1]}\\] \\{`));
-    assert.match(css, new RegExp(`nav a\\[aria-current='page'\\]\\[${header[1]}\\] \\{`));
-    assert.match(home, /<link rel="stylesheet" href="\/assets\/style\.css">\n<\/head>/);
-    assert.match(fs.readFileSync(path.join(dir, 'dist', 'launch', 'index.html'), 'utf8'), /stylesheet/);
+    assert.ok(css.includes(`.site-header[${header[1]}]{`));
+    assert.ok(css.includes(`nav a[aria-current='page'][${header[1]}]{`));
+    assert.match(read('launch/index.html'), /stylesheet/);
 });
 
 test('example/-এর JS: শুধু দরকারি স্ক্রিপ্ট, কম্পোনেন্টের রুটে data-a-c', (t) => {
@@ -135,20 +148,68 @@ test('example/-এর JS: শুধু দরকারি স্ক্রিপ�
     const scripts = (html) => [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]);
 
     const home = read('index.html');
-    assert.deepEqual(scripts(home), ['/assets/global.js', '/assets/components.js', '/assets/pages/index.js']);
+    assert.deepEqual(scripts(home).map(unhash), ['/assets/global.js', '/assets/components.js', '/assets/pages/index.js']);
     assert.match(home, /<div class="faq"[^>]* data-a-c="Faq">/);
     assert.match(home, /<div class="counter" data-start="5"[^>]* data-a-c="Counter">/);
     assert.match(home, /<header class="site-header"[^>]* data-a-c="Header">/);
 
-    assert.deepEqual(scripts(read('about/index.html')), ['/assets/global.js', '/assets/components.js']);
-    assert.deepEqual(scripts(read('launch/index.html')), ['/assets/global.js']);
-    assert.deepEqual(scripts(read('404.html')), ['/assets/global.js']);
+    assert.deepEqual(scripts(read('about/index.html')).map(unhash), ['/assets/global.js', '/assets/components.js']);
+    assert.deepEqual(scripts(read('launch/index.html')).map(unhash), ['/assets/global.js']);
+    assert.deepEqual(scripts(read('404.html')).map(unhash), ['/assets/global.js']);
 
-    const components = read('assets/components.js');
-    for (const name of ['Counter', 'Faq', 'Header']) assert.match(components, new RegExp(`"${name}": function \\(\\$el\\)`));
-    assert.doesNotMatch(components, /"Card"/);
-    assert.match(read('assets/global.js'), /^\/\* global\/main\.js \*\//);
-    assert.match(read('assets/pages/index.js'), /getElementById\('today'\)/);
+    const [globalJs, componentsJs, pageJs] = scripts(home).map((src) => read(src.slice(1)));
+    for (const name of ['Counter', 'Faq', 'Header']) assert.match(componentsJs, new RegExp(`"${name}": function \\(\\$el\\)`));
+    assert.doesNotMatch(componentsJs, /"Card"/);
+    assert.match(globalJs, /^\/\* global\/main\.js \*\//);
+    assert.match(pageJs, /getElementById\('today'\)/);
+});
+
+test('example/-এর প্রোডাকশন আউটপুট: হ্যাশ, sitemap, robots', (t) => {
+    const dir = tempProject(t, EXAMPLE);
+    const result = alo(dir, ['build']);
+    assert.equal(result.code, 0);
+    assert.doesNotMatch(result.stderr, /⚠/);
+    const read = (file) => fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8');
+
+    for (const url of linkedAssets(read('index.html'))) {
+        assert.match(url, /\.[0-9a-f]{8}\.(css|js)$/, url);
+        assert.ok(fs.existsSync(path.join(dir, 'dist', ...url.slice(1).split('/'))), url);
+    }
+
+    const sitemap = read('sitemap.xml');
+    const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    assert.deepEqual(locs, [
+        'https://example.com/',
+        'https://example.com/about/',
+        'https://example.com/blog/',
+        'https://example.com/blog/hello-world/',
+        'https://example.com/blog/second-post/',
+        'https://example.com/blog/third-post/',
+    ]);
+    assert.equal(read('robots.txt'), 'User-agent: *\nAllow: /\nSitemap: https://example.com/sitemap.xml\n');
+});
+
+test('example/ --base /repo/ দিয়ে: সব লিংক, ছবি, CSS আর JS base-সহ', (t) => {
+    const dir = tempProject(t, EXAMPLE);
+    assert.equal(alo(dir, ['build', '--base', 'repo']).code, 0);
+    const read = (file) => fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8');
+
+    const pages = ['index.html', 'about/index.html', 'blog/index.html', 'blog/hello-world/index.html', 'launch/index.html', '404.html'];
+    for (const page of pages) {
+        const html = read(page);
+        assert.match(html, /<html lang="bn" data-base="\/repo\/">/, page);
+        const rootLinks = [...html.matchAll(/\s(?:href|src)="(\/[^"]*)"/g)].map((m) => m[1]);
+        assert.ok(rootLinks.length > 0, page);
+        for (const link of rootLinks) assert.ok(link.startsWith('/repo/'), `${page}: ${link}`);
+        for (const url of linkedAssets(html)) assert.ok(fs.existsSync(path.join(dir, 'dist', ...url.slice('/repo/'.length).split('/'))), url);
+    }
+
+    const home = read('index.html');
+    assert.match(home, /<a href="\/repo\/about\/">আমাদের কথা<\/a>|<a href="\/repo\/about\/"/);
+    assert.match(read('blog/hello-world/index.html'), /<a href="\/repo\/about\/">আমাদের কথা<\/a>/);
+    assert.match(home, /aria-current="page"/, 'route.path-এ base থাকে না, তাই active লিংক মেলে');
+    assert.match(read('sitemap.xml'), /<loc>https:\/\/example\.com\/repo\/about\/<\/loc>/);
+    assert.match(read('robots.txt'), /Sitemap: https:\/\/example\.com\/repo\/sitemap\.xml/);
 });
 
 test('এরর হলে কোড ফ্রেমসহ বাংলা মেসেজ, exit 1, আর আগের dist/ অক্ষত', (t) => {

@@ -11,7 +11,7 @@ const { createMemoryReader } = require('./helpers/memfs.js');
 const A = 'data-a-a1b2c3';
 
 function build(files) {
-    const result = compile({ reader: createMemoryReader(files) });
+    const result = compile({ reader: createMemoryReader(files), mode: 'dev' });
     const out = {};
     for (const file of result.files) out[file.path] = file.contents;
     const body = (path) => out[path].slice(out[path].indexOf('<body>\n') + 7, out[path].indexOf('\n</body>'));

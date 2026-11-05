@@ -9,7 +9,7 @@ const { createMemoryReader } = require('./helpers/memfs.js');
 function site(page, components) {
     const files = { 'pages/page.alo': `<template>${page}</template>` };
     for (const [name, source] of Object.entries(components)) files[`components/${name}.alo`] = source;
-    const result = compile({ reader: createMemoryReader(files) });
+    const result = compile({ reader: createMemoryReader(files), mode: 'dev' });
     const html = result.files[0].contents;
     return { body: html.slice(html.indexOf('<body>\n') + 7, html.indexOf('\n</body>')), warnings: result.warnings };
 }

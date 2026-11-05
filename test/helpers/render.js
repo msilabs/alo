@@ -10,7 +10,7 @@ const FILE = 'pages/page.alo';
 // Renders `<template>{snippet}</template>` as the home page and returns the <body> content.
 function renderBody(snippet, head = '') {
     const source = (head ? `<head>${head}</head>\n` : '') + `<template>${snippet}</template>`;
-    const { files, warnings } = compile({ reader: createMemoryReader({ [FILE]: source }) });
+    const { files, warnings } = compile({ reader: createMemoryReader({ [FILE]: source }), mode: 'dev' });
     const html = files[0].contents;
     const body = html.slice(html.indexOf('<body>\n') + 7, html.indexOf('\n</body>'));
     const headHtml = html.slice(html.indexOf('<head>\n') + 7, html.indexOf('\n</head>'));

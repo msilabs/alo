@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('node:crypto');
 const { AloError } = require('./errors.js');
 const { parseSfc } = require('./sfc.js');
 const { renderNodes, escapeHtml } = require('./render.js');
@@ -9,13 +10,17 @@ const { scanComponents, propUsage, referencedComponents } = require('./component
 const { createData } = require('./data.js');
 const { scopeAttribute } = require('./css-scope.js');
 const { scanGlobal, buildStyle, blockText, buildGlobalScript, buildComponentScript, buildPageScript } = require('./assets.js');
+const { normalizeBase, applyBase, rewriteCssUrls } = require('./base-path.js');
+const { minifyCss } = require('./css-minify.js');
+const { buildSitemap, buildRobots } = require('./seo.js');
 
 const STYLE_PATH = 'assets/style.css';
 const GLOBAL_SCRIPT_PATH = 'assets/global.js';
 const COMPONENT_SCRIPT_PATH = 'assets/components.js';
 
-function renderDocument({ lang, head, body, stylesheet, scripts }) {
-    const lines = ['<!DOCTYPE html>', `<html lang="${escapeHtml(lang)}">`, '<head>', ...head];
+function renderDocument({ lang, base, head, body, stylesheet, scripts }) {
+    const dataBase = base === '/' ? '' : ` data-base="${base}"`;
+    const lines = ['<!DOCTYPE html>', `<html lang="${escapeHtml(lang)}"${dataBase}>`, '<head>', ...head];
     if (stylesheet) lines.push(`<link rel="stylesheet" href="${stylesheet}">`);
     lines.push('</head>', '<body>');
     if (body) lines.push(body);
@@ -103,13 +108,15 @@ function renderRoute(route, kind, options, item) {
     const pageScript = scripts.page(route, [...layouts, page]);
     if (pageScript) sources.push(pageScript);
 
-    return renderDocument({
+    const html = renderDocument({
         lang: data.site?.lang ?? 'bn',
+        base,
         head: mergeHeads(heads, data.site?.name ?? 'Alo'),
         body: trimBlock(body),
         stylesheet,
         scripts: sources,
     });
+    return applyBase(html, base);
 }
 
 // `site.url` is only the origin; a sub-path belongs to `--base`.
@@ -158,10 +165,23 @@ function findUsedComponents(project, roots, warn) {
 
 // reader: { exists(path), read(path), list(dir) } with POSIX paths relative to the project root.
 // Returns the output files instead of writing them, so core never touches the disk.
-function compile({ reader, mode = 'build', base = '/' }) {
+function compile({ reader, mode = 'build', base: rawBase = '/' }) {
     const warnings = [];
     const seen = new Set();
     const files = [];
+    const base = normalizeBase(rawBase);
+
+    // Adds a generated asset and returns its URL. In build mode the name carries the first
+    // 8 hex chars of the content's SHA-256, so browsers can cache it forever.
+    function addAsset(path, contents) {
+        let finalPath = path;
+        if (mode === 'build') {
+            const hash = crypto.createHash('sha256').update(contents).digest('hex').slice(0, 8);
+            finalPath = path.replace(/(\.[a-z]+)$/, `.${hash}$1`);
+        }
+        files.push({ path: finalPath, contents });
+        return '/' + finalPath;
+    }
 
     // The same template line inside a loop would otherwise warn once per item.
     function warn(diagnostic) {
@@ -185,34 +205,37 @@ function compile({ reader, mode = 'build', base = '/' }) {
         }
         const components = findUsedComponents(project, roots, warn);
         const globals = scanGlobal(reader, warn);
-        const css = buildStyle({ reader, globals: globals.css, sfcs: [...roots, ...components] });
-        if (css) files.push({ path: STYLE_PATH, contents: css });
+        let css = rewriteCssUrls(buildStyle({ reader, globals: globals.css, sfcs: [...roots, ...components] }), base);
+        if (css && mode === 'build') css = minifyCss(css) + '\n';
+        const stylesheet = css ? addAsset(STYLE_PATH, css) : null;
 
         const globalScript = buildGlobalScript(reader, globals.js);
-        if (globalScript) files.push({ path: GLOBAL_SCRIPT_PATH, contents: globalScript });
         const componentScript = buildComponentScript(components.map((sfc) => ({ name: sfc.componentName, sfc })));
-        if (componentScript) files.push({ path: COMPONENT_SCRIPT_PATH, contents: componentScript });
 
         // All pages of a [slug] route share one page script, so each file is built once.
         const pageScripts = new Map();
         const scripts = {
-            global: globalScript ? '/' + GLOBAL_SCRIPT_PATH : null,
-            components: '/' + COMPONENT_SCRIPT_PATH,
+            global: globalScript ? addAsset(GLOBAL_SCRIPT_PATH, globalScript) : null,
+            components: componentScript ? addAsset(COMPONENT_SCRIPT_PATH, componentScript) : null,
             page(route, sfcs) {
                 const path = `assets/pages/${scriptName(route)}.js`;
                 if (!pageScripts.has(path)) {
                     const code = buildPageScript(sfcs);
-                    pageScripts.set(path, code);
-                    if (code) files.push({ path, contents: code });
+                    pageScripts.set(path, code ? addAsset(path, code) : null);
                 }
-                return pageScripts.get(path) ? '/' + path : null;
+                return pageScripts.get(path);
             },
         };
 
-        const options = { project, warn, mode, base, data, stylesheet: css ? '/' + STYLE_PATH : null, scripts };
+        const options = { project, warn, mode, base, data, stylesheet, scripts };
         const sources = new Map(pages.filter((page) => !page.dynamic).map((page) => [page.output, page.file]));
 
-        const emit = (route, item) => files.push({ path: route.output, contents: renderRoute(route, 'page', options, item) });
+        const built = [];
+        const emit = (route, item) => {
+            const html = renderRoute(route, 'page', options, item);
+            built.push({ path: route.path, html });
+            files.push({ path: route.output, contents: html });
+        };
 
         for (const page of pages) {
             if (!page.dynamic) {
@@ -235,6 +258,18 @@ function compile({ reader, mode = 'build', base = '/' }) {
         }
 
         if (notFound) files.push({ path: notFound.output, contents: renderRoute(notFound, 'not-found', options) });
+
+        // sitemap.xml and robots.txt only in build; a file with the same name in public/ wins.
+        if (mode === 'build') {
+            const siteUrl = typeof data.site?.url === 'string' ? data.site.url : null;
+            if (!reader.exists('public/sitemap.xml')) {
+                if (siteUrl) files.push({ path: 'sitemap.xml', contents: buildSitemap(built, siteUrl, base) });
+                else warn({ file: 'data/site.json', message: '`data/site.json`-এ `url` দিলে sitemap.xml তৈরি হবে।', hint: 'যেমন: `"url": "https://example.com"`' });
+            }
+            if (!reader.exists('public/robots.txt')) {
+                files.push({ path: 'robots.txt', contents: buildRobots(siteUrl, base) });
+            }
+        }
     } catch (err) {
         if (err instanceof AloError) {
             if (err.file && err.source === undefined && reader.exists(err.file)) err.source = reader.read(err.file);

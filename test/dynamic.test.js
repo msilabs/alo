@@ -14,7 +14,7 @@ function build(files, mode = 'build') {
         pages[file.path] = html.includes('<body>\n</body>') ? '' : html.slice(html.indexOf('<body>\n') + 7, html.indexOf('\n</body>'));
         pages[file.path + ':html'] = html;
     }
-    return { pages, warnings: result.warnings, paths: result.files.map((f) => f.path) };
+    return { pages, warnings: result.warnings, paths: result.files.map((f) => f.path).filter((p) => p.endsWith('.html')) };
 }
 
 function buildError(files) {
