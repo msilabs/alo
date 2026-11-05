@@ -1,0 +1,15 @@
+:root {
+    --color-text: #1f2328;
+    --color-muted: #59636e;
+    --color-accent: #b35c00;
+    --color-surface: #fffaf0;
+    --radius: 12px;
+
+    color: var(--color-text);
+    font-family: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif;
+    line-height: 1.7;
+}
+
+a {
+    color: var(--color-accent);
+}

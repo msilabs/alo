@@ -198,6 +198,7 @@ function renderComponent(node, ctx) {
         slot: content ? { nodes: node.children, ctx } : null,
         stack: [...ctx.stack, node.name],
         inPlainTemplate: false,
+        scopeAttr: sfc.scopeAttr,
     };
 
     try {
@@ -225,6 +226,7 @@ function renderElement(node, ctx) {
 
     let attrs = '';
     for (const attr of node.attrs) attrs += renderAttribute(attr, ctx);
+    if (ctx.scopeAttr) attrs += ' ' + ctx.scopeAttr;
 
     const open = `<${node.name}${attrs}>`;
     if (VOID_ELEMENTS.has(node.name)) return open;
@@ -331,7 +333,8 @@ function renderIfChain(nodes, start, ctx) {
     return { html: '', next };
 }
 
-// ctx: { file, source, scope, warn(diagnostic), project, slot, stack, inPlainTemplate }
+// ctx: { file, source, scope, warn(diagnostic), project, slot, stack, inPlainTemplate, scopeAttr }
+//   scopeAttr: `data-a-xxxxxx` added to every element when the file has a scoped <style>, else null
 //   slot: undefined on pages, null in a component called without content,
 //         { nodes, ctx } for component content, { html } for the page inside a layout
 function renderNodes(nodes, ctx) {

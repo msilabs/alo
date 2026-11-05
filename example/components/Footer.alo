@@ -3,3 +3,13 @@
         <p>Alo দিয়ে বানানো। HTML, CSS আর JS ছাড়া আর কিছু লাগেনি।</p>
     </footer>
 </template>
+
+<style>
+    .site-footer {
+        max-width: 48rem;
+        margin: 2rem auto 0;
+        padding: 1rem;
+        color: var(--color-muted);
+        border-top: 1px solid #eee;
+    }
+</style>

@@ -8,3 +8,28 @@
         </nav>
     </header>
 </template>
+
+<style>
+    .site-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 48rem;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    nav a {
+        margin-left: 1rem;
+    }
+
+    nav a[aria-current='page'] {
+        font-weight: 700;
+    }
+</style>

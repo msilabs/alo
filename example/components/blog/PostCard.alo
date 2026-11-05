@@ -9,3 +9,21 @@
         </template>
     </Card>
 </template>
+
+<style>
+    time {
+        color: var(--color-muted);
+        font-size: 0.9rem;
+    }
+
+    .tags {
+        display: flex;
+        gap: 0.5rem;
+        padding: 0;
+        list-style: none;
+    }
+
+    .tags li::before {
+        content: '#';
+    }
+</style>

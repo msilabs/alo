@@ -8,3 +8,17 @@
         </slot>
     </article>
 </template>
+
+<style>
+    .card {
+        margin-block: 1rem;
+        padding: 1rem 1.25rem;
+        border: 1px solid #f0e2c8;
+        border-radius: var(--radius);
+        background: var(--color-surface);
+    }
+
+    h3 {
+        margin-top: 0;
+    }
+</style>

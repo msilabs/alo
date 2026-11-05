@@ -17,6 +17,11 @@ function tempProject(t, from) {
     return dir;
 }
 
+// Scope attributes (data-a-xxxxxx) are checked in their own test; the rest compares content only.
+function withoutScope(html) {
+    return html.replace(/ data-a-[0-9a-f]{6}/g, '');
+}
+
 function alo(cwd, args) {
     const result = spawnSync(process.execPath, [BIN, ...args], {
         cwd,
@@ -33,7 +38,7 @@ test('example/ বিল্ড হয়ে হোমপেইজ তৈরি �
     assert.equal(result.code, 0, result.stderr);
     assert.match(result.stdout, /বিল্ড শেষ: 8টা পেইজ/);
 
-    const html = fs.readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8');
+    const html = withoutScope(fs.readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8'));
     assert.match(html, /^<!DOCTYPE html>\n<html lang="bn">/);
     assert.match(html, /<title>আলো — হালকা স্ট্যাটিক সাইট<\/title>/);
     assert.match(html, /HTML, CSS আর JS লেখো; বিল্ড করলে পাবে স্ট্যাটিক সাইট।/);
@@ -64,7 +69,7 @@ test('example/ বিল্ড হয়ে হোমপেইজ তৈরি �
 test('example/-এর রাউট, রাউট গ্রুপ, লেআউট আর 404', (t) => {
     const dir = tempProject(t, EXAMPLE);
     assert.equal(alo(dir, ['build']).code, 0);
-    const read = (file) => fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8');
+    const read = (file) => withoutScope(fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8'));
 
     const home = read('index.html');
     assert.match(home, /<header class="site-header">/);
@@ -105,6 +110,22 @@ test('example/-এর রাউট, রাউট গ্রুপ, লেআউ�
     const notFound = read('404.html');
     assert.match(notFound, /<h1>পেইজটা পাওয়া যায়নি<\/h1>/);
     assert.doesNotMatch(notFound, /site-header/);
+});
+
+test('example/-এর CSS: global/ আগে, স্কোপড স্টাইল, প্রতিটা পেইজে লিংক', (t) => {
+    const dir = tempProject(t, EXAMPLE);
+    assert.equal(alo(dir, ['build']).code, 0);
+    const css = fs.readFileSync(path.join(dir, 'dist', 'assets', 'style.css'), 'utf8');
+    const home = fs.readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8');
+
+    assert.ok(css.indexOf('/* global/base/01-reset.css */') < css.indexOf('/* global/theme.css */'));
+    assert.ok(css.indexOf('/* global/theme.css */') < css.indexOf('/* components/'));
+    const header = /<header class="site-header" (data-a-[0-9a-f]{6})>/.exec(home);
+    assert.ok(header, 'হেডারে স্কোপ অ্যাট্রিবিউট থাকা দরকার');
+    assert.match(css, new RegExp(`\\.site-header\\[${header[1]}\\] \\{`));
+    assert.match(css, new RegExp(`nav a\\[aria-current='page'\\]\\[${header[1]}\\] \\{`));
+    assert.match(home, /<link rel="stylesheet" href="\/assets\/style\.css">\n<\/head>/);
+    assert.match(fs.readFileSync(path.join(dir, 'dist', 'launch', 'index.html'), 'utf8'), /stylesheet/);
 });
 
 test('এরর হলে কোড ফ্রেমসহ বাংলা মেসেজ, exit 1, আর আগের dist/ অক্ষত', (t) => {
