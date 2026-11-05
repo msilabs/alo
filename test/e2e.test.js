@@ -40,6 +40,12 @@ test('example/ বিল্ড হয়ে dist/index.html তৈরি হয�
     assert.match(html, /<code>\/<\/code>/);
     assert.match(html, /২ \+ ৩ = 5/);
     assert.match(html, /আক্ষরিক বন্ধনী লিখতে: \{\{ এভাবে \}\}/);
+    assert.match(html, /<!-- এই কমেন্ট আউটপুটে হুবহু যায় -->/);
+    assert.match(html, /<linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">/);
+    assert.match(html, /<stop offset="0" stop-color="#ffd54f"><\/stop>/);
+    assert.match(html, /<p title="তুলনা: বড়">/);
+    assert.match(html, /<pre><code>const আলো = &#39;হালকা&#39;;<\/code><\/pre>/);
+    assert.match(html, /<button type="button" x-data="\{ open: false \}" @click="open = !open" :aria-expanded="open">/);
     assert.ok(!fs.existsSync(path.join(dir, '.alo', 'build')), 'অস্থায়ী ফোল্ডার থেকে যাওয়া উচিত নয়');
 });
 

@@ -143,6 +143,69 @@ test('খালি {{ }}-এ এরর', () => {
     assert.match(parseError('<p>{{ }}</p>').message, /খালি/);
 });
 
+test('কোট ছাড়া মানে {{ }} থাকলে স্পেস আর /> দুটোই ঠিক থাকে', () => {
+    const [a, b] = parseHtml('<Card count={{ 1 + 2 }} /><Card count={{ 5 }}/>').children;
+    assert.deepEqual([a.attrs[0].value, a.selfClosing], ['{{ 1 + 2 }}', true]);
+    assert.deepEqual([b.attrs[0].value, b.selfClosing], ['{{ 5 }}', true]);
+});
+
+test('ট্যাগের নামে {{ }} থাকলে এরর', () => {
+    for (const source of ['<{{ tag }}>a', '<div{{ x }}></div>', '<p></{{ x }}>']) {
+        const err = parseError(source);
+        assert.match(err.message, /ট্যাগের নামে `\{\{ \}\}` চলে না/, source);
+    }
+});
+
+test('বন্ধ করার ট্যাগে বড়-ছোট হাত না মিললে ইঙ্গিত', () => {
+    const err = parseError('<Card>\n</card>');
+    assert.match(err.message, /`<\/card>` দিয়ে `<Card>` বন্ধ হয় না/);
+    assert.match(err.hint, /`<\/Card>` লেখো/);
+    assert.equal(err.line, 2);
+});
+
+test('ট্যাগের ভেতরে বাড়তি / উপেক্ষা হয়', () => {
+    const [a] = parseHtml('<a / href="x">y</a>').children;
+    assert.deepEqual(a.attrs.map((attr) => attr.name), ['href']);
+});
+
+test('শুধু ছোট হাতের script আর style raw; বন্ধ ট্যাগ যেকোনো কেসে', () => {
+    const [component, script] = parseHtml('<Script>{{ x }}</Script><script>a</SCRIPT>').children;
+    assert.equal(component.children[0].parts[0].code, 'x');
+    assert.equal(script.children[0].value, 'a');
+});
+
+test('ট্যাগ নয় এমন < আক্ষরিক লেখা', () => {
+    const [p] = parseHtml('<p>a < b, 3<4</p>').children;
+    assert.equal(p.children[0].value, 'a < b, 3<4');
+});
+
+test('বন্ধ না করা কমেন্ট, কোট আর DOCTYPE-এ এরর', () => {
+    assert.match(parseError('<p>a</p>\n<!-- নোট').message, /কমেন্ট বন্ধ হয়নি/);
+    const quote = parseError('<a href="/x>y</a>');
+    assert.match(quote.message, /`href`-এর মানের কোট বন্ধ হয়নি/);
+    const doctype = parseError('<!DOCTYPE html>');
+    assert.match(doctype.hint, /Alo নিজে বসায়/);
+});
+
+test('কমেন্টের ভেতরের {{ }} ছোঁয়া হয় না', () => {
+    const [comment] = parseHtml('<!-- {{ x }} -->').children;
+    assert.equal(comment.type, 'comment');
+    assert.equal(comment.value, '<!-- {{ x }} -->');
+});
+
+test('CRLF আর কয়েক লাইনের অ্যাট্রিবিউটে লাইন নম্বর ঠিক থাকে', () => {
+    const root = parseHtml('<div>\r\n  <a\r\n    title="{{\r\n      x }}">y</a>\r\n</div>');
+    const a = root.children[0].children[1];
+    assert.deepEqual([a.line, a.column], [2, 3]);
+    const expr = a.attrs[0].parts[0];
+    assert.deepEqual([expr.line, expr.column, expr.code], [3, 12, 'x']);
+});
+
+test('অ্যাট্রিবিউটে \\{{ আক্ষরিক থাকে', () => {
+    const [el] = parseHtml('<code data-x="\\{{ y }}"></code>').children;
+    assert.deepEqual(el.attrs[0].parts, [{ type: 'text', value: '{{ y }}' }]);
+});
+
 test('শুরুর BOM বাদ যায়', () => {
     const root = parseHtml('﻿<p>a</p>');
     assert.equal(root.children[0].name, 'p');

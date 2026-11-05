@@ -5,6 +5,36 @@ const { parseHtml } = require('./html-parser.js');
 
 const BLOCKS = ['head', 'template', 'style', 'script'];
 const DOCUMENT_TAGS = ['html', 'head', 'body'];
+const LOGIC_ATTRIBUTES = ['for', 'if', 'else-if', 'else'];
+
+function isLogicTemplate(node) {
+    return node.name === 'template' && node.attrs.some((attr) => LOGIC_ATTRIBUTES.includes(attr.name));
+}
+
+// Slots inside a plain HTML <template> belong to Web Components, so Alo leaves them alone.
+function findSlots(nodes, found = []) {
+    for (const node of nodes) {
+        if (node.type !== 'element') continue;
+        if (node.name === 'slot') found.push(node);
+        if (node.name === 'template' && !isLogicTemplate(node)) continue;
+        findSlots(node.children, found);
+    }
+    return found;
+}
+
+function checkLayoutSlot(blocks, fail) {
+    const slots = blocks.template ? findSlots(blocks.template.children) : [];
+    if (slots.length === 0) {
+        fail(
+            blocks.template ?? { line: 1, column: 1 },
+            'লেআউটে `<slot />` নেই।',
+            'পেইজ কোথায় বসবে, `<template>`-এর ভেতরে সেখানে `<slot />` লেখো।',
+        );
+    }
+    if (slots.length > 1) {
+        fail(slots[1], 'লেআউটে একটার বেশি `<slot />` আছে।', `লেআউটে ঠিক একটা \`<slot />\` থাকে। প্রথমটা আছে লাইন ${slots[0].line}-এ।`);
+    }
+}
 
 function blockKey(node, fail) {
     if (node.name === 'style' && node.attrs.length === 1 && node.attrs[0].name === 'global' && node.attrs[0].value === null) {
@@ -66,8 +96,9 @@ function parseSfc(source, file, kind) {
 
     if (blocks.template) checkNoDocumentTags(blocks.template.children, fail);
     if (blocks.head) checkNoDocumentTags(blocks.head.children, fail);
+    if (kind === 'layout') checkLayoutSlot(blocks, fail);
 
     return blocks;
 }
 
-module.exports = { parseSfc };
+module.exports = { parseSfc, isLogicTemplate, findSlots, LOGIC_ATTRIBUTES };

@@ -83,6 +83,11 @@ test('অ্যাট্রিবিউটে {{ }} বসে; স্ট্য�
     assert.match(html, /<a href="\/x\/2\/" title='a&quot;b' x-data="\{ open: false \}" @click='open = !open' hidden>x<\/a>/);
 });
 
+test('অ্যাট্রিবিউটের \\{{ আউটপুটে আক্ষরিক {{ হয়', () => {
+    const html = output(build({ 'pages/page.alo': '<template><code title="\\{{ x }}">a</code></template>' }), 'index.html');
+    assert.match(html, /<code title="\{\{ x \}\}">a<\/code>/);
+});
+
 test('void আর self-closing HTML এলিমেন্ট', () => {
     const html = output(build({ 'pages/page.alo': '<template><br><div /><img src="a.png" /></template>' }), 'index.html');
     assert.match(html, /<br><div><\/div><img src="a.png">/);

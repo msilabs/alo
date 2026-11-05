@@ -52,7 +52,35 @@ test('একই ব্লক দুবার থাকলে এরর', () => {
 
 test('কম্পোনেন্টে <head> থাকলে এরর', () => {
     assert.match(sfcError('<head></head>', 'component').message, /কম্পোনেন্টে `<head>` চলে না/);
-    assert.ok(parseSfc('<head></head>', 'x.alo', 'layout').head);
+    assert.ok(parseSfc('<head></head><template><slot /></template>', 'x.alo', 'layout').head);
+});
+
+test('লেআউটে ঠিক একটা <slot /> থাকতে হয়', () => {
+    assert.ok(parseSfc('<template><header></header><main><slot /></main></template>', 'x.alo', 'layout'));
+
+    const none = sfcError('<template>\n  <main></main>\n</template>', 'layout');
+    assert.match(none.message, /লেআউটে `<slot \/>` নেই/);
+    assert.equal(none.line, 1);
+    assert.match(sfcError('<style></style>', 'layout').message, /লেআউটে `<slot \/>` নেই/);
+
+    const two = sfcError('<template>\n  <slot />\n  <slot />\n</template>', 'layout');
+    assert.match(two.message, /একটার বেশি/);
+    assert.equal(two.line, 3);
+    assert.match(two.hint, /লাইন 2/);
+});
+
+test('লেআউটের slot গোনায় লজিক-template আর কম্পোনেন্ট ধরা হয়, সাধারণ template নয়', () => {
+    assert.ok(parseSfc('<template><template if="x"><slot /></template></template>', 'x.alo', 'layout'));
+    assert.ok(parseSfc('<template><Card><slot /></Card></template>', 'x.alo', 'layout'));
+
+    const webComponent = '<template><template id="wc"><slot name="x"></slot></template><slot /></template>';
+    assert.ok(parseSfc(webComponent, 'x.alo', 'layout'));
+    assert.match(sfcError('<template><template id="wc"><slot></slot></template></template>', 'layout').message, /`<slot \/>` নেই/);
+});
+
+test('পেইজ আর কম্পোনেন্টে slot গোনা হয় না', () => {
+    assert.ok(parseSfc('<template><p>a</p></template>', 'x.alo', 'page'));
+    assert.ok(parseSfc('<template><p>a</p></template>', 'x.alo', 'component'));
 });
 
 test('টপ-লেভেল ব্লকে অ্যাট্রিবিউট থাকলে এরর; <style global> ছাড়া', () => {

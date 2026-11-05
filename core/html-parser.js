@@ -202,8 +202,10 @@ function parseHtml(input, file) {
     }
 
     function parseAttribute(i, attrs, tagName) {
+        if (source[i] === '/') return i + 1;
+
         const start = i;
-        while (i < length && !/[\s"'>=]/.test(source[i]) && !source.startsWith('/>', i)) {
+        while (i < length && !/[\s"'>=/]/.test(source[i])) {
             if (source.startsWith('{{', i)) {
                 fail(i, 'অ্যাট্রিবিউটের নামে `{{ }}` চলে না।', 'মানের ভেতরে লেখো, যেমন `title="{{ x }}"`।');
             }
@@ -211,10 +213,7 @@ function parseHtml(input, file) {
         }
 
         const name = source.slice(start, i);
-        if (!name) {
-            if (source[i] === '/') return i + 1;
-            fail(i, `\`<${tagName}>\` ট্যাগে অপ্রত্যাশিত \`${source[i]}\`।`);
-        }
+        if (!name) fail(i, `\`<${tagName}>\` ট্যাগে অপ্রত্যাশিত \`${source[i]}\`।`);
 
         let j = skipWhitespace(i);
         if (source[j] !== '=') {
@@ -235,7 +234,7 @@ function parseHtml(input, file) {
             i = valueEnd + 1;
         } else {
             valueStart = j;
-            valueEnd = scanUntil(j, (ch) => WHITESPACE.test(ch) || ch === '>');
+            valueEnd = scanUntil(j, (ch, k) => WHITESPACE.test(ch) || ch === '>' || source.startsWith('/>', k));
             if (valueEnd === valueStart) fail(j, `\`${name}=\`-এর পরে কোনো মান নেই।`);
             i = valueEnd;
         }
@@ -252,9 +251,14 @@ function parseHtml(input, file) {
         return i;
     }
 
+    function failExpressionInTagName(offset) {
+        fail(offset, 'ট্যাগের নামে `{{ }}` চলে না।', 'ট্যাগের নাম সবসময় সরাসরি লেখো, যেমন `<div>` বা `<Card />`।');
+    }
+
     function parseOpeningTag(start) {
         const name = readTagName(start + 1);
         let i = start + 1 + name.length;
+        if (source.startsWith('{{', i)) failExpressionInTagName(i);
         const attrs = [];
         let selfClosing = false;
 
@@ -312,6 +316,9 @@ function parseHtml(input, file) {
         if (stack.some((node) => node.name === name)) {
             fail(open.offset, `\`<${open.name}>\` বন্ধ হয়নি, তার আগেই \`</${name}>\` এসেছে।`, `\`</${name}>\`-এর আগে \`</${open.name}>\` দাও।`);
         }
+        if (open.type === 'element' && open.name.toLowerCase() === name.toLowerCase()) {
+            fail(start, `\`</${name}>\` দিয়ে \`<${open.name}>\` বন্ধ হয় না।`, `ট্যাগের নামে বড়-ছোট হাত মিলতে হবে: \`</${open.name}>\` লেখো।`);
+        }
         fail(start, `\`</${name}>\`-এর কোনো খোলা \`<${name}>\` নেই।`, 'বাড়তি বন্ধ করার ট্যাগটা সরাও।');
     }
 
@@ -337,6 +344,9 @@ function parseHtml(input, file) {
                 flushText(i);
                 i = textStart = parseOpeningTag(i);
                 continue;
+            }
+            if (source.startsWith('{{', i + 1) || source.startsWith('/{{', i + 1)) {
+                failExpressionInTagName(i + 1);
             }
             if (source[i + 1] === '!') {
                 fail(i, '`<!...>` এখানে চলে না।', '`<!DOCTYPE>` Alo নিজে বসায়; কমেন্টের জন্য `<!-- -->` লেখো।');
