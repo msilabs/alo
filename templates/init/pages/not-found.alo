@@ -1,0 +1,8 @@
+<head>
+    <title>পাওয়া যায়নি | {{ data.site.name }}</title>
+</head>
+
+<template>
+    <h1>পেইজটা পাওয়া যায়নি</h1>
+    <p><a href="/">হোমে ফিরে যাও</a></p>
+</template>

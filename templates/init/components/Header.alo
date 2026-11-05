@@ -1,0 +1,35 @@
+<template>
+    <header class="site-header">
+        <a class="logo" href="/">{{ data.site.name }}</a>
+        <nav>
+            <template for="link in data.menu">
+                <a href="{{ link.href }}" aria-current="{{ route.path === link.href ? 'page' : null }}">{{ link.label }}</a>
+            </template>
+        </nav>
+    </header>
+</template>
+
+<style>
+    .site-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 48rem;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .logo {
+        font-size: 1.25rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    nav a {
+        margin-left: 1rem;
+    }
+
+    nav a[aria-current='page'] {
+        font-weight: 700;
+    }
+</style>

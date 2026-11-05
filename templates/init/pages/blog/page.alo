@@ -1,0 +1,12 @@
+<head>
+    <title>ব্লগ | {{ data.site.name }}</title>
+</head>
+
+<template>
+    <h1>ব্লগ</h1>
+    <template for="post in data.blog.toReversed()">
+        <Card title="{{ post.title }}">
+            <p><time>{{ post.date }}</time> · <a href="/blog/{{ post.slug }}/">পড়ো</a></p>
+        </Card>
+    </template>
+</template>

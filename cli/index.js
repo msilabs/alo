@@ -126,6 +126,14 @@ async function runCommand(command, args, flags) {
         await build({ root: process.cwd(), base: flags.base ?? '/' });
         return;
     }
+    if (command === 'init') {
+        require('./scaffold.js').init(process.cwd(), args[0]);
+        return;
+    }
+    if (command === 'new') {
+        require('./scaffold.js').create(process.cwd(), args);
+        return;
+    }
     if (command === 'dev') {
         const { startDevServer } = require('./dev-server.js');
         const server = await startDevServer({ root: process.cwd(), port: flags.port ?? 3000, base: flags.base ?? '/' });

@@ -1,0 +1,8 @@
+<head>
+    <title>আমাদের কথা | {{ data.site.name }}</title>
+</head>
+
+<template>
+    <h1>আমাদের কথা</h1>
+    <p>এই পেইজটা আছে <code>pages/about/page.alo</code>-এ, তাই এর ঠিকানা <code>/about/</code>।</p>
+</template>

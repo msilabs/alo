@@ -1,0 +1,21 @@
+<template>
+    <article class="card {{ props.class }}">
+        <template if="props.title">
+            <h3>{{ props.title }}</h3>
+        </template>
+        <slot />
+    </article>
+</template>
+
+<style>
+    .card {
+        margin-block: 1rem;
+        padding: 1rem 1.25rem;
+        border: 1px solid #eee;
+        border-radius: 12px;
+    }
+
+    h3 {
+        margin-top: 0;
+    }
+</style>

@@ -1,0 +1,20 @@
+<head>
+    <meta name="description" content="Alo দিয়ে বানানো সাইট">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+</head>
+
+<template>
+    <Header />
+    <main>
+        <slot />
+    </main>
+    <Footer />
+</template>
+
+<style>
+    main {
+        max-width: 48rem;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+</style>
