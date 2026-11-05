@@ -148,7 +148,9 @@ function immutableError(path) {
 
 // Creates the `data` value for templates. Files are read only when a template first reads them,
 // and every value is deep-frozen. `loadMarkdown(source, file)` turns a .md file into an object.
-function createData(reader, { mode, warn, loadMarkdown = loadMarkdownFile }) {
+// cache (optional, kept between builds by the dev server): Map<file, { source, value }>.
+// A file whose text has not changed reuses its parsed value, so a Markdown body is not rendered again.
+function createData(reader, { mode, warn, loadMarkdown = loadMarkdownFile, cache = null }) {
     const fileCache = new Map();
     const arrayCache = new Map();
     const proxyCache = new Map();
@@ -157,7 +159,14 @@ function createData(reader, { mode, warn, loadMarkdown = loadMarkdownFile }) {
     function loadFile(file) {
         if (!fileCache.has(file)) {
             const source = reader.read(file);
-            const value = file.endsWith('.md') ? loadMarkdown(source, file) : deepFreeze(parseJson(source, file));
+            const cached = cache?.get(file);
+            const value =
+                cached && cached.source === source
+                    ? cached.value
+                    : file.endsWith('.md')
+                      ? loadMarkdown(source, file)
+                      : deepFreeze(parseJson(source, file));
+            cache?.set(file, { source, value });
             fileCache.set(file, value);
         }
         return fileCache.get(file);

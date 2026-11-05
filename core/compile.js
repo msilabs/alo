@@ -42,15 +42,23 @@ function trimBlock(html) {
     return html.replace(/^\s*\n/, '').trimEnd();
 }
 
-function createProject(reader, warn) {
+// cache (optional): { sfc: Map, data: Map } kept between builds, so unchanged files are not parsed again.
+function createProject(reader, warn, cache) {
     const components = scanComponents(reader, warn);
     const sfcCache = new Map();
     const usageCache = new Map();
 
     function loadSfc(file, kind) {
         if (!sfcCache.has(file)) {
-            const sfc = parseSfc(reader.read(file), file, kind);
-            sfc.scopeAttr = blockText(sfc.style).trim() ? scopeAttribute(file) : null;
+            const source = reader.read(file);
+            const key = kind + '\n' + file;
+            const cached = cache?.sfc.get(key);
+            let sfc = cached && cached.source === source ? cached.sfc : null;
+            if (!sfc) {
+                sfc = parseSfc(source, file, kind);
+                sfc.scopeAttr = blockText(sfc.style).trim() ? scopeAttribute(file) : null;
+                cache?.sfc.set(key, { source, sfc });
+            }
             sfcCache.set(file, sfc);
         }
         return sfcCache.get(file);
@@ -188,7 +196,7 @@ function findUsedComponents(project, roots, warn, unused) {
 
 // reader: { exists(path), read(path), list(dir) } with POSIX paths relative to the project root.
 // Returns the output files instead of writing them, so core never touches the disk.
-function compile({ reader, mode = 'build', base: rawBase = '/' }) {
+function compile({ reader, mode = 'build', base: rawBase = '/', cache = null }) {
     const warnings = [];
     const seen = new Set();
     const files = [];
@@ -217,8 +225,8 @@ function compile({ reader, mode = 'build', base: rawBase = '/' }) {
     }
 
     try {
-        const project = createProject(reader, warn);
-        const { data, collection } = createData(reader, { mode, warn });
+        const project = createProject(reader, warn, cache);
+        const { data, collection } = createData(reader, { mode, warn, cache: cache?.data });
         checkSiteUrl(data.site);
         const { pages, notFound } = findRoutes(reader, warn);
 

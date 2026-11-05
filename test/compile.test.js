@@ -139,3 +139,21 @@ test('রাউটগুলো কোড-পয়েন্ট ক্রমে �
     });
     assert.deepEqual(result.files.map((f) => f.path), ['1/index.html', 'a/index.html', 'a-b/index.html', 'b/index.html']);
 });
+
+test('ক্যাশ: না বদলানো ফাইল আবার পার্স হয় না, বদলানোটা হয়', () => {
+    const cache = { sfc: new Map(), data: new Map() };
+    const files = {
+        'pages/page.alo': '<template>{{ data.post.body }}</template>',
+        'components/Card.alo': '<template>c</template>',
+        'data/post.md': '# এক',
+    };
+    compile({ reader: createMemoryReader(files), mode: 'dev', cache });
+    const page = cache.sfc.get('page\npages/page.alo').sfc;
+    const post = cache.data.get('data/post.md').value;
+
+    files['data/post.md'] = '# দুই';
+    const second = compile({ reader: createMemoryReader(files), mode: 'dev', cache });
+    assert.equal(cache.sfc.get('page\npages/page.alo').sfc, page, 'না বদলানো পেইজ আগের পার্স থেকেই আসে');
+    assert.notEqual(cache.data.get('data/post.md').value, post, 'বদলানো Markdown নতুন করে পড়া হয়');
+    assert.match(second.files[0].contents, /দুই/);
+});

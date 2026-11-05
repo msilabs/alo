@@ -126,6 +126,14 @@ async function runCommand(command, args, flags) {
         await build({ root: process.cwd(), base: flags.base ?? '/' });
         return;
     }
+    if (command === 'dev') {
+        const { startDevServer } = require('./dev-server.js');
+        const server = await startDevServer({ root: process.cwd(), port: flags.port ?? 3000, base: flags.base ?? '/' });
+        const stop = () => server.close().then(() => process.exit(0));
+        process.once('SIGINT', stop);
+        process.once('SIGTERM', stop);
+        return;
+    }
     throw new AloError({ message: `\`alo ${command}\` কমান্ড এখনো তৈরি হয়নি।` });
 }
 

@@ -36,9 +36,9 @@ function writeOutput(root, dir, { files, copies }) {
     }
 }
 
-function compileProject(root, mode, base) {
+function compileProject(root, mode, base, { reader = createFsReader(root), cache = null } = {}) {
     try {
-        return compile({ reader: createFsReader(root), mode, base });
+        return compile({ reader, mode, base, cache });
     } catch (err) {
         for (const warning of err.warnings ?? []) log.warn(warning);
         throw err;
