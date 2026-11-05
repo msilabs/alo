@@ -22,8 +22,84 @@ function findSlots(nodes, found = []) {
     return found;
 }
 
+function edgeTextPart(node, edge) {
+    if (!node || node.type !== 'text' || node.rawText) return null;
+    const part = edge === 'start' ? node.parts[0] : node.parts[node.parts.length - 1];
+    return part && part.type === 'text' ? part : null;
+}
+
+const LINE_START = /\n[ \t]*$/;
+const LINE_END = /^[ \t]*\r?\n/;
+
+function endsWith(node, pattern) {
+    const part = edgeTextPart(node, 'end');
+    return part !== null && pattern.test(part.value);
+}
+
+function startsWith(node, pattern) {
+    const part = edgeTextPart(node, 'start');
+    return part !== null && pattern.test(part.value);
+}
+
+function collectLineEdits(nodes, ends, starts) {
+    nodes.forEach((node, i) => {
+        if (node.type !== 'element' || node.name === 'pre' || node.name === 'textarea') return;
+        const first = node.children[0];
+        const last = node.children[node.children.length - 1];
+
+        if (isLogicTemplate(node)) {
+            if (endsWith(nodes[i - 1], LINE_START) && startsWith(first, LINE_END)) {
+                ends.push(nodes[i - 1]);
+                starts.push(first);
+            }
+            if (endsWith(last, LINE_START) && startsWith(nodes[i + 1], LINE_END)) {
+                ends.push(last);
+                starts.push(nodes[i + 1]);
+            }
+        }
+        collectLineEdits(node.children, ends, starts);
+    });
+}
+
+// A logic <template> tag alone on its line takes that line with it, so loops and conditions do not
+// leave blank lines behind (like Jinja's trim_blocks). Nothing changes inside <pre> or <textarea>.
+// All conditions are checked on the original text before any edit, because one text node often sits
+// between two tags and an early edit would hide the newline the other tag looks for.
+function tidyWhitespace(nodes) {
+    const ends = [];
+    const starts = [];
+    collectLineEdits(nodes, ends, starts);
+
+    for (const node of ends) {
+        const part = edgeTextPart(node, 'end');
+        part.value = part.value.replace(LINE_START, '\n');
+    }
+    for (const node of starts) {
+        const part = edgeTextPart(node, 'start');
+        part.value = part.value.replace(LINE_END, '');
+    }
+}
+
+function checkSlotAttributes(slots, fail) {
+    for (const slot of slots) {
+        if (slot.attrs.length > 0) {
+            fail(slot, '`<slot>`-এ অ্যাট্রিবিউট চলে না।', 'নামযুক্ত স্লট নেই; একটা ফাইলে শুধু একটা `<slot />` থাকে।');
+        }
+    }
+}
+
+function checkComponentSlot(blocks, fail) {
+    const slots = blocks.template ? findSlots(blocks.template.children) : [];
+    checkSlotAttributes(slots, fail);
+    if (slots.length > 1) {
+        fail(slots[1], 'কম্পোনেন্টে একটার বেশি `<slot>` আছে।', `একটা কম্পোনেন্টে একটাই \`<slot />\` থাকে। প্রথমটা আছে লাইন ${slots[0].line}-এ।`);
+    }
+    blocks.hasSlot = slots.length === 1;
+}
+
 function checkLayoutSlot(blocks, fail) {
     const slots = blocks.template ? findSlots(blocks.template.children) : [];
+    checkSlotAttributes(slots, fail);
     if (slots.length === 0) {
         fail(
             blocks.template ?? { line: 1, column: 1 },
@@ -97,6 +173,9 @@ function parseSfc(source, file, kind) {
     if (blocks.template) checkNoDocumentTags(blocks.template.children, fail);
     if (blocks.head) checkNoDocumentTags(blocks.head.children, fail);
     if (kind === 'layout') checkLayoutSlot(blocks, fail);
+    if (kind === 'component') checkComponentSlot(blocks, fail);
+    if (blocks.template) tidyWhitespace(blocks.template.children);
+    if (blocks.head) tidyWhitespace(blocks.head.children);
 
     return blocks;
 }

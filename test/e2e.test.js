@@ -51,6 +51,12 @@ test('example/ বিল্ড হয়ে dist/index.html তৈরি হয�
     assert.doesNotMatch(html, /অনেক কিছু|কিছুই লাগে না|<template/);
     assert.match(html, /<details open>/);
     assert.match(html, /<button aria-pressed="false">চাপো<\/button>/);
+    assert.match(html, /<article class="card post-card">\s*<h3><a href="\/blog\/hello-world\/">হ্যালো ওয়ার্ল্ড<\/a><\/h3>\s*<time>2026-01-10<\/time>/);
+    assert.match(html, /<ul class="tags">\s*<li>intro<\/li><li>news<\/li>\s*<\/ul>/);
+    assert.match(html, /<a href="\/blog\/second-post\/">দ্বিতীয় লেখা<\/a>/);
+    assert.equal((html.match(/<ul class="tags">/g) ?? []).length, 1);
+    assert.match(html, /<article class="card ">\s*<h3>ফলব্যাক কনটেন্ট<\/h3>\s*<p>এখানে এখনো কিছু লেখা হয়নি।<\/p>/);
+    assert.doesNotMatch(html, /<Card|<Blog\.PostCard|<slot/);
     assert.doesNotMatch(result.stderr, /⚠/);
     assert.ok(!fs.existsSync(path.join(dir, '.alo', 'build')), 'অস্থায়ী ফোল্ডার থেকে যাওয়া উচিত নয়');
 });

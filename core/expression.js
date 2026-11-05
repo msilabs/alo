@@ -26,6 +26,25 @@ function compileExpression(code, names, location) {
     return fn;
 }
 
+function escapeRegExp(text) {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// For "Cannot read properties of undefined (reading 'slug')", finds which chain such as
+// `post` or `data.blog` was empty by re-evaluating each candidate in front of `.slug`.
+function findEmptyOwner(code, property, scope, names) {
+    const pattern = new RegExp(`([A-Za-z_$][\\w$]*(?:\\??\\.[A-Za-z_$][\\w$]*)*)\\s*\\??\\.\\s*${escapeRegExp(property)}\\b`, 'g');
+    for (const match of code.matchAll(pattern)) {
+        try {
+            const value = new Function(...names, `"use strict";\nreturn (${match[1]}\n);`)(...names.map((name) => scope[name]));
+            if (value === undefined || value === null) return match[1];
+        } catch {
+            // Not a readable chain on its own; try the next candidate.
+        }
+    }
+    return null;
+}
+
 // location: { file, line, column, source } — used only for error messages.
 function evaluate(code, scope, location) {
     const names = Object.keys(scope);
@@ -48,6 +67,19 @@ function evaluate(code, scope, location) {
                 ...location,
                 message: `\`${missing[1]}\` নামে কোনো ভেরিয়েবল নেই।`,
                 hint: (close ? `তুমি কি \`${close}\` বোঝাতে চেয়েছিলে? ` : '') + `এখানে আছে: ${available}।`,
+            });
+        }
+
+        const unreadable = err instanceof TypeError && /^Cannot read properties of (undefined|null) \(reading '(.+)'\)$/.exec(err.message);
+        if (unreadable) {
+            const [, empty, property] = unreadable;
+            const owner = findEmptyOwner(code, property, scope, names);
+            throw new AloError({
+                ...location,
+                message: owner
+                    ? `\`${owner}\` হলো \`${empty}\`, তাই \`.${property}\` পড়া যায় না।`
+                    : `\`${empty}\` থেকে \`.${property}\` পড়া যায় না।`,
+                hint: `মান না-ও থাকতে পারলে \`?.\` লেখো, যেমন \`${owner ?? 'x'}?.${property}\`। কম্পোনেন্টে হলে প্রপটা পাঠানো হয়েছে কিনা দেখো।`,
             });
         }
 

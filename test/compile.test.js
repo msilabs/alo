@@ -113,7 +113,10 @@ test('অজানা ভেরিয়েবলে লাইন, কলাম 
 
 test('ভুল এক্সপ্রেশন আর রানটাইম এরর বাংলায়', () => {
     assert.match(compileError({ 'pages/page.alo': '<template>{{ a b }}</template>' }).message, /বোঝা যাচ্ছে না/);
-    const runtime = compileError({ 'pages/page.alo': '<template>{{ data.missing.title }}</template>' });
+    const missing = compileError({ 'pages/page.alo': '<template>{{ data.missing.title }}</template>' });
+    assert.equal(missing.message, '`data.missing` হলো `undefined`, তাই `.title` পড়া যায় না।');
+    assert.match(missing.hint, /`data\.missing\?\.title`/);
+    const runtime = compileError({ 'pages/page.alo': '<template>{{ (1).toFixed(200) }}</template>' });
     assert.match(runtime.message, /এক্সপ্রেশন চালাতে গিয়ে এরর/);
 });
 

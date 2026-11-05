@@ -42,6 +42,13 @@
             <p>কিছুই লাগে না।</p>
         </template>
 
+        <h2>সাম্প্রতিক লেখা</h2>
+        <template for="post in [{ slug: 'hello-world', title: 'হ্যালো ওয়ার্ল্ড', date: '2026-01-10', tags: ['intro', 'news'] }, { slug: 'second-post', title: 'দ্বিতীয় লেখা', date: '2026-02-01' }]">
+            <Blog.PostCard post="{{ post }}" />
+        </template>
+
+        <Card title="ফলব্যাক কনটেন্ট" />
+
         <details open="{{ true }}">
             <summary>boolean অ্যাট্রিবিউট</summary>
             <button disabled="{{ 2 > 3 }}" aria-pressed="{{ false }}" title="{{ null }}">চাপো</button>

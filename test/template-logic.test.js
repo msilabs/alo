@@ -126,6 +126,33 @@ test('<head>-এও template লজিক চলে', () => {
     assert.doesNotMatch(head, /name="x"/);
 });
 
+test('নিজের লাইনে একা থাকা লজিক-template লাইনসহ বাদ যায়, ফাঁকা লাইন থাকে না', () => {
+    const snippet = [
+        '',
+        '<ul>',
+        '    <template for="x in [1, 2]">',
+        '        <li>{{ x }}</li>',
+        '    </template>',
+        '</ul>',
+        '<template if="false">',
+        '    <p>না</p>',
+        '</template>',
+        '<template else>',
+        '    <template if="true">',
+        '        <p>হ্যাঁ</p>',
+        '    </template>',
+        '</template>',
+        '<footer></footer>',
+        '',
+    ].join('\n');
+    assert.equal(renderBody(snippet).body, ['<ul>', '        <li>1</li>', '        <li>2</li>', '</ul>', '        <p>হ্যাঁ</p>', '<footer></footer>'].join('\n'));
+});
+
+test('এক লাইনে লেখা লজিক-template আর <pre>-এর ভেতরের হোয়াইটস্পেস বদলায় না', () => {
+    assert.equal(renderBody('<p>\n  <template for="x in [1, 2]"><b>{{ x }}</b></template>\n</p>').body, '<p>\n  <b>1</b><b>2</b>\n</p>');
+    assert.equal(renderBody('<pre>\n<template if="true">\n  কোড\n</template>\n</pre>').body, '<pre>\n\n  কোড\n\n</pre>');
+});
+
 test('লুপ আর শর্তের ভেতরের এররে সঠিক লাইন', () => {
     const err = renderError(`<template for="x in [1]">\n  <template if="x">\n    {{ nope }}\n  </template>\n</template>`);
     assert.equal(err.line, 3);

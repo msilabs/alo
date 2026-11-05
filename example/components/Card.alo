@@ -1,0 +1,10 @@
+<template>
+    <article class="card {{ props.class }}">
+        <template if="title">
+            <h3>{{ title }}</h3>
+        </template>
+        <slot>
+            <p>এখানে এখনো কিছু লেখা হয়নি।</p>
+        </slot>
+    </article>
+</template>

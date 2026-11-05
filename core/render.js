@@ -1,10 +1,21 @@
 'use strict';
 
-const { AloError } = require('./errors.js');
+const { AloError, suggest } = require('./errors.js');
 const { evaluate } = require('./expression.js');
-const { VOID_ELEMENTS } = require('./html-tags.js');
-const { isStatic, isWholeExpression, wholeValueOutcome } = require('./attributes.js');
+const { VOID_ELEMENTS, HTML_TAGS } = require('./html-tags.js');
+const { isStatic, isWholeExpression, wholeValueOutcome, decodeEntities, propName } = require('./attributes.js');
 const { LOGIC_ATTRIBUTES, isLogicTemplate } = require('./sfc.js');
+const { expectedPath } = require('./components.js');
+
+const RESERVED_PROPS = ['data', 'route', 'base', 'props', 'item'];
+const UNCHECKED_PROPS = ['class', 'id'];
+const JS_RESERVED = new Set(
+    (
+        'break case catch class const continue debugger default delete do else enum export extends false finally for ' +
+        'function if implements import in instanceof interface let new null package private protected public return ' +
+        'static super switch this throw true try typeof var void while with yield await arguments eval undefined'
+    ).split(' '),
+);
 
 const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 const FOR_PATTERN = /^\s*(?:([A-Za-z_$][\w$]*)|\(\s*([A-Za-z_$][\w$]*)\s*,\s*([A-Za-z_$][\w$]*)\s*\))\s+in\s+([\s\S]+)$/;
@@ -110,15 +121,144 @@ function checkElementLogic(node, ctx) {
     }
 }
 
+function isIdentifier(name) {
+    return /^[A-Za-z_$][\w$]*$/.test(name) && !JS_RESERVED.has(name);
+}
+
+function hasContent(nodes) {
+    return nodes.some((node) => !isSkippable(node));
+}
+
+function failUnknownComponent(node, ctx) {
+    const { components } = ctx.project;
+    const close = suggest(node.name, [...components.keys()]);
+    const lower = node.name.toLowerCase();
+    const hints = [];
+    if (HTML_TAGS.has(lower)) hints.push(`HTML ট্যাগ চাইলে ছোট হাতে \`<${lower}>\` লেখো।`);
+    if (close) hints.push(`তুমি কি \`<${close}>\` বোঝাতে চেয়েছিলে? (${components.get(close).file})`);
+    if (hints.length === 0) hints.push(`কম্পোনেন্টটা বানাও: \`${expectedPath(node.name)}\``);
+    fail(ctx, node, `\`<${node.name}>\` কম্পোনেন্ট পাওয়া যায়নি।`, hints.join('\n'));
+}
+
+// Whole-value `{{ }}` passes the real value; everything else becomes a plain (unescaped) string.
+function propValue(attr, ctx) {
+    if (attr.value === null) return true;
+    if (isStatic(attr)) return decodeEntities(attr.value);
+
+    const raw = attr.parts.find((part) => part.type === 'expr' && part.raw);
+    if (raw) fail(ctx, raw, 'অ্যাট্রিবিউটে `{{{ }}}` চলে না।', 'প্রপে `{{ }}` লেখো; পুরো মান `{{ }}` হলে আসল মানটাই যায়।');
+    if (isWholeExpression(attr)) return evaluatePart(attr.parts[0], ctx);
+
+    let out = '';
+    for (const part of attr.parts) {
+        out += part.type === 'text' ? decodeEntities(part.value) : stringify(evaluatePart(part, ctx), part, ctx);
+    }
+    return out;
+}
+
+function checkPropUsage(node, entry, sfc, ctx) {
+    const usage = ctx.project.usage(sfc);
+    if (usage.dynamic) return;
+
+    const known = [...usage.names].filter((name) => isIdentifier(name) && !RESERVED_PROPS.includes(name));
+    for (const attr of node.attrs) {
+        const name = propName(attr.name);
+        if (UNCHECKED_PROPS.includes(name) || usage.names.has(name)) continue;
+        const close = suggest(name, known);
+        ctx.warn({
+            ...location(ctx, attr),
+            message: `\`<${node.name}>\`-এ \`${name}\` কোথাও ব্যবহার হয়নি।`,
+            hint: close
+                ? `তুমি কি \`${close}\` বোঝাতে চেয়েছিলে?`
+                : `${entry.file}-এ \`{{ ${isIdentifier(name) ? name : `props['${name}']`} }}\` লিখে ব্যবহার করো, নয়তো প্রপটা সরাও।`,
+        });
+    }
+}
+
+function renderComponent(node, ctx) {
+    const entry = ctx.project.components.get(node.name);
+    if (!entry) failUnknownComponent(node, ctx);
+
+    if (ctx.stack.includes(node.name)) {
+        const chain = [...ctx.stack.slice(ctx.stack.indexOf(node.name)), node.name].map((name) => `<${name}>`).join(' → ');
+        fail(ctx, node, `কম্পোনেন্টগুলো একে অপরকে ঘুরে ঘুরে ডাকছে: ${chain}`, 'চেইনের কোনো একটা কম্পোনেন্ট থেকে ডাকটা সরাও।');
+    }
+
+    const sfc = ctx.project.loadComponent(entry);
+    const props = {};
+    for (const attr of node.attrs) {
+        const name = propName(attr.name);
+        if (RESERVED_PROPS.includes(name)) {
+            fail(ctx, attr, `\`${attr.name}\` নামে প্রপ পাঠানো যায় না।`, '`data`, `route`, `base`, `props` আর `item` সংরক্ষিত নাম। অন্য নাম দাও, যেমন `post="{{ item }}"`।');
+        }
+        props[name] = propValue(attr, ctx);
+    }
+    checkPropUsage(node, entry, sfc, ctx);
+
+    const content = hasContent(node.children);
+    if (content && !sfc.hasSlot) {
+        ctx.warn({
+            ...location(ctx, node),
+            message: `\`<${node.name}>\`-এ \`<slot />\` নেই, তাই ভেতরের কনটেন্ট দেখানো হবে না।`,
+            hint: `${entry.file}-এ কনটেন্ট যেখানে বসবে সেখানে \`<slot />\` লেখো।`,
+        });
+    }
+
+    const scope = { data: ctx.scope.data, route: ctx.scope.route, base: ctx.scope.base };
+    for (const [name, value] of Object.entries(props)) {
+        if (isIdentifier(name)) scope[name] = value;
+    }
+    // Props are never declared, so any name the template reads that is not a global counts as a prop
+    // that was not passed: it is `undefined`, which lets `{{ title ?? 'শিরোনাম নেই' }}` work.
+    for (const name of ctx.project.usage(sfc).names) {
+        if (isIdentifier(name) && !RESERVED_PROPS.includes(name) && !(name in scope) && !(name in globalThis)) {
+            scope[name] = undefined;
+        }
+    }
+    scope.props = Object.freeze(props);
+
+    if (!sfc.template) return '';
+    const childCtx = {
+        ...ctx,
+        file: sfc.file,
+        source: sfc.source,
+        scope,
+        slot: content ? { nodes: node.children, ctx } : null,
+        stack: [...ctx.stack, node.name],
+        inPlainTemplate: false,
+    };
+
+    try {
+        return renderNodes(sfc.template.children, childCtx).trim();
+    } catch (err) {
+        if (err instanceof AloError && err.file === sfc.file && !err.calledFrom) {
+            err.calledFrom = { file: ctx.file, line: node.line, column: node.column };
+        }
+        throw err;
+    }
+}
+
+// Slot content renders in the caller's scope; the fallback renders in the component's own.
+// Both are trimmed so the content sits exactly where the <slot> tag was.
+function renderSlot(node, ctx) {
+    if (ctx.slot) return renderNodes(ctx.slot.nodes, ctx.slot.ctx).trim();
+    return renderNodes(node.children, ctx).trim();
+}
+
 function renderElement(node, ctx) {
     checkElementLogic(node, ctx);
+    if (isComponentName(node.name)) return renderComponent(node, ctx);
+    if (node.name === 'slot' && ctx.slot !== undefined && !ctx.inPlainTemplate) return renderSlot(node, ctx);
 
     let attrs = '';
     for (const attr of node.attrs) attrs += renderAttribute(attr, ctx);
 
     const open = `<${node.name}${attrs}>`;
     if (VOID_ELEMENTS.has(node.name)) return open;
-    return open + renderNodes(node.children, ctx) + `</${node.name}>`;
+
+    // Inside a plain HTML <template>, `<slot>` belongs to Web Components and is left alone.
+    const childCtx = node.name === 'template' && !ctx.inPlainTemplate ? { ...ctx, inPlainTemplate: true } : ctx;
+    return open + renderNodes(node.children, childCtx) + `</${node.name}>`;
 }
 
 function renderNode(node, ctx) {
@@ -218,7 +358,8 @@ function renderIfChain(nodes, start, ctx) {
     return { html: '', next };
 }
 
-// ctx: { file, source, scope, warn(diagnostic) }
+// ctx: { file, source, scope, warn(diagnostic), project, slot, stack, inPlainTemplate }
+//   slot: undefined on pages, null in a component called without content, else { nodes, ctx }
 function renderNodes(nodes, ctx) {
     let out = '';
     for (let i = 0; i < nodes.length; i++) {

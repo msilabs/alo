@@ -85,5 +85,5 @@ test('লুপের ভেতরের একই সতর্কবার্�
 test('এক্সপ্রেশনের এররে অবস্থান থাকে', () => {
     const err = renderError('\n  <p>{{ data.x.y }}</p>');
     assert.deepEqual([err.line, err.column], [2, 6]);
-    assert.match(err.message, /এক্সপ্রেশন চালাতে গিয়ে এরর/);
+    assert.equal(err.message, '`data.x` হলো `undefined`, তাই `.y` পড়া যায় না।');
 });
