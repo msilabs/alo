@@ -1,0 +1,24 @@
+{
+    "name": "@msilabs/alo",
+    "version": "0.1.0",
+    "description": "Lightweight static web framework: HTML, CSS, JS with components, layouts, loops and conditions. Zero dependencies.",
+    "type": "commonjs",
+    "engines": {
+        "node": ">=22"
+    },
+    "bin": {
+        "alo": "bin/alo.js"
+    },
+    "exports": {
+        "./cli": "./cli/index.js"
+    },
+    "files": [
+        "bin",
+        "cli",
+        "core",
+        "templates"
+    ],
+    "scripts": {
+        "test": "node --test \"test/**/*.test.js\""
+    }
+}
