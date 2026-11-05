@@ -987,7 +987,7 @@ alo/
 ├── example/
 ├── docs/
 │   └── SPEC.md               ← এই স্পেক
-├── .github/workflows/ci.yml  ← Node 22, 24, 26 × Linux, macOS, Windows
+├── .github/workflows/ci.yml  ← Node 22, 24, 26 × Linux, Windows; macOS-এ Node 24
 ├── README.md                 ← বাংলায়
 └── DECISIONS.md
 ```
@@ -1106,7 +1106,7 @@ alo/
 
 ## ২২. টেস্ট
 
-`node --test` দিয়ে, কোনো টেস্ট লাইব্রেরি ছাড়া। CI-তে Node 22, 24, 26 × Linux, macOS, Windows। ন্যূনতম যা টেস্ট হবে:
+`node --test` দিয়ে, কোনো টেস্ট লাইব্রেরি ছাড়া। CI-তে Node 22, 24, 26 × Linux, Windows, আর macOS-এ Node 24 (`DECISIONS.md` #২৬)। ন্যূনতম যা টেস্ট হবে:
 
 - **html-parser:** কেস অক্ষুণ্ণ থাকা, Dot ট্যাগ নাম, void আর self-closing, raw text, অ্যাট্রিবিউটের চার ধরন, `:click`/`@click`/`x-data` হুবহু থাকা, কমেন্ট, লাইন নম্বর, বন্ধ না করা ট্যাগ, `{{ a > b }}`, কোটের ভেতরে কোটওয়ালা এক্সপ্রেশন, স্ট্রিংয়ের ভেতরে `}}`, বন্ধ না করা `{{`।
 - **sfc:** ব্লক ভাগ, ডুপ্লিকেট এরর, কম্পোনেন্টে `<head>` এরর, লেআউটে `<slot />`-এর সংখ্যা, টপ-লেভেল ব্লকে অ্যাট্রিবিউট থাকলে এরর।
@@ -1178,7 +1178,7 @@ alo/
 ## ২৪. গ্রহণযোগ্যতার মানদণ্ড (Definition of Done)
 
 - `npm ls`-এ কোনো dependency নেই। ইউজার প্রজেক্টে কোনো কনফিগ ফাইল লাগে না।
-- `node --test`-এর সব টেস্ট পাস করে, Node 22, 24 আর 26-এ, Linux, macOS আর Windows-এ।
+- `node --test`-এর সব টেস্ট পাস করে, Node 22, 24 আর 26-এ Linux আর Windows-এ, আর Node 24-এ macOS-এ।
 - উদাহরণ সাইটের কোনো `.alo` ফাইলে `import`, `<link rel="stylesheet">` বা লোকাল `<script src>` নেই, তবুও সব কাজ করে।
 - উদাহরণ সাইটে সব লজিক `<template>` ট্যাগে।
 - `example/`-এ `node alo build` এরর ছাড়া চলে, আর `dist/` যেকোনো সাধারণ স্ট্যাটিক সার্ভারে ঠিকমতো কাজ করে: সব পেইজ, স্টাইল, মেনু, FAQ ক্লিক, Counter আর Markdown ব্লগ পোস্ট। খসড়া পোস্ট `dist/`-এ নেই।
