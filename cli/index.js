@@ -120,7 +120,12 @@ function validateFlags(command, flags) {
     }
 }
 
-async function runCommand(command) {
+async function runCommand(command, args, flags) {
+    if (command === 'build') {
+        const { build } = require('./build.js');
+        await build({ root: process.cwd(), base: flags.base ?? '/' });
+        return;
+    }
     throw new AloError({ message: `\`alo ${command}\` কমান্ড এখনো তৈরি হয়নি।` });
 }
 
