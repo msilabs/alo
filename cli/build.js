@@ -22,37 +22,58 @@ function createFsReader(root) {
     };
 }
 
-function writeFiles(dir, files) {
+// Writes generated files and copies public/ files byte for byte into `dir`.
+function writeOutput(root, dir, { files, copies }) {
     for (const file of files) {
         const target = path.join(dir, ...file.path.split('/'));
         fs.mkdirSync(path.dirname(target), { recursive: true });
         fs.writeFileSync(target, file.contents);
     }
+    for (const copy of copies) {
+        const target = path.join(dir, ...copy.to.split('/'));
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.copyFileSync(path.join(root, ...copy.from.split('/')), target);
+    }
 }
 
-async function build({ root, base }) {
-    const started = performance.now();
-
-    let result;
+function compileProject(root, mode, base) {
     try {
-        result = compile({ reader: createFsReader(root), mode: 'build', base });
+        return compile({ reader: createFsReader(root), mode, base });
     } catch (err) {
         for (const warning of err.warnings ?? []) log.warn(warning);
         throw err;
     }
+}
+
+function summary(result, ms) {
+    const pages = result.files.filter((file) => file.path.endsWith('.html')).length;
+    const assets = result.files.filter((file) => file.path.startsWith('assets/')).length;
+    const parts = [`${pages}টা পেইজ`, `${assets}টা asset`];
+    if (result.copies.length > 0) parts.push(`public/ থেকে ${result.copies.length}টা ফাইল`);
+    return `বিল্ড শেষ: ${parts.join(', ')}, ${ms}ms → dist/`;
+}
+
+// Builds into .alo/build first and only then replaces dist/, so a failed build leaves the old dist/ intact.
+async function build({ root, base }) {
+    const started = performance.now();
+    const result = compileProject(root, 'build', base);
     for (const warning of result.warnings) log.warn(warning);
 
-    // Build into a temporary folder first so a failed build never leaves a half-written dist/.
     const temp = path.join(root, '.alo', 'build');
     const dist = path.join(root, 'dist');
     fs.rmSync(temp, { recursive: true, force: true });
-    writeFiles(temp, result.files);
-    fs.rmSync(dist, { recursive: true, force: true });
-    fs.renameSync(temp, dist);
+    try {
+        writeOutput(root, temp, result);
+        fs.rmSync(dist, { recursive: true, force: true });
+        fs.renameSync(temp, dist);
+    } catch (err) {
+        fs.rmSync(temp, { recursive: true, force: true });
+        throw err;
+    }
 
-    const pages = result.files.filter((file) => file.path.endsWith('.html')).length;
-    const ms = Math.round(performance.now() - started);
-    log.success(`বিল্ড শেষ: ${pages}টা পেইজ, ${ms}ms → dist/`);
+    log.success(summary(result, Math.round(performance.now() - started)));
+    if (result.unused.length > 0) log.dim(`  অব্যবহৃত কম্পোনেন্ট: ${result.unused.map((name) => `<${name}>`).join(', ')}`);
+    if (result.warnings.length > 0) log.dim(`  ${result.warnings.length}টা সতর্কবার্তা, উপরে দেখো।`);
 }
 
-module.exports = { build, createFsReader };
+module.exports = { build, createFsReader, compileProject, writeOutput };

@@ -135,9 +135,31 @@ function checkSiteUrl(site) {
     }
 }
 
+// OS clutter files are skipped; everything else in public/ is copied, dotfiles like .well-known/ too.
+const PUBLIC_JUNK = new Set(['.DS_Store', 'Thumbs.db', 'desktop.ini']);
+
+// Lists public/ files as copy instructions: { from: 'public/images/a.png', to: 'images/a.png' }.
+// Files are copied byte for byte by the caller, so core never reads or writes them.
+function scanPublic(reader) {
+    const copies = [];
+    if (!reader.exists('public')) return copies;
+
+    function walk(dir) {
+        for (const entry of reader.list(dir)) {
+            if (PUBLIC_JUNK.has(entry.name)) continue;
+            const from = `${dir}/${entry.name}`;
+            if (entry.isDirectory) walk(from);
+            else copies.push({ from, to: from.slice('public/'.length) });
+        }
+    }
+
+    walk('public');
+    return copies.sort((a, b) => (a.to < b.to ? -1 : a.to > b.to ? 1 : 0));
+}
+
 // A component counts as used if any page or layout reaches it, even inside an `if` branch that is false right now.
 // Returns the used components' parsed files and warns about the rest.
-function findUsedComponents(project, roots, warn) {
+function findUsedComponents(project, roots, warn, unused) {
     const used = new Set();
     const queue = [...roots];
     while (queue.length > 0) {
@@ -156,6 +178,7 @@ function findUsedComponents(project, roots, warn) {
             warn({ file: entry.file, message: `\`<${entry.name}>\` কোথাও ব্যবহার হয়নি।`, hint: 'দরকার না থাকলে ফাইলটা মুছে ফেলো।' });
         }
     }
+    unused.push(...[...project.components.values()].filter((entry) => !used.has(entry.name)).map((entry) => entry.name));
     return [...used].map((name) => {
         const sfc = project.loadComponent(project.components.get(name));
         sfc.componentName = name;
@@ -169,6 +192,8 @@ function compile({ reader, mode = 'build', base: rawBase = '/' }) {
     const warnings = [];
     const seen = new Set();
     const files = [];
+    const unused = [];
+    let copies = [];
     const base = normalizeBase(rawBase);
 
     // Adds a generated asset and returns its URL. In build mode the name carries the first
@@ -203,7 +228,7 @@ function compile({ reader, mode = 'build', base: rawBase = '/' }) {
             roots.add(project.loadSfc(route.file, route === notFound ? 'not-found' : 'page'));
             for (const layout of route.layouts) roots.add(project.loadSfc(layout, 'layout'));
         }
-        const components = findUsedComponents(project, roots, warn);
+        const components = findUsedComponents(project, roots, warn, unused);
         const globals = scanGlobal(reader, warn);
         let css = rewriteCssUrls(buildStyle({ reader, globals: globals.css, sfcs: [...roots, ...components] }), base);
         if (css && mode === 'build') css = minifyCss(css) + '\n';
@@ -270,6 +295,18 @@ function compile({ reader, mode = 'build', base: rawBase = '/' }) {
                 files.push({ path: 'robots.txt', contents: buildRobots(siteUrl, base) });
             }
         }
+
+        copies = scanPublic(reader);
+        const generated = new Set(files.map((file) => file.path));
+        for (const copy of copies) {
+            if (generated.has(copy.to)) {
+                throw new AloError({
+                    file: copy.from,
+                    message: `\`${copy.from}\` আর Alo-র তৈরি করা \`dist/${copy.to}\` একই জায়গায় যাচ্ছে।`,
+                    hint: 'public/-এর ফাইলটার নাম বা ফোল্ডার বদলাও।',
+                });
+            }
+        }
     } catch (err) {
         if (err instanceof AloError) {
             if (err.file && err.source === undefined && reader.exists(err.file)) err.source = reader.read(err.file);
@@ -278,7 +315,7 @@ function compile({ reader, mode = 'build', base: rawBase = '/' }) {
         throw err;
     }
 
-    return { files, warnings };
+    return { files, copies, warnings, unused };
 }
 
 module.exports = { compile };

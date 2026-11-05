@@ -209,6 +209,11 @@ test('example/ --base /repo/ দিয়ে: সব লিংক, ছবি, CS
     assert.match(read('blog/hello-world/index.html'), /<a href="\/repo\/about\/">আমাদের কথা<\/a>/);
     assert.match(home, /aria-current="page"/, 'route.path-এ base থাকে না, তাই active লিংক মেলে');
     assert.match(read('sitemap.xml'), /<loc>https:\/\/example\.com\/repo\/about\/<\/loc>/);
+    const about = read('about/index.html');
+    assert.match(about, /<img src="\/repo\/images\/logo\.svg"/);
+    assert.match(about, /<link rel="icon" href="\/repo\/favicon\.svg"/);
+    assert.ok(fs.existsSync(path.join(dir, 'dist', 'images', 'logo.svg')));
+    assert.ok(fs.existsSync(path.join(dir, 'dist', 'favicon.svg')));
     assert.match(read('robots.txt'), /Sitemap: https:\/\/example\.com\/repo\/sitemap\.xml/);
 });
 
