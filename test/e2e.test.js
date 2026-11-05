@@ -26,12 +26,12 @@ function alo(cwd, args) {
     return { code: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
-test('example/ বিল্ড হয়ে dist/index.html তৈরি হয়', (t) => {
+test('example/ বিল্ড হয়ে হোমপেইজ তৈরি হয়', (t) => {
     const dir = tempProject(t, EXAMPLE);
     const result = alo(dir, ['build']);
 
     assert.equal(result.code, 0, result.stderr);
-    assert.match(result.stdout, /বিল্ড শেষ: 1টা পেইজ/);
+    assert.match(result.stdout, /বিল্ড শেষ: 5টা পেইজ/);
 
     const html = fs.readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8');
     assert.match(html, /^<!DOCTYPE html>\n<html lang="bn">/);
@@ -59,6 +59,37 @@ test('example/ বিল্ড হয়ে dist/index.html তৈরি হয�
     assert.doesNotMatch(html, /<Card|<Blog\.PostCard|<slot/);
     assert.doesNotMatch(result.stderr, /⚠/);
     assert.ok(!fs.existsSync(path.join(dir, '.alo', 'build')), 'অস্থায়ী ফোল্ডার থেকে যাওয়া উচিত নয়');
+});
+
+test('example/-এর রাউট, রাউট গ্রুপ, লেআউট আর 404', (t) => {
+    const dir = tempProject(t, EXAMPLE);
+    assert.equal(alo(dir, ['build']).code, 0);
+    const read = (file) => fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8');
+
+    const home = read('index.html');
+    assert.match(home, /<header class="site-header">/);
+    assert.match(home, /<a href="\/" aria-current="page">হোম<\/a>/);
+    assert.match(home, /<a href="\/about\/">আমাদের কথা<\/a>/);
+    assert.match(home, /<main>\s*<!-- এই কমেন্ট/);
+    assert.match(home, /<footer class="site-footer">/);
+    assert.match(home, /<meta name="description" content="Alo দিয়ে বানানো উদাহরণ সাইট">/);
+
+    const about = read('about/index.html');
+    assert.match(about, /<title>আমাদের কথা \| আলো<\/title>/);
+    assert.match(about, /<a href="\/about\/" aria-current="page">আমাদের কথা<\/a>/);
+    assert.match(about, /<meta name="description" content="Alo কেন বানানো হলো">/);
+    assert.doesNotMatch(about, /উদাহরণ সাইট"/);
+
+    const blog = read('blog/index.html');
+    assert.match(blog, /<main>\s*<section class="blog">\s*<p class="blog-label">ব্লগ<\/p>\s*<h1>সব লেখা<\/h1>/);
+
+    const launch = read('launch/index.html');
+    assert.doesNotMatch(launch, /site-header|site-footer/);
+    assert.match(launch, /<meta name="robots" content="noindex">/);
+
+    const notFound = read('404.html');
+    assert.match(notFound, /<h1>পেইজটা পাওয়া যায়নি<\/h1>/);
+    assert.doesNotMatch(notFound, /site-header/);
 });
 
 test('এরর হলে কোড ফ্রেমসহ বাংলা মেসেজ, exit 1, আর আগের dist/ অক্ষত', (t) => {

@@ -133,8 +133,9 @@ test('pages/ না থাকলে স্পেকের এরর', () => {
 test('রাউটগুলো কোড-পয়েন্ট ক্রমে আসে', () => {
     const result = build({
         'pages/b/page.alo': '',
+        'pages/a-b/page.alo': '',
         'pages/a/page.alo': '',
-        'pages/B/page.alo': '',
+        'pages/1/page.alo': '',
     });
-    assert.deepEqual(result.files.map((f) => f.path), ['B/index.html', 'a/index.html', 'b/index.html']);
+    assert.deepEqual(result.files.map((f) => f.path), ['1/index.html', 'a/index.html', 'a-b/index.html', 'b/index.html']);
 });

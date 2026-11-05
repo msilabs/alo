@@ -1,0 +1,5 @@
+<template>
+    <footer class="site-footer">
+        <p>Alo দিয়ে বানানো। HTML, CSS আর JS ছাড়া আর কিছু লাগেনি।</p>
+    </footer>
+</template>

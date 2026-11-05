@@ -1,0 +1,9 @@
+<head>
+    <title>আমাদের কথা | আলো</title>
+    <meta name="description" content="Alo কেন বানানো হলো">
+</head>
+
+<template>
+    <h1>আমাদের কথা</h1>
+    <p>ছোট সাইট বানাতে বড় টুল লাগার কথা নয়। Alo শুধু HTML, CSS আর JS জানলেই চলে।</p>
+</template>

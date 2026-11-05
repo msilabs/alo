@@ -4,19 +4,11 @@ const { AloError } = require('./errors.js');
 const { parseSfc } = require('./sfc.js');
 const { renderNodes, escapeHtml } = require('./render.js');
 const { findRoutes } = require('./routes.js');
+const { mergeHeads } = require('./head.js');
 const { scanComponents, propUsage, referencedComponents } = require('./components.js');
 
-function renderDocument({ lang, head, title, body }) {
-    const lines = [
-        '<!DOCTYPE html>',
-        `<html lang="${escapeHtml(lang)}">`,
-        '<head>',
-        '<meta charset="UTF-8">',
-        '<meta name="viewport" content="width=device-width, initial-scale=1">',
-    ];
-    if (title !== null) lines.push(`<title>${escapeHtml(title)}</title>`);
-    if (head) lines.push(head);
-    lines.push('</head>', '<body>');
+function renderDocument({ lang, head, body }) {
+    const lines = ['<!DOCTYPE html>', `<html lang="${escapeHtml(lang)}">`, '<head>', ...head, '</head>', '<body>'];
     if (body) lines.push(body);
     lines.push('</body>', '</html>', '');
     return lines.join('\n');
@@ -25,36 +17,6 @@ function renderDocument({ lang, head, title, body }) {
 // Drops only the blank lines around a block, so every line keeps the same indentation.
 function trimBlock(html) {
     return html.replace(/^\s*\n/, '').trimEnd();
-}
-
-function hasTitle(headBlock) {
-    return Boolean(headBlock) && headBlock.children.some((node) => node.type === 'element' && node.name === 'title');
-}
-
-function renderPage(sfc, route, options) {
-    const data = {};
-    const scope = {
-        data,
-        route: Object.freeze({ path: route.path }),
-        base: options.base,
-    };
-    const ctx = {
-        file: sfc.file,
-        source: sfc.source,
-        scope,
-        warn: options.warn,
-        project: options.project,
-        slot: undefined,
-        stack: [],
-        inPlainTemplate: false,
-    };
-
-    return renderDocument({
-        lang: data.site?.lang ?? 'bn',
-        head: sfc.head ? trimBlock(renderNodes(sfc.head.children, ctx)) : '',
-        title: hasTitle(sfc.head) ? null : 'Alo',
-        body: sfc.template ? trimBlock(renderNodes(sfc.template.children, ctx)) : '',
-    });
 }
 
 function createProject(reader, warn) {
@@ -78,10 +40,48 @@ function createProject(reader, warn) {
     };
 }
 
-// A component counts as used if any page reaches it, even inside an `if` branch that is false right now.
-function warnUnusedComponents(project, pages, warn) {
+// Renders one route: the page, then each layout around it from the nearest outwards.
+// Heads merge in the opposite order: root layout → inner layouts → page.
+function renderRoute(route, kind, options) {
+    const { project, warn, base } = options;
+    const data = {};
+    const scope = { data, route: Object.freeze({ path: route.path }), base };
+
+    const page = project.loadSfc(route.file, kind);
+    const layouts = route.layouts.map((file) => project.loadSfc(file, 'layout'));
+
+    const context = (sfc, slot) => ({
+        file: sfc.file,
+        source: sfc.source,
+        scope,
+        warn,
+        project,
+        slot,
+        stack: [],
+        inPlainTemplate: false,
+    });
+
+    let body = page.template ? renderNodes(page.template.children, context(page, undefined)) : '';
+    for (const layout of [...layouts].reverse()) {
+        body = renderNodes(layout.template.children, context(layout, { html: body }));
+    }
+
+    const heads = [...layouts, page].map((sfc) => (sfc.head ? renderNodes(sfc.head.children, context(sfc, undefined)) : ''));
+
+    return {
+        sfcs: [...layouts, page],
+        html: renderDocument({
+            lang: data.site?.lang ?? 'bn',
+            head: mergeHeads(heads, data.site?.name ?? 'Alo'),
+            body: trimBlock(body),
+        }),
+    };
+}
+
+// A component counts as used if any page or layout reaches it, even inside an `if` branch that is false right now.
+function warnUnusedComponents(project, roots, warn) {
     const used = new Set();
-    const queue = [...pages];
+    const queue = [...roots];
     while (queue.length > 0) {
         const sfc = queue.pop();
         const nodes = [...(sfc.head?.children ?? []), ...(sfc.template?.children ?? [])];
@@ -117,13 +117,26 @@ function compile({ reader, mode = 'build', base = '/' }) {
 
     try {
         const project = createProject(reader, warn);
-        const pages = [];
-        for (const route of findRoutes(reader)) {
-            const sfc = project.loadSfc(route.file, 'page');
-            pages.push(sfc);
-            files.push({ path: route.output, contents: renderPage(sfc, route, { mode, base, warn, project }) });
+        const options = { project, warn, mode, base };
+        const { pages, notFound } = findRoutes(reader, warn);
+        const rendered = new Set();
+
+        for (const page of pages) {
+            if (page.dynamic) {
+                throw new AloError({ file: page.file, message: 'ডায়নামিক পেইজ (`[slug]`) এখনো তৈরি হয়নি।', hint: 'এটা আসবে ডেটার মাইলস্টোনে।' });
+            }
+            const { html, sfcs } = renderRoute(page, 'page', options);
+            sfcs.forEach((sfc) => rendered.add(sfc));
+            files.push({ path: page.output, contents: html });
         }
-        warnUnusedComponents(project, pages, warn);
+
+        if (notFound) {
+            const { html, sfcs } = renderRoute(notFound, 'not-found', options);
+            sfcs.forEach((sfc) => rendered.add(sfc));
+            files.push({ path: notFound.output, contents: html });
+        }
+
+        warnUnusedComponents(project, rendered, warn);
     } catch (err) {
         if (err instanceof AloError) {
             if (err.file && err.source === undefined && reader.exists(err.file)) err.source = reader.read(err.file);

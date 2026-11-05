@@ -1,0 +1,6 @@
+<template>
+    <section class="blog">
+        <p class="blog-label">ব্লগ</p>
+        <slot />
+    </section>
+</template>

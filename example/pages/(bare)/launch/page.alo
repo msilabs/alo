@@ -1,0 +1,9 @@
+<head>
+    <title>শীঘ্রই আসছে | আলো</title>
+    <meta name="robots" content="noindex">
+</head>
+
+<template>
+    <h1>শীঘ্রই আসছে</h1>
+    <p>এই পেইজে হেডার-ফুটার নেই, কারণ এটা <code>(bare)</code> গ্রুপে।</p>
+</template>

@@ -1,0 +1,11 @@
+<head>
+    <meta name="description" content="Alo দিয়ে বানানো উদাহরণ সাইট">
+</head>
+
+<template>
+    <Header />
+    <main>
+        <slot />
+    </main>
+    <Footer />
+</template>

@@ -213,6 +213,7 @@ function renderComponent(node, ctx) {
 // Slot content renders in the caller's scope; the fallback renders in the component's own.
 // Both are trimmed so the content sits exactly where the <slot> tag was.
 function renderSlot(node, ctx) {
+    if (ctx.slot && 'html' in ctx.slot) return ctx.slot.html.trim();
     if (ctx.slot) return renderNodes(ctx.slot.nodes, ctx.slot.ctx).trim();
     return renderNodes(node.children, ctx).trim();
 }
@@ -331,7 +332,8 @@ function renderIfChain(nodes, start, ctx) {
 }
 
 // ctx: { file, source, scope, warn(diagnostic), project, slot, stack, inPlainTemplate }
-//   slot: undefined on pages, null in a component called without content, else { nodes, ctx }
+//   slot: undefined on pages, null in a component called without content,
+//         { nodes, ctx } for component content, { html } for the page inside a layout
 function renderNodes(nodes, ctx) {
     let out = '';
     for (let i = 0; i < nodes.length; i++) {
