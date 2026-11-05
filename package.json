@@ -2,6 +2,22 @@
     "name": "@msilabs/alo",
     "version": "0.1.0",
     "description": "Lightweight static web framework: HTML, CSS, JS with components, layouts, loops and conditions. Zero dependencies.",
+    "keywords": [
+        "static-site-generator",
+        "ssg",
+        "html",
+        "components",
+        "bangla",
+        "zero-dependency"
+    ],
+    "homepage": "https://github.com/msilabs/alo#readme",
+    "bugs": {
+        "url": "https://github.com/msilabs/alo/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/msilabs/alo.git"
+    },
     "type": "commonjs",
     "engines": {
         "node": ">=22"

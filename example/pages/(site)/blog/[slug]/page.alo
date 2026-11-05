@@ -9,3 +9,23 @@
         {{{ item.body }}}
     </article>
 </template>
+
+<!-- Markdown-এর বডি {{{ }}} দিয়ে বসে, তাই তাতে স্কোপ অ্যাট্রিবিউট থাকে না; স্টাইল দিতে <style global> -->
+<style global>
+    .post pre {
+        overflow-x: auto;
+        padding: 1rem;
+        border-radius: 8px;
+        background: #f6f8fa;
+    }
+
+    .post table {
+        border-collapse: collapse;
+    }
+
+    .post th,
+    .post td {
+        padding: 0.25rem 0.75rem;
+        border: 1px solid #ddd;
+    }
+</style>

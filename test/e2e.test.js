@@ -217,6 +217,59 @@ test('example/ --base /repo/ দিয়ে: সব লিংক, ছবি, CS
     assert.match(read('robots.txt'), /Sitemap: https:\/\/example\.com\/repo\/sitemap\.xml/);
 });
 
+test('example/-এর .alo ফাইলে import, stylesheet লিংক বা লোকাল script src নেই; লজিক শুধু <template>-এ', () => {
+    const { parseSfc } = require('../core/sfc.js');
+    const files = [];
+    const walk = (dir) => {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                if (entry.name !== 'dist' && entry.name !== '.alo') walk(full);
+            } else if (entry.name.endsWith('.alo')) {
+                files.push(full);
+            }
+        }
+    };
+    walk(EXAMPLE);
+    assert.ok(files.length >= 15, 'উদাহরণে যথেষ্ট .alo ফাইল থাকা দরকার');
+
+    const logic = ['for', 'if', 'else-if', 'else'];
+    for (const file of files) {
+        const source = fs.readFileSync(file, 'utf8');
+        const relative = path.relative(EXAMPLE, file);
+        assert.doesNotMatch(source, /^\s*import\s/m, relative);
+        assert.doesNotMatch(source, /<link[^>]+rel=["']?stylesheet/i, relative);
+        assert.doesNotMatch(source, /<script[^>]+src=["']?\/(?!\/)/i, relative);
+
+        const sfc = parseSfc(source, relative, relative.includes('components') ? 'component' : relative.endsWith('layout.alo') ? 'layout' : 'page');
+        const visit = (nodes) => {
+            for (const node of nodes) {
+                if (node.type !== 'element') continue;
+                if (node.name !== 'template') {
+                    const misplaced = node.attrs.find((attr) => logic.includes(attr.name) && !(attr.name === 'for' && node.name === 'label'));
+                    assert.ok(!misplaced, `${relative}:${node.line} <${node.name} ${misplaced?.name}>`);
+                }
+                visit(node.children);
+            }
+        };
+        visit([...(sfc.head?.children ?? []), ...(sfc.template?.children ?? [])]);
+    }
+});
+
+test('example/-এর আউটপুটে Alpine.js-এর অ্যাট্রিবিউট অপরিবর্তিত, কোনো রিঅ্যাক্টিভ রানটাইম নেই', (t) => {
+    const dir = tempProject(t, EXAMPLE);
+    assert.equal(alo(dir, ['build']).code, 0);
+    const home = fs.readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8');
+    assert.match(home, /x-data="\{ open: false \}" @click="open = !open" :aria-expanded="open"/);
+
+    const assets = path.join(dir, 'dist', 'assets');
+    const scripts = fs.readdirSync(assets, { recursive: true }).filter((file) => String(file).endsWith('.js'));
+    for (const file of scripts) {
+        const code = fs.readFileSync(path.join(assets, String(file)), 'utf8');
+        assert.doesNotMatch(code, /new Proxy|MutationObserver|reactive|createElement\(/, String(file));
+    }
+});
+
 test('এরর হলে কোড ফ্রেমসহ বাংলা মেসেজ, exit 1, আর আগের dist/ অক্ষত', (t) => {
     const dir = tempProject(t);
     fs.mkdirSync(path.join(dir, 'pages'));
