@@ -91,5 +91,4 @@
    - কোনো ফাইল বদলালে রিলোড হয় কিনা।
    - ভুল লিখলে এরর overlay আসে কিনা।
 2. বাইরের একজন টেস্টারকে দিয়ে [TESTER-GUIDE.md](TESTER-GUIDE.md) অনুযায়ী পরীক্ষা করানো, আর যেখানে আটকেছে সেখানে README বা এরর মেসেজ ঠিক করা।
-3. `package.json`-এ লাইসেন্স ঠিক করা (এখনো নেই)।
-4. `npm publish --access public`।
+3. `npm publish --access public`।
