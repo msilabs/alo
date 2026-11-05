@@ -46,6 +46,15 @@
 
     <Card title="ফলব্যাক কনটেন্ট" />
 
+    <h2>প্রশ্ন আর উত্তর</h2>
+    <Faq question="Alo কি রিঅ্যাক্টিভ?" answer="না। লুপ আর শর্ত চলে বিল্ডের সময়, একবার; ব্রাউজারে চলে শুধু তোমার লেখা সাধারণ JS।" />
+    <Faq question="কনফিগ ফাইল লাগে?" answer="না। সব ঠিক হয় ফোল্ডার আর ফাইলের নাম থেকে।" />
+
+    <h2>কাউন্টার</h2>
+    <Counter start="{{ 5 }}" />
+
+    <p>আজকের তারিখ: <span id="today"></span></p>
+
     <details open="{{ true }}">
         <summary>boolean অ্যাট্রিবিউট</summary>
         <button disabled="{{ 2 > 3 }}" aria-pressed="{{ false }}" title="{{ null }}">চাপো</button>
@@ -55,3 +64,8 @@
         Alpine.js-এর অ্যাট্রিবিউট অপরিবর্তিত থাকে
     </button>
 </template>
+
+<script>
+    // পেইজের নিজের স্ক্রিপ্ট: এখানে $el নেই, সাধারণ DOM API চলে।
+    document.getElementById('today').textContent = new Date().toLocaleDateString('bn-BD');
+</script>

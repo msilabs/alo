@@ -1,0 +1,23 @@
+<template>
+    <div class="counter" data-start="{{ props.start ?? 0 }}">
+        <button type="button">+</button>
+        <span></span>
+    </div>
+</template>
+
+<style>
+    .counter {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+</style>
+
+<script>
+    let n = Number($el.dataset.start);
+    const span = $el.querySelector('span');
+    span.textContent = n;
+    $el.querySelector('button').addEventListener('click', () => {
+        span.textContent = ++n;
+    });
+</script>

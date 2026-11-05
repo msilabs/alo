@@ -72,7 +72,7 @@ test('example/-এর রাউট, রাউট গ্রুপ, লেআউ�
     const read = (file) => withoutScope(fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8'));
 
     const home = read('index.html');
-    assert.match(home, /<header class="site-header">/);
+    assert.match(home, /<header class="site-header"[ >]/);
     assert.match(home, /<a href="\/" aria-current="page">হোম<\/a>/);
     assert.match(home, /<a href="\/about\/">আমাদের কথা<\/a>/);
     assert.match(home, /<main>\s*<!-- এই কমেন্ট/);
@@ -120,12 +120,35 @@ test('example/-এর CSS: global/ আগে, স্কোপড স্টাই
 
     assert.ok(css.indexOf('/* global/base/01-reset.css */') < css.indexOf('/* global/theme.css */'));
     assert.ok(css.indexOf('/* global/theme.css */') < css.indexOf('/* components/'));
-    const header = /<header class="site-header" (data-a-[0-9a-f]{6})>/.exec(home);
+    const header = /<header class="site-header" (data-a-[0-9a-f]{6})[ >]/.exec(home);
     assert.ok(header, 'হেডারে স্কোপ অ্যাট্রিবিউট থাকা দরকার');
     assert.match(css, new RegExp(`\\.site-header\\[${header[1]}\\] \\{`));
     assert.match(css, new RegExp(`nav a\\[aria-current='page'\\]\\[${header[1]}\\] \\{`));
     assert.match(home, /<link rel="stylesheet" href="\/assets\/style\.css">\n<\/head>/);
     assert.match(fs.readFileSync(path.join(dir, 'dist', 'launch', 'index.html'), 'utf8'), /stylesheet/);
+});
+
+test('example/-এর JS: শুধু দরকারি স্ক্রিপ্ট, কম্পোনেন্টের রুটে data-a-c', (t) => {
+    const dir = tempProject(t, EXAMPLE);
+    assert.equal(alo(dir, ['build']).code, 0);
+    const read = (file) => fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8');
+    const scripts = (html) => [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]);
+
+    const home = read('index.html');
+    assert.deepEqual(scripts(home), ['/assets/global.js', '/assets/components.js', '/assets/pages/index.js']);
+    assert.match(home, /<div class="faq"[^>]* data-a-c="Faq">/);
+    assert.match(home, /<div class="counter" data-start="5"[^>]* data-a-c="Counter">/);
+    assert.match(home, /<header class="site-header"[^>]* data-a-c="Header">/);
+
+    assert.deepEqual(scripts(read('about/index.html')), ['/assets/global.js', '/assets/components.js']);
+    assert.deepEqual(scripts(read('launch/index.html')), ['/assets/global.js']);
+    assert.deepEqual(scripts(read('404.html')), ['/assets/global.js']);
+
+    const components = read('assets/components.js');
+    for (const name of ['Counter', 'Faq', 'Header']) assert.match(components, new RegExp(`"${name}": function \\(\\$el\\)`));
+    assert.doesNotMatch(components, /"Card"/);
+    assert.match(read('assets/global.js'), /^\/\* global\/main\.js \*\//);
+    assert.match(read('assets/pages/index.js'), /getElementById\('today'\)/);
 });
 
 test('এরর হলে কোড ফ্রেমসহ বাংলা মেসেজ, exit 1, আর আগের dist/ অক্ষত', (t) => {

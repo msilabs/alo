@@ -1,0 +1,5 @@
+// সব পেইজে চলে: বাইরের সাইটের লিংক নতুন ট্যাবে খোলে।
+document.querySelectorAll('a[href^="http"]').forEach((link) => {
+    link.target = '_blank';
+    link.rel = 'noopener';
+});

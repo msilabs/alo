@@ -202,12 +202,75 @@ function renderComponent(node, ctx) {
     };
 
     try {
-        return renderNodes(sfc.template.children, childCtx).trim();
+        const html = renderNodes(sfc.template.children, childCtx).trim();
+        if (!hasScript(sfc)) return html;
+        warnAboutScriptRoot(node, sfc, ctx);
+        ctx.scripted.add(node.name);
+        return markScriptRoot(html, node.name);
     } catch (err) {
         if (err instanceof AloError && err.file === sfc.file && !err.calledFrom) {
             err.calledFrom = { file: ctx.file, line: node.line, column: node.column };
         }
         throw err;
+    }
+}
+
+// Adds the component's name to data-a-c on the first element of its output, where its script finds `$el`.
+// A child component's root may already carry its own name, so names are joined with a space.
+function markScriptRoot(html, name) {
+    let i = 0;
+    for (;;) {
+        const lt = html.indexOf('<', i);
+        if (lt === -1) return html;
+        if (html.startsWith('<!--', lt)) {
+            const end = html.indexOf('-->', lt);
+            if (end === -1) return html;
+            i = end + 3;
+            continue;
+        }
+        if (!/[A-Za-z]/.test(html[lt + 1] ?? '')) {
+            i = lt + 1;
+            continue;
+        }
+
+        let end = lt + 1;
+        let quote = null;
+        for (; end < html.length; end++) {
+            const ch = html[end];
+            if (quote) {
+                if (ch === quote) quote = null;
+            } else if (ch === '"' || ch === "'") {
+                quote = ch;
+            } else if (ch === '>') {
+                break;
+            }
+        }
+        const tag = html.slice(lt, end);
+        const existing = / data-a-c="([^"]*)"/.exec(tag);
+        const marked = existing ? tag.replace(existing[0], ` data-a-c="${existing[1]} ${name}"`) : `${tag} data-a-c="${name}"`;
+        return html.slice(0, lt) + marked + html.slice(end);
+    }
+}
+
+function hasScript(sfc) {
+    return Boolean(sfc.script) && sfc.script.children.some((child) => child.value.trim() !== '');
+}
+
+function warnAboutScriptRoot(node, sfc, ctx) {
+    const roots = (sfc.template?.children ?? []).filter((child) => child.type === 'element');
+    const where = { file: sfc.file, line: sfc.script.line, column: sfc.script.column, source: sfc.source };
+    if (roots.length === 0) {
+        ctx.warn({
+            ...where,
+            message: `\`<${node.name}>\`-এর স্ক্রিপ্টে \`$el\` পাওয়া যাবে না, কারণ টেমপ্লেটে কোনো এলিমেন্ট নেই।`,
+            hint: 'পুরো মার্কআপ একটা এলিমেন্টে মোড়াও, যেমন `<div>…</div>`।',
+        });
+    } else if (roots.length > 1) {
+        ctx.warn({
+            ...where,
+            message: `\`<${node.name}>\`-এ একাধিক রুট এলিমেন্ট আছে, তাই \`$el\` হবে প্রথমটা।`,
+            hint: 'সব মার্কআপ একটা এলিমেন্টে মোড়ালে `$el` দিয়ে পুরোটা পাওয়া যায়।',
+        });
     }
 }
 
@@ -333,7 +396,8 @@ function renderIfChain(nodes, start, ctx) {
     return { html: '', next };
 }
 
-// ctx: { file, source, scope, warn(diagnostic), project, slot, stack, inPlainTemplate, scopeAttr }
+// ctx: { file, source, scope, warn(diagnostic), project, slot, stack, inPlainTemplate, scopeAttr, scripted }
+//   scripted: Set of component names with a <script> rendered on this page
 //   scopeAttr: `data-a-xxxxxx` added to every element when the file has a scoped <style>, else null
 //   slot: undefined on pages, null in a component called without content,
 //         { nodes, ctx } for component content, { html } for the page inside a layout

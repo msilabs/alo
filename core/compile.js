@@ -8,17 +8,28 @@ const { mergeHeads } = require('./head.js');
 const { scanComponents, propUsage, referencedComponents } = require('./components.js');
 const { createData } = require('./data.js');
 const { scopeAttribute } = require('./css-scope.js');
-const { scanGlobal, buildStyle, blockText } = require('./assets.js');
+const { scanGlobal, buildStyle, blockText, buildGlobalScript, buildComponentScript, buildPageScript } = require('./assets.js');
 
 const STYLE_PATH = 'assets/style.css';
+const GLOBAL_SCRIPT_PATH = 'assets/global.js';
+const COMPONENT_SCRIPT_PATH = 'assets/components.js';
 
-function renderDocument({ lang, head, body, stylesheet }) {
+function renderDocument({ lang, head, body, stylesheet, scripts }) {
     const lines = ['<!DOCTYPE html>', `<html lang="${escapeHtml(lang)}">`, '<head>', ...head];
     if (stylesheet) lines.push(`<link rel="stylesheet" href="${stylesheet}">`);
     lines.push('</head>', '<body>');
     if (body) lines.push(body);
+    for (const src of scripts) lines.push(`<script src="${src}"></script>`);
     lines.push('</body>', '</html>', '');
     return lines.join('\n');
+}
+
+// The name of a route's page script: / → index, /about/ → about, /docs/intro/ → docs__intro,
+// every page of pages/blog/[slug]/ → blog__slug, not-found → 404.
+function scriptName(route) {
+    if (route.output === '404.html') return '404';
+    const segments = route.dynamic ? [...route.dynamic.prefix, 'slug'] : route.path.split('/').filter(Boolean);
+    return segments.length > 0 ? segments.join('__') : 'index';
 }
 
 // Drops only the blank lines around a block, so every line keeps the same indentation.
@@ -55,7 +66,7 @@ function createProject(reader, warn) {
 // Heads merge in the opposite order: root layout → inner layouts → page.
 // `item` is set only on pages made from a `[slug]` route.
 function renderRoute(route, kind, options, item) {
-    const { project, warn, base, data, stylesheet } = options;
+    const { project, warn, base, data, stylesheet, scripts } = options;
     const scope = { data, route: Object.freeze({ path: route.path }), base };
     if (item !== undefined) scope.item = item;
 
@@ -73,7 +84,9 @@ function renderRoute(route, kind, options, item) {
         stack: [],
         inPlainTemplate: false,
         scopeAttr: inHead ? null : sfc.scopeAttr,
+        scripted,
     });
+    const scripted = new Set();
 
     let body = page.template ? renderNodes(page.template.children, context(page, undefined)) : '';
     for (const layout of [...layouts].reverse()) {
@@ -82,11 +95,20 @@ function renderRoute(route, kind, options, item) {
 
     const heads = [...layouts, page].map((sfc) => (sfc.head ? renderNodes(sfc.head.children, context(sfc, undefined, true)) : ''));
 
+    // A page loads components.js only if it rendered a component with a script, and its own
+    // page script only if one of its files has a <script>.
+    const sources = [];
+    if (scripts.global) sources.push(scripts.global);
+    if (scripted.size > 0) sources.push(scripts.components);
+    const pageScript = scripts.page(route, [...layouts, page]);
+    if (pageScript) sources.push(pageScript);
+
     return renderDocument({
         lang: data.site?.lang ?? 'bn',
         head: mergeHeads(heads, data.site?.name ?? 'Alo'),
         body: trimBlock(body),
         stylesheet,
+        scripts: sources,
     });
 }
 
@@ -127,7 +149,11 @@ function findUsedComponents(project, roots, warn) {
             warn({ file: entry.file, message: `\`<${entry.name}>\` কোথাও ব্যবহার হয়নি।`, hint: 'দরকার না থাকলে ফাইলটা মুছে ফেলো।' });
         }
     }
-    return [...used].map((name) => project.loadComponent(project.components.get(name)));
+    return [...used].map((name) => {
+        const sfc = project.loadComponent(project.components.get(name));
+        sfc.componentName = name;
+        return sfc;
+    });
 }
 
 // reader: { exists(path), read(path), list(dir) } with POSIX paths relative to the project root.
@@ -162,7 +188,28 @@ function compile({ reader, mode = 'build', base = '/' }) {
         const css = buildStyle({ reader, globals: globals.css, sfcs: [...roots, ...components] });
         if (css) files.push({ path: STYLE_PATH, contents: css });
 
-        const options = { project, warn, mode, base, data, stylesheet: css ? '/' + STYLE_PATH : null };
+        const globalScript = buildGlobalScript(reader, globals.js);
+        if (globalScript) files.push({ path: GLOBAL_SCRIPT_PATH, contents: globalScript });
+        const componentScript = buildComponentScript(components.map((sfc) => ({ name: sfc.componentName, sfc })));
+        if (componentScript) files.push({ path: COMPONENT_SCRIPT_PATH, contents: componentScript });
+
+        // All pages of a [slug] route share one page script, so each file is built once.
+        const pageScripts = new Map();
+        const scripts = {
+            global: globalScript ? '/' + GLOBAL_SCRIPT_PATH : null,
+            components: '/' + COMPONENT_SCRIPT_PATH,
+            page(route, sfcs) {
+                const path = `assets/pages/${scriptName(route)}.js`;
+                if (!pageScripts.has(path)) {
+                    const code = buildPageScript(sfcs);
+                    pageScripts.set(path, code);
+                    if (code) files.push({ path, contents: code });
+                }
+                return pageScripts.get(path) ? '/' + path : null;
+            },
+        };
+
+        const options = { project, warn, mode, base, data, stylesheet: css ? '/' + STYLE_PATH : null, scripts };
         const sources = new Map(pages.filter((page) => !page.dynamic).map((page) => [page.output, page.file]));
 
         const emit = (route, item) => files.push({ path: route.output, contents: renderRoute(route, 'page', options, item) });

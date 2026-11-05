@@ -1,0 +1,35 @@
+<template>
+    <div class="faq">
+        <button type="button" aria-expanded="false">{{ props.question }}</button>
+        <p>{{ props.answer }}</p>
+    </div>
+</template>
+
+<style>
+    button {
+        width: 100%;
+        padding: 0.75rem 0;
+        border: 0;
+        border-bottom: 1px solid #eee;
+        background: none;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    p {
+        display: none;
+    }
+
+    .open p {
+        display: block;
+    }
+</style>
+
+<script>
+    const button = $el.querySelector('button');
+    button.addEventListener('click', () => {
+        const open = $el.classList.toggle('open');
+        button.setAttribute('aria-expanded', String(open));
+    });
+</script>
