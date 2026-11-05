@@ -1,5 +1,5 @@
 <head>
-    <title>আলো — হালকা স্ট্যাটিক সাইট</title>
+    <title>{{ data.site.name }} — হালকা স্ট্যাটিক সাইট</title>
 </head>
 
 <template>
@@ -41,9 +41,8 @@
     </template>
 
     <h2>সাম্প্রতিক লেখা</h2>
-    <template for="post in [{ slug: 'hello-world', title: 'হ্যালো ওয়ার্ল্ড', date: '2026-01-10', tags: ['intro', 'news'] }, { slug: 'second-post', title: 'দ্বিতীয় লেখা', date: '2026-02-01' }]">
-        <Blog.PostCard post="{{ post }}" />
-    </template>
+    <!-- সর্বশেষ ৩টা পোস্ট, নতুনটা আগে -->
+    <Blog.PostList posts="{{ data.blog.toReversed().slice(0, 3) }}" />
 
     <Card title="ফলব্যাক কনটেন্ট" />
 

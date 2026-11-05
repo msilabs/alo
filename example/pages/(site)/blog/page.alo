@@ -1,10 +1,8 @@
 <head>
-    <title>ব্লগ | আলো</title>
+    <title>ব্লগ | {{ data.site.name }}</title>
 </head>
 
 <template>
     <h1>সব লেখা</h1>
-    <template for="post in [{ slug: 'hello-world', title: 'হ্যালো ওয়ার্ল্ড', date: '2026-01-10', tags: ['intro', 'news'] }, { slug: 'second-post', title: 'দ্বিতীয় লেখা', date: '2026-02-01' }]">
-        <Blog.PostCard post="{{ post }}" />
-    </template>
+    <Blog.PostList posts="{{ data.blog.toReversed() }}" />
 </template>

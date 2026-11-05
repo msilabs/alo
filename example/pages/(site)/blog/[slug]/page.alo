@@ -1,0 +1,11 @@
+<head>
+    <title>{{ item.title }} | {{ data.site.name }}</title>
+</head>
+
+<template>
+    <article class="post">
+        <h1>{{ item.title }}</h1>
+        <time>{{ item.date }}</time>
+        {{{ item.body }}}
+    </article>
+</template>

@@ -70,7 +70,10 @@ function findRoutes(reader, warn) {
 
     // Returns how many pages live at or below `dir`, for the "layout without pages" warning.
     function walk(dir, segments, layouts, slug) {
-        const entries = reader.list(dir).sort(byName);
+        const entries = reader
+            .list(dir)
+            .filter((entry) => !entry.name.startsWith('.'))
+            .sort(byName);
         const ownLayout = entries.find((entry) => !entry.isDirectory && entry.name === 'layout.alo');
         const chain = ownLayout ? [...layouts, `${dir}/layout.alo`] : layouts;
         let count = 0;

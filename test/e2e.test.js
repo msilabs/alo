@@ -31,7 +31,7 @@ test('example/ বিল্ড হয়ে হোমপেইজ তৈরি �
     const result = alo(dir, ['build']);
 
     assert.equal(result.code, 0, result.stderr);
-    assert.match(result.stdout, /বিল্ড শেষ: 5টা পেইজ/);
+    assert.match(result.stdout, /বিল্ড শেষ: 8টা পেইজ/);
 
     const html = fs.readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8');
     assert.match(html, /^<!DOCTYPE html>\n<html lang="bn">/);
@@ -53,8 +53,8 @@ test('example/ বিল্ড হয়ে হোমপেইজ তৈরি �
     assert.match(html, /<button aria-pressed="false">চাপো<\/button>/);
     assert.match(html, /<article class="card post-card">\s*<h3><a href="\/blog\/hello-world\/">হ্যালো ওয়ার্ল্ড<\/a><\/h3>\s*<time>2026-01-10<\/time>/);
     assert.match(html, /<ul class="tags">\s*<li>intro<\/li><li>news<\/li>\s*<\/ul>/);
-    assert.match(html, /<a href="\/blog\/second-post\/">দ্বিতীয় লেখা<\/a>/);
-    assert.equal((html.match(/<ul class="tags">/g) ?? []).length, 1);
+    assert.match(html, /তৃতীয় লেখা[\s\S]*দ্বিতীয় লেখা[\s\S]*হ্যালো ওয়ার্ল্ড/);
+    assert.doesNotMatch(html, /শীঘ্রই আসছে/);
     assert.match(html, /<article class="card ">\s*<h3>ফলব্যাক কনটেন্ট<\/h3>\s*<p>এখানে এখনো কিছু লেখা হয়নি।<\/p>/);
     assert.doesNotMatch(html, /<Card|<Blog\.PostCard|<slot/);
     assert.doesNotMatch(result.stderr, /⚠/);
@@ -86,6 +86,16 @@ test('example/-এর রাউট, রাউট গ্রুপ, লেআউ�
     const launch = read('launch/index.html');
     assert.doesNotMatch(launch, /site-header|site-footer/);
     assert.match(launch, /<meta name="robots" content="noindex">/);
+
+    const post = read('blog/hello-world/index.html');
+    assert.match(post, /<title>হ্যালো ওয়ার্ল্ড \| আলো<\/title>/);
+    assert.match(post, /<h1>হ্যালো ওয়ার্ল্ড<\/h1>\s*<time>2026-01-10<\/time>\s*<p>Alo দিয়ে লেখা প্রথম পোস্ট।<\/p>/);
+    assert.match(post, /<section class="blog">/);
+    assert.ok(!fs.existsSync(path.join(dir, 'dist', 'blog', 'coming-soon')), 'খসড়া পোস্ট dist/-এ থাকা উচিত নয়');
+
+    assert.match(about, /রাহিম\s*<span class="badge">প্রধান<\/span>/);
+    assert.match(about, /সুমি\s*<span class="badge">ডেভেলপার<\/span>/);
+    assert.match(about, /করিম\s*<span class="badge">অতিথি<\/span>/);
 
     const notFound = read('404.html');
     assert.match(notFound, /<h1>পেইজটা পাওয়া যায়নি<\/h1>/);

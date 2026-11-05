@@ -1,9 +1,27 @@
 <head>
-    <title>আমাদের কথা | আলো</title>
+    <title>আমাদের কথা | {{ data.site.name }}</title>
     <meta name="description" content="Alo কেন বানানো হলো">
 </head>
 
 <template>
     <h1>আমাদের কথা</h1>
     <p>ছোট সাইট বানাতে বড় টুল লাগার কথা নয়। Alo শুধু HTML, CSS আর JS জানলেই চলে।</p>
+
+    <h2>দল</h2>
+    <ul class="team">
+        <template for="member in data.team">
+            <li>
+                {{ member.name }}
+                <template if="member.role === 'lead'">
+                    <span class="badge">প্রধান</span>
+                </template>
+                <template else-if="member.role === 'dev'">
+                    <span class="badge">ডেভেলপার</span>
+                </template>
+                <template else>
+                    <span class="badge">অতিথি</span>
+                </template>
+            </li>
+        </template>
+    </ul>
 </template>

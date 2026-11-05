@@ -1,0 +1,7 @@
+<template>
+    <div class="post-list">
+        <template for="post in props.posts">
+            <Blog.PostCard post="{{ post }}" />
+        </template>
+    </div>
+</template>

@@ -36,7 +36,7 @@ function scanComponents(reader, warn) {
     if (!reader.exists('components')) return components;
 
     function walk(dir, prefix) {
-        for (const entry of reader.list(dir).sort(byName)) {
+        for (const entry of reader.list(dir).filter((e) => !e.name.startsWith('.')).sort(byName)) {
             const file = `${dir}/${entry.name}`;
             if (entry.isDirectory) {
                 if (!FOLDER_NAME.test(entry.name)) {

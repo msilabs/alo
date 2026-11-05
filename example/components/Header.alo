@@ -1,8 +1,8 @@
 <template>
     <header class="site-header">
-        <a class="logo" href="/">আলো</a>
+        <a class="logo" href="/">{{ data.site.name }}</a>
         <nav>
-            <template for="link in [{ href: '/', label: 'হোম' }, { href: '/about/', label: 'আমাদের কথা' }, { href: '/blog/', label: 'ব্লগ' }]">
+            <template for="link in data.menu">
                 <a href="{{ link.href }}" aria-current="{{ route.path === link.href ? 'page' : null }}">{{ link.label }}</a>
             </template>
         </nav>

@@ -6,6 +6,7 @@ const { renderNodes, escapeHtml } = require('./render.js');
 const { findRoutes } = require('./routes.js');
 const { mergeHeads } = require('./head.js');
 const { scanComponents, propUsage, referencedComponents } = require('./components.js');
+const { createData } = require('./data.js');
 
 function renderDocument({ lang, head, body }) {
     const lines = ['<!DOCTYPE html>', `<html lang="${escapeHtml(lang)}">`, '<head>', ...head, '</head>', '<body>'];
@@ -42,10 +43,11 @@ function createProject(reader, warn) {
 
 // Renders one route: the page, then each layout around it from the nearest outwards.
 // Heads merge in the opposite order: root layout → inner layouts → page.
-function renderRoute(route, kind, options) {
-    const { project, warn, base } = options;
-    const data = {};
+// `item` is set only on pages made from a `[slug]` route.
+function renderRoute(route, kind, options, item) {
+    const { project, warn, base, data } = options;
     const scope = { data, route: Object.freeze({ path: route.path }), base };
+    if (item !== undefined) scope.item = item;
 
     const page = project.loadSfc(route.file, kind);
     const layouts = route.layouts.map((file) => project.loadSfc(file, 'layout'));
@@ -76,6 +78,26 @@ function renderRoute(route, kind, options) {
             body: trimBlock(body),
         }),
     };
+}
+
+function loadMarkdownLater(source, file) {
+    throw new AloError({ file, message: 'Markdown (`.md`) ফাইল এখনো পড়া যায় না।', hint: 'এটা আসবে Markdown-এর মাইলস্টোনে; আপাতত `.json` ব্যবহার করো।' });
+}
+
+// `site.url` is only the origin; a sub-path belongs to `--base`.
+function checkSiteUrl(site) {
+    if (!site || typeof site.url !== 'string') return;
+    const file = 'data/site.json';
+    let url;
+    try {
+        url = new URL(site.url);
+    } catch {
+        throw new AloError({ file, message: `\`url\`-এর মান \`${site.url}\` সঠিক URL নয়।`, hint: 'পুরো origin লেখো, যেমন `"https://example.com"`।' });
+    }
+    if (!/^https?:$/.test(url.protocol) || url.pathname !== '/' || url.search || url.hash || site.url.endsWith('/')) {
+        const hint = url.pathname !== '/' ? `পাথ \`--base\` দিয়ে দাও: \`url\`-এ লেখো \`"${url.origin}"\`, আর বিল্ড করো \`--base ${url.pathname}\`।` : `শুধু origin লেখো, শেষে \`/\` ছাড়া: \`"${url.origin}"\`।`;
+        throw new AloError({ file, message: '`url`-এ শুধু সাইটের origin থাকে।', hint });
+    }
 }
 
 // A component counts as used if any page or layout reaches it, even inside an `if` branch that is false right now.
@@ -117,17 +139,37 @@ function compile({ reader, mode = 'build', base = '/' }) {
 
     try {
         const project = createProject(reader, warn);
-        const options = { project, warn, mode, base };
+        const { data, collection } = createData(reader, { mode, warn, loadMarkdown: loadMarkdownLater });
+        checkSiteUrl(data.site);
+        const options = { project, warn, mode, base, data };
         const { pages, notFound } = findRoutes(reader, warn);
         const rendered = new Set();
+        const sources = new Map(pages.filter((page) => !page.dynamic).map((page) => [page.output, page.file]));
+
+        const emit = (route, item) => {
+            const { html, sfcs } = renderRoute(route, 'page', options, item);
+            sfcs.forEach((sfc) => rendered.add(sfc));
+            files.push({ path: route.output, contents: html });
+        };
 
         for (const page of pages) {
-            if (page.dynamic) {
-                throw new AloError({ file: page.file, message: 'ডায়নামিক পেইজ (`[slug]`) এখনো তৈরি হয়নি।', hint: 'এটা আসবে ডেটার মাইলস্টোনে।' });
+            if (!page.dynamic) {
+                emit(page);
+                continue;
             }
-            const { html, sfcs } = renderRoute(page, 'page', options);
-            sfcs.forEach((sfc) => rendered.add(sfc));
-            files.push({ path: page.output, contents: html });
+            for (const { item, file } of collection(page.dynamic.dataDir, page.file)) {
+                const prefix = page.dynamic.prefix.map((segment) => segment + '/').join('');
+                const output = `${prefix}${item.slug}/index.html`;
+                if (sources.has(output)) {
+                    throw new AloError({
+                        file,
+                        message: `\`dist/${output}\` দুই জায়গা থেকে তৈরি হচ্ছে: \`${sources.get(output)}\` আর \`${file}\`।`,
+                        hint: 'ডেটা ফাইলের নাম বা স্ট্যাটিক পেইজের ফোল্ডার বদলাও।',
+                    });
+                }
+                sources.set(output, file);
+                emit({ ...page, path: '/' + prefix + item.slug + '/', output }, item);
+            }
         }
 
         if (notFound) {
