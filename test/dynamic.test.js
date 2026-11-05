@@ -72,7 +72,7 @@ test('টেমপ্লেট থেকে ডেটা বদলানোর �
     const err = buildError({ ...BLOG, 'pages/page.alo': '<template>\n{{ data.blog.reverse() }}\n</template>' });
     assert.equal(err.file, 'pages/page.alo');
     assert.equal(err.line, 2);
-    assert.match(err.message, /ডেটা বদলানো যায় না/);
+    assert.match(err.message, /`reverse\(\)` ডেটা বদলায়/);
 
     const assign = buildError({ ...BLOG, 'pages/page.alo': '<template>{{ data.blog = [] }}</template>' });
     assert.match(assign.message, /`data\.blog` বদলানো যায় না/);
@@ -110,4 +110,10 @@ test('Markdown ফ্রন্ট ম্যাটারের এররে .md �
     });
     assert.deepEqual([err.file, err.line], ['data/post.md', 4]);
     assert.match(err.hint, /`\.json` ফাইল ব্যবহার করো/);
+});
+
+test('এক পোস্টের ব্লগেও টেমপ্লেটে reverse() লিখলে অবস্থানসহ এরর', () => {
+    const err = buildError({ 'pages/page.alo': '<template>\n  {{ data.blog.reverse() }}\n</template>', 'data/blog/a.json': '{}' });
+    assert.deepEqual([err.file, err.line], ['pages/page.alo', 2]);
+    assert.match(err.message, /`reverse\(\)` ডেটা বদলায়/);
 });

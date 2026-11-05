@@ -25,10 +25,26 @@ function splitExtension(name) {
     return dot <= 0 ? [name, ''] : [name.slice(0, dot), name.slice(dot)];
 }
 
+const MUTATING_METHODS = ['reverse', 'sort', 'push', 'pop', 'shift', 'unshift', 'splice', 'fill', 'copyWithin'];
+
+// A frozen array only throws when a write really happens, so `[x].reverse()` would pass quietly.
+// These own, non-enumerable methods make every attempt fail the same way; copies like
+// `toReversed()` or `[...list]` are ordinary arrays and are not affected.
+function lockArray(array) {
+    for (const method of MUTATING_METHODS) {
+        Object.defineProperty(array, method, {
+            value() {
+                throw new AloError({ message: `\`${method}()\` ডেটা বদলায়, তাই ডেটার অ্যারেতে চলে না।`, hint: IMMUTABLE_HINT });
+            },
+        });
+    }
+    return Object.freeze(array);
+}
+
 function deepFreeze(value) {
     if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
     for (const key of Object.keys(value)) deepFreeze(value[key]);
-    return Object.freeze(value);
+    return Array.isArray(value) ? lockArray(value) : Object.freeze(value);
 }
 
 function isValidDate(year, month, day) {
@@ -227,7 +243,7 @@ function createData(reader, { mode, warn, loadMarkdown = loadMarkdownFile, cache
                 bySlug.set(item.slug, file);
                 entries.push({ item, file });
             }
-            arrayCache.set(node.dir, { entries, items: Object.freeze(entries.map((entry) => entry.item)) });
+            arrayCache.set(node.dir, { entries, items: lockArray(entries.map((entry) => entry.item)) });
         }
         return arrayCache.get(node.dir);
     }

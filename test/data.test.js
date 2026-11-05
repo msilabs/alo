@@ -201,3 +201,15 @@ test('collection: [slug]-এর ডেটা ফোল্ডার যাচা�
     assert.throws(() => collection('data/shop', 'pages/shop/[slug]/page.alo'), /JSON বা Markdown/);
     assert.throws(() => collection('data/empty', 'pages/empty/[slug]/page.alo'), /JSON বা Markdown/);
 });
+
+test('এক আইটেমের বা খালি অ্যারেতেও বদলানোর মেথডে এরর; কপি আর toReversed চলে', () => {
+    const { data } = setup({ 'data/blog/a.json': '{ "tags": [] }', 'data/menu.json': '[1]' });
+    for (const call of [() => data.blog.reverse(), () => data.blog.sort(), () => data.menu.reverse(), () => data.blog[0].tags.push(1), () => data.menu.splice(0, 0)]) {
+        assert.throws(call, (err) => err instanceof AloError && /ডেটা বদলায়/.test(err.message) && /toReversed/.test(err.hint));
+    }
+    assert.deepEqual(data.menu.toReversed(), [1]);
+    assert.deepEqual([...data.menu].sort(), [1]);
+    assert.equal(JSON.stringify(data.menu), '[1]');
+    assert.deepEqual(Object.keys(data.menu), ['0']);
+    assert.ok(Array.isArray(data.blog));
+});
