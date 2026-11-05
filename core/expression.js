@@ -4,6 +4,9 @@ const { AloError, suggest } = require('./errors.js');
 
 const cache = new Map();
 
+// V8 messages for writes to frozen objects, e.g. `.sort()`, `.push()` or `post.title = 'x'`.
+const FROZEN_WRITE = /read only property|not extensible|Cannot delete property|Cannot redefine property|Cannot define property/;
+
 function compileExpression(code, names, location) {
     const key = names.join(',') + '\n' + code;
     let fn = cache.get(key);
@@ -31,7 +34,11 @@ function evaluate(code, scope, location) {
     try {
         return fn(...names.map((name) => scope[name]));
     } catch (err) {
-        if (err instanceof AloError) throw err;
+        if (err instanceof AloError) {
+            // Errors raised deep inside data proxies do not know where the expression is.
+            if (!err.file) Object.assign(err, location);
+            throw err;
+        }
 
         const missing = err instanceof ReferenceError && /^(\S+) is not defined$/.exec(err.message);
         if (missing) {
@@ -41,6 +48,14 @@ function evaluate(code, scope, location) {
                 ...location,
                 message: `\`${missing[1]}\` নামে কোনো ভেরিয়েবল নেই।`,
                 hint: (close ? `তুমি কি \`${close}\` বোঝাতে চেয়েছিলে? ` : '') + `এখানে আছে: ${available}।`,
+            });
+        }
+
+        if (err instanceof TypeError && FROZEN_WRITE.test(err.message)) {
+            throw new AloError({
+                ...location,
+                message: `ডেটা বদলানো যায় না: \`${code}\``,
+                hint: 'নতুন মান বানাও: `toReversed()`, `toSorted()` বা `slice()` ব্যবহার করো।',
             });
         }
 

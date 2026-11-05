@@ -37,7 +37,7 @@ function renderPage(sfc, route, options) {
         route: Object.freeze({ path: route.path }),
         base: options.base,
     };
-    const ctx = { file: sfc.file, source: sfc.source, scope };
+    const ctx = { file: sfc.file, source: sfc.source, scope, warn: options.warn };
 
     return renderDocument({
         lang: data.site?.lang ?? 'bn',
@@ -51,12 +51,21 @@ function renderPage(sfc, route, options) {
 // Returns the output files instead of writing them, so core never touches the disk.
 function compile({ reader, mode = 'build', base = '/' }) {
     const warnings = [];
+    const seen = new Set();
     const files = [];
+
+    // The same template line inside a loop would otherwise warn once per item.
+    function warn(diagnostic) {
+        const key = [diagnostic.file, diagnostic.line, diagnostic.column, diagnostic.message].join('\n');
+        if (seen.has(key)) return;
+        seen.add(key);
+        warnings.push(diagnostic);
+    }
 
     try {
         for (const route of findRoutes(reader)) {
             const sfc = parseSfc(reader.read(route.file), route.file, 'page');
-            files.push({ path: route.output, contents: renderPage(sfc, route, { mode, base }) });
+            files.push({ path: route.output, contents: renderPage(sfc, route, { mode, base, warn }) });
         }
     } catch (err) {
         if (err instanceof AloError) {

@@ -46,6 +46,12 @@ test('example/ বিল্ড হয়ে dist/index.html তৈরি হয�
     assert.match(html, /<p title="তুলনা: বড়">/);
     assert.match(html, /<pre><code>const আলো = &#39;হালকা&#39;;<\/code><\/pre>/);
     assert.match(html, /<button type="button" x-data="\{ open: false \}" @click="open = !open" :aria-expanded="open">/);
+    assert.match(html, /<li>1\. HTML<\/li>[\s\S]*<li>2\. CSS<\/li>[\s\S]*<li>3\. JavaScript<\/li>/);
+    assert.match(html, /<p>মাত্র 3টা জিনিস জানলেই চলে।<\/p>/);
+    assert.doesNotMatch(html, /অনেক কিছু|কিছুই লাগে না|<template/);
+    assert.match(html, /<details open>/);
+    assert.match(html, /<button aria-pressed="false">চাপো<\/button>/);
+    assert.doesNotMatch(result.stderr, /⚠/);
     assert.ok(!fs.existsSync(path.join(dir, '.alo', 'build')), 'অস্থায়ী ফোল্ডার থেকে যাওয়া উচিত নয়');
 });
 
