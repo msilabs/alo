@@ -1,6 +1,8 @@
 'use strict';
 
 const { AloError } = require('./errors.js');
+const { parseYaml } = require('./yaml.js');
+const { renderMarkdown } = require('./markdown.js');
 
 const NAME = /^[a-z0-9-]+$/;
 const DATED = /^(\d{4})-(\d{2})-(\d{2})(?:-(.*))?$/;
@@ -106,13 +108,47 @@ function scan(reader, dir, warn) {
     return { kind: 'object', dir, children };
 }
 
+// A .md file becomes { ...front matter, body }, where `body` is rendered only when first read.
+function loadMarkdownFile(input, file) {
+    const source = input.replace(/^\uFEFF/, '');
+    const lines = source.split(/\r?\n/);
+    let frontMatter = {};
+    let body = source;
+
+    if (/^---[ \t]*$/.test(lines[0])) {
+        const end = lines.findIndex((line, i) => i > 0 && /^---[ \t]*$/.test(line));
+        if (end === -1) {
+            throw new AloError({ file, line: 1, column: 1, source, message: 'ফ্রন্ট ম্যাটার বন্ধ হয়নি।', hint: 'ফ্রন্ট ম্যাটারের শেষে আরেকটা `---` লাইন দাও।' });
+        }
+        frontMatter = parseYaml(lines.slice(1, end).join('\n'), { file, lineOffset: 1, source });
+        body = lines.slice(end + 1).join('\n');
+
+        if (Object.hasOwn(frontMatter, 'body')) {
+            const line = lines.findIndex((text, i) => i > 0 && i < end && /^body\s*:/.test(text)) + 1;
+            throw new AloError({ file, line, column: 1, source, message: '`body` ফ্রন্ট ম্যাটারে রাখা যায় না।', hint: 'Markdown-এর লেখাটাই নিজে থেকে `body`-তে আসে।' });
+        }
+    }
+
+    let html = null;
+    const value = {};
+    for (const [key, entry] of Object.entries(frontMatter)) value[key] = deepFreeze(entry);
+    Object.defineProperty(value, 'body', {
+        enumerable: true,
+        get() {
+            if (html === null) html = renderMarkdown(body);
+            return html;
+        },
+    });
+    return Object.freeze(value);
+}
+
 function immutableError(path) {
     return new AloError({ message: `\`${path}\` বদলানো যায় না।`, hint: IMMUTABLE_HINT });
 }
 
 // Creates the `data` value for templates. Files are read only when a template first reads them,
 // and every value is deep-frozen. `loadMarkdown(source, file)` turns a .md file into an object.
-function createData(reader, { mode, warn, loadMarkdown }) {
+function createData(reader, { mode, warn, loadMarkdown = loadMarkdownFile }) {
     const fileCache = new Map();
     const arrayCache = new Map();
     const proxyCache = new Map();
@@ -250,4 +286,4 @@ function createData(reader, { mode, warn, loadMarkdown }) {
     return { data: objectProxy(root), collection };
 }
 
-module.exports = { createData, toKey };
+module.exports = { createData, toKey, loadMarkdownFile };

@@ -89,7 +89,12 @@ test('example/-এর রাউট, রাউট গ্রুপ, লেআউ�
 
     const post = read('blog/hello-world/index.html');
     assert.match(post, /<title>হ্যালো ওয়ার্ল্ড \| আলো<\/title>/);
-    assert.match(post, /<h1>হ্যালো ওয়ার্ল্ড<\/h1>\s*<time>2026-01-10<\/time>\s*<p>Alo দিয়ে লেখা প্রথম পোস্ট।<\/p>/);
+    assert.match(post, /<h1>হ্যালো ওয়ার্ল্ড<\/h1>\s*<time>2026-01-10<\/time>\s*<p>Alo দিয়ে লেখা <strong>প্রথম পোস্ট<\/strong>/);
+    assert.match(post, /<h2 id="যা-যা-লাগে">যা যা লাগে<\/h2>/);
+    assert.match(post, /<pre><code class="language-html">&lt;Card title=&quot;হ্যালো&quot;&gt;/);
+    assert.match(post, /<th style="text-align: left">ফোল্ডার<\/th>/);
+    assert.match(read('blog/second-post/index.html'), /<blockquote>\n<p>Markdown-এর ভেতরে <code>\{\{ \}\}<\/code> প্রসেস হয় না/);
+    assert.match(read('blog/third-post/index.html'), /<p>প্রতিটা ফাইল থেকে নিজে থেকেই একটা পেইজ তৈরি হয়।<\/p>/);
     assert.match(post, /<section class="blog">/);
     assert.ok(!fs.existsSync(path.join(dir, 'dist', 'blog', 'coming-soon')), 'খসড়া পোস্ট dist/-এ থাকা উচিত নয়');
 

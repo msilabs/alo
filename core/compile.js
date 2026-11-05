@@ -80,10 +80,6 @@ function renderRoute(route, kind, options, item) {
     };
 }
 
-function loadMarkdownLater(source, file) {
-    throw new AloError({ file, message: 'Markdown (`.md`) ফাইল এখনো পড়া যায় না।', hint: 'এটা আসবে Markdown-এর মাইলস্টোনে; আপাতত `.json` ব্যবহার করো।' });
-}
-
 // `site.url` is only the origin; a sub-path belongs to `--base`.
 function checkSiteUrl(site) {
     if (!site || typeof site.url !== 'string') return;
@@ -139,7 +135,7 @@ function compile({ reader, mode = 'build', base = '/' }) {
 
     try {
         const project = createProject(reader, warn);
-        const { data, collection } = createData(reader, { mode, warn, loadMarkdown: loadMarkdownLater });
+        const { data, collection } = createData(reader, { mode, warn });
         checkSiteUrl(data.site);
         const options = { project, warn, mode, base, data };
         const { pages, notFound } = findRoutes(reader, warn);

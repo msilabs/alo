@@ -95,8 +95,19 @@ test('site.url-এ শুধু origin; পাথ থাকলে --base-এর 
     assert.match(buildError({ 'pages/page.alo': '', 'data/site.json': '{ "url": "example.com" }' }).message, /সঠিক URL নয়/);
 });
 
-test('Markdown ফাইল এখনো পড়া যায় না, পরিষ্কার মেসেজ', () => {
-    const err = buildError({ 'pages/page.alo': '<template>{{ data.post.title }}</template>', 'data/post.md': '# x' });
-    assert.equal(err.file, 'data/post.md');
-    assert.match(err.message, /Markdown/);
+test('Markdown পোস্ট: ফ্রন্ট ম্যাটার item-এ, বডি {{{ item.body }}} দিয়ে', () => {
+    const { pages } = build({
+        'pages/blog/[slug]/page.alo': '<template><h1>{{ item.title }}</h1>{{{ item.body }}}</template>',
+        'data/blog/2026-01-10-hello.md': '---\ntitle: হ্যালো\ntags: [a, b]\n---\n\n## প্রথম অংশ\n\nএটা **গাঢ়** আর {{ না }}।\n',
+    });
+    assert.equal(pages['blog/hello/index.html'], '<h1>হ্যালো</h1><h2 id="প্রথম-অংশ">প্রথম অংশ</h2>\n<p>এটা <strong>গাঢ়</strong> আর {{ না }}।</p>');
+});
+
+test('Markdown ফ্রন্ট ম্যাটারের এররে .md ফাইলের আসল লাইন', () => {
+    const err = buildError({
+        'pages/page.alo': '<template>{{ data.post.title }}</template>',
+        'data/post.md': '---\ntitle: ক\nauthor:\n  name: খ\n---\nবডি',
+    });
+    assert.deepEqual([err.file, err.line], ['data/post.md', 4]);
+    assert.match(err.hint, /`\.json` ফাইল ব্যবহার করো/);
 });
