@@ -1,15 +1,15 @@
 <template>
     <footer class="site-footer">
-        <p>Alo দিয়ে বানানো।</p>
+        <p class="container">© {{ data.site.name }}। <a href="https://github.com/msilabs/alo">আলো</a> দিয়ে বানানো।</p>
     </footer>
 </template>
 
 <style>
     .site-footer {
-        max-width: 48rem;
-        margin: 2rem auto 0;
-        padding: 1rem;
-        border-top: 1px solid #eee;
-        color: #59636e;
+        margin-top: 5rem;
+        padding-block: 2rem;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.92rem;
     }
 </style>

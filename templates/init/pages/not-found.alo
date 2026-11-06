@@ -1,8 +1,26 @@
 <head>
-    <title>পাওয়া যায়নি | {{ data.site.name }}</title>
+    <title>পেইজটা পাওয়া যায়নি | {{ data.site.name }}</title>
 </head>
 
 <template>
-    <h1>পেইজটা পাওয়া যায়নি</h1>
-    <p><a href="/">হোমে ফিরে যাও</a></p>
+    <div class="missing">
+        <p class="code">৪০৪</p>
+        <h1>এই পেইজটা পাওয়া যায়নি</h1>
+        <a class="button button-primary" href="/">হোমে ফিরে যাও</a>
+    </div>
 </template>
+
+<style>
+    .missing {
+        display: grid;
+        justify-items: start;
+        gap: 1rem;
+    }
+
+    .code {
+        color: var(--accent);
+        font-size: 4rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+</style>

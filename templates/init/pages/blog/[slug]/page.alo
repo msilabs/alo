@@ -1,11 +1,48 @@
+<!-- data/blog/-এর প্রতিটা ফাইল থেকে একটা পেইজ; ফাইলের ডেটা পাওয়া যায় item-এ -->
 <head>
     <title>{{ item.title }} | {{ data.site.name }}</title>
 </head>
 
 <template>
-    <article>
+    <article class="post">
+        <a class="back" href="/blog/">← সব লেখা</a>
         <h1>{{ item.title }}</h1>
-        <time>{{ item.date }}</time>
-        {{{ item.body }}}
+        <time datetime="{{ item.date }}">{{ new Date(item.date).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) }}</time>
+        <div class="body">
+            {{{ item.body }}}
+        </div>
     </article>
 </template>
+
+<style>
+    .post {
+        max-width: var(--reading);
+    }
+
+    .back {
+        color: var(--muted);
+        text-decoration: none;
+    }
+
+    h1 {
+        margin-block: 1rem 0.5rem;
+        font-size: clamp(1.9rem, 5vw, 2.5rem);
+    }
+
+    time {
+        display: block;
+        margin-bottom: 2rem;
+        color: var(--muted);
+    }
+</style>
+
+<!-- Markdown-এর বডিতে স্কোপ অ্যাট্রিবিউট থাকে না, তাই এর স্টাইল <style global>-এ -->
+<style global>
+    .post .body > * + * {
+        margin-top: 1rem;
+    }
+
+    .post .body h2 {
+        margin-top: 2.25rem;
+    }
+</style>

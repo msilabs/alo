@@ -3,6 +3,25 @@
 </head>
 
 <template>
-    <h1>আমাদের কথা</h1>
-    <p>এই পেইজটা আছে <code>pages/about/page.alo</code>-এ, তাই এর ঠিকানা <code>/about/</code>।</p>
+    <article class="page">
+        <p class="eyebrow">আমাদের কথা</p>
+        <h1>আমরা কারা</h1>
+        <p>এখানে তোমার নিজের কথা লেখো। এই পেইজটা আছে <code>pages/about/page.alo</code>-এ, তাই এর ঠিকানা <code>/about/</code>।</p>
+        <p>নতুন পেইজ যোগ করতে <code>pages/</code>-এর ভেতরে একটা ফোল্ডার বানিয়ে তাতে <code>page.alo</code> রাখো, অথবা চালাও <code>node alo new page contact</code>।</p>
+    </article>
 </template>
+
+<style>
+    .page {
+        max-width: var(--reading);
+    }
+
+    h1 {
+        margin-block: 0.4rem 1rem;
+        font-size: clamp(2rem, 5vw, 2.6rem);
+    }
+
+    p + p {
+        margin-top: 1rem;
+    }
+</style>

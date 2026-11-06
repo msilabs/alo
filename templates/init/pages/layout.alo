@@ -1,11 +1,15 @@
+<!-- এই লেআউট সব পেইজকে মোড়ায়: পেইজের কনটেন্ট বসে <slot />-এর জায়গায় -->
 <head>
-    <meta name="description" content="Alo দিয়ে বানানো সাইট">
+    <meta name="description" content="{{ data.site.description }}">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap">
 </head>
 
 <template>
     <Header />
-    <main>
+    <main class="container">
         <slot />
     </main>
     <Footer />
@@ -13,8 +17,7 @@
 
 <style>
     main {
-        max-width: 48rem;
-        margin: 0 auto;
-        padding: 0 1rem;
+        min-height: 60vh;
+        padding-top: 3.5rem;
     }
 </style>

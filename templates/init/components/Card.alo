@@ -9,13 +9,15 @@
 
 <style>
     .card {
-        margin-block: 1rem;
-        padding: 1rem 1.25rem;
-        border: 1px solid #eee;
-        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow);
     }
 
     h3 {
-        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-size: 1.15rem;
     }
 </style>

@@ -1,5 +1,6 @@
 {
     "name": "আমার সাইট",
+    "description": "Alo দিয়ে বানানো নতুন একটা সাইট। এই লেখাটা বদলাতে data/site.json খোলো।",
     "lang": "bn",
     "url": "https://example.com"
 }

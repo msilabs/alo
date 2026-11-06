@@ -3,21 +3,83 @@
 </head>
 
 <template>
-    <h1>স্বাগতম!</h1>
-    <p>এই পেইজটা আছে <code>pages/page.alo</code>-এ। বদলে সেভ করো, ব্রাউজার নিজে থেকে রিলোড হবে।</p>
+    <section class="hero">
+        <p class="eyebrow">স্বাগতম</p>
+        <h1>{{ data.site.name }}</h1>
+        <p class="lead">{{ data.site.description }}</p>
+    </section>
 
-    <Card title="শুরু করো">
-        <ul>
-            <li>নতুন পেইজ: <code>node alo new page contact</code></li>
-            <li>নতুন কম্পোনেন্ট: <code>node alo new component Button</code></li>
-            <li>নতুন লেখা: <code>node alo new post blog/my-post</code></li>
-        </ul>
-    </Card>
+    <div class="cards">
+        <Card title="এই পেইজটা বদলাও">
+            <p>লেখাটা আছে <code>pages/page.alo</code>-এ। বদলে সেভ করো, ব্রাউজার নিজে থেকে রিলোড হবে।</p>
+        </Card>
+        <Card title="নাম আর মেনু">
+            <p>সাইটের নাম আর বর্ণনা <code>data/site.json</code>-এ, মেনুর লিংক <code>data/menu.json</code>-এ।</p>
+        </Card>
+        <Card title="রঙ আর ফন্ট">
+            <p>পুরো সাইটের রঙ, ফন্ট আর মাপ ঠিক হয় <code>global/theme.css</code>-এর ভেরিয়েবল থেকে।</p>
+        </Card>
+    </div>
 
     <h2>সাম্প্রতিক লেখা</h2>
-    <ul>
+    <ul class="posts">
         <template for="post in data.blog.toReversed().slice(0, 3)">
-            <li><a href="/blog/{{ post.slug }}/">{{ post.title }}</a></li>
+            <li>
+                <a href="/blog/{{ post.slug }}/">{{ post.title }}</a>
+                <time datetime="{{ post.date }}">{{ new Date(post.date).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) }}</time>
+            </li>
         </template>
     </ul>
 </template>
+
+<style>
+    .hero {
+        margin-bottom: 3rem;
+    }
+
+    h1 {
+        margin-block: 0.4rem 0.75rem;
+        font-size: clamp(2.2rem, 6vw, 3.2rem);
+    }
+
+    .lead {
+        max-width: 38rem;
+        color: var(--muted);
+        font-size: 1.15rem;
+    }
+
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+        gap: 1.25rem;
+    }
+
+    .cards p {
+        color: var(--muted);
+    }
+
+    h2 {
+        margin: 3.5rem 0 1rem;
+        font-size: 1.5rem;
+    }
+
+    .posts {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .posts li {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding-block: 0.8rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    time {
+        color: var(--muted);
+        font-size: 0.92rem;
+    }
+</style>

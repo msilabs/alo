@@ -3,10 +3,34 @@
 </head>
 
 <template>
-    <h1>ব্লগ</h1>
-    <template for="post in data.blog.toReversed()">
-        <Card title="{{ post.title }}">
-            <p><time>{{ post.date }}</time> · <a href="/blog/{{ post.slug }}/">পড়ো</a></p>
-        </Card>
-    </template>
+    <p class="eyebrow">ব্লগ</p>
+    <h1>সব লেখা</h1>
+    <div class="list">
+        <template for="post in data.blog.toReversed()">
+            <Card title="{{ post.title }}">
+                <p class="meta">
+                    <time datetime="{{ post.date }}">{{ new Date(post.date).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) }}</time>
+                    · <a href="/blog/{{ post.slug }}/">পড়ো →</a>
+                </p>
+            </Card>
+        </template>
+    </div>
 </template>
+
+<style>
+    h1 {
+        margin-block: 0.4rem 2rem;
+        font-size: clamp(2rem, 5vw, 2.6rem);
+    }
+
+    .list {
+        display: grid;
+        gap: 1rem;
+        max-width: var(--reading);
+    }
+
+    .meta {
+        color: var(--muted);
+        font-size: 0.92rem;
+    }
+</style>
