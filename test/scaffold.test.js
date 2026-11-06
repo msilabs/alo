@@ -35,7 +35,7 @@ test('init: every project file and the next steps', (t) => {
     assert.match(result.stdout, /cd "My Site"\n {2}npm install\n {2}node alo dev/);
 
     const dir = path.join(cwd, 'My Site');
-    for (const file of ['alo', 'package.json', '.gitignore', '.gitattributes', '.vscode/settings.json', 'pages/page.alo', 'pages/layout.alo', 'pages/blog/[slug]/page.alo', 'components/Header.alo', 'components/Footer.alo', 'components/Card.alo', 'data/site.json', 'data/blog/2026-01-10-hello-world.md', 'public/favicon.svg']) {
+    for (const file of ['alo', 'package.json', '.gitignore', '.gitattributes', '.vscode/settings.json', 'pages/page.alo', 'pages/layout.alo', 'pages/blog/[slug]/page.alo', 'components/Header.alo', 'components/Footer.alo', 'components/Card.alo', 'data/site.json', 'data/blog/2026-01-10-hello-world.md', 'public/favicon.svg', 'AGENTS.md']) {
         assert.ok(fs.existsSync(path.join(dir, ...file.split('/'))), file);
     }
 

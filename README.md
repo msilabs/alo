@@ -31,6 +31,17 @@ node alo build
 
 একই কমান্ড তিনভাবে চালানো যায়, তিনটাই প্রজেক্টের নিজের ভার্সন চালায়: `node alo dev`, `npm run dev` অথবা `npx alo dev`।
 
+## AI সহকারী দিয়ে কাজ করলে
+
+Claude, ChatGPT, Cursor বা Copilot-এর মতো AI Alo চেনে না, তাই না জানিয়ে দিলে সে React বা Vue-র ধাঁচে কোড লিখে ফেলবে (`import`, `<li for>`, `{{ title }}`)। এটা ঠেকাতে:
+
+- **`alo init` দিয়ে বানানো প্রজেক্টে** রুটে একটা `AGENTS.md` থাকে। Claude Code, Cursor, Codex-এর মতো টুল ফোল্ডার খুললে এটা নিজে পড়ে নেয়; তোমাকে কিছু করতে হয় না।
+- **চ্যাটে বা অন্য প্রজেক্টে** AI-কে এই লিংক দাও, বা প্রম্পটে লিখে দাও:
+
+  > Read https://raw.githubusercontent.com/msilabs/alo/main/templates/init/AGENTS.md and follow it for all Alo code in this project.
+
+গাইডটা ইংরেজিতে, কারণ AI-এর কাছে নিয়মগুলো এতে সবচেয়ে নির্ভুল পৌঁছায়। এতে আছে কঠোর নিয়ম, প্রজেক্টের গঠন, টেমপ্লেট, ডেটা, CSS আর JS, কমান্ড আর সবচেয়ে সাধারণ ভুলের তালিকা। রুটের [llms.txt](llms.txt) ফাইলেও একই লিংক আছে।
+
 ## এক পাতায় Alo
 
 এটুকু জানলেই কাজ শুরু করা যায়।

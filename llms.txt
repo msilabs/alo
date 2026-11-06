@@ -1,0 +1,10 @@
+# Alo
+
+> Alo is a lightweight static web framework: plain HTML, CSS and JS in `.alo` files, with components, layouts, loops and conditions. Zero dependencies. Requires Node.js 22+.
+
+If you write code for an Alo project, read the AI guide first. It lists the rules and the mistakes AI assistants make most often.
+
+- [AI guide (rules for AI assistants)](https://raw.githubusercontent.com/msilabs/alo/main/templates/init/AGENTS.md): hard rules, project layout, templates, data, CSS/JS, commands
+- [README (Bengali)](https://raw.githubusercontent.com/msilabs/alo/main/README.md): full user documentation
+- [Full specification](https://raw.githubusercontent.com/msilabs/alo/main/docs/SPEC.md): every rule in detail
+- [Design decisions](https://raw.githubusercontent.com/msilabs/alo/main/DECISIONS.md): why Alo behaves the way it does
