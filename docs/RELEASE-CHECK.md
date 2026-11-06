@@ -83,7 +83,7 @@
 
 **১২. বাইরের টেস্টার।** এটা মানুষের কাজ। চেকলিস্ট আর পর্যবেক্ষণ লেখার টেমপ্লেট আছে [TESTER-GUIDE.md](TESTER-GUIDE.md)-এ।
 
-**১৩. Alpine.js।** উদাহরণের হোম পেইজের `x-data="{ open: false }" @click="open = !open" :aria-expanded="open"` আউটপুটে হুবহু থাকে; e2e টেস্ট এটা দেখে।
+**১৩. Alpine.js।** e2e টেস্টের ছোট প্রজেক্টে `x-data="{ open: false }" @click="open = !open" :aria-expanded="open"` আউটপুটে হুবহু থাকে।
 
 ## প্রকাশের আগে মালিকের কাজ
 
