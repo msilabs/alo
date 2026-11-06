@@ -36,7 +36,7 @@ test('example/ builds its home page', (t) => {
     const result = alo(dir, ['build']);
 
     assert.equal(result.code, 0, result.stderr);
-    assert.match(result.stdout, /Built 9 pages/);
+    assert.match(result.stdout, /Built 10 pages/);
     assert.doesNotMatch(result.stderr, /⚠/);
     assert.ok(!fs.existsSync(path.join(dir, '.alo', 'build')), 'the temp folder should not remain');
 
@@ -54,7 +54,7 @@ test('example/ builds its home page', (t) => {
     assert.match(html, /&lt;h3&gt;\{\{ props\.title \}\}&lt;\/h3&gt;/);
 
     // The newest three posts, with Bengali dates; the draft is not there.
-    assert.match(html, /২১ অক্টোবর, ২০২৬[\s\S]*GitHub Pages-এ সাইট প্রকাশ[\s\S]*কম্পোনেন্ট আর লেআউট[\s\S]*আলো এল/);
+    assert.match(html, /২৭ নভেম্বর, ২০২৬[\s\S]*GitHub Pages-এ সাইট প্রকাশ[\s\S]*ডেটা থেকে পেইজ[\s\S]*কম্পোনেন্ট আর লেআউট/);
     assert.doesNotMatch(html, /সামনে যা আসছে/);
 
     assert.match(html, /<div class="counter" data-start="10"/);
@@ -88,16 +88,19 @@ test('example/ routes, route groups, layouts and 404', (t) => {
 
     const blog = read('blog/index.html');
     assert.match(blog, /<main>\s*<div class="blog reading">\s*<p class="eyebrow">ব্লগ<\/p>/);
-    assert.match(blog, /মোট ৩টা লেখা/);
+    assert.match(blog, /মোট ৪টা লেখা/);
 
     const post = read('blog/introducing-alo/index.html');
     assert.match(post, /<title>আলো এল: HTML জানলেই ওয়েবসাইট \| আলো<\/title>/);
     assert.match(post, /<meta name="description" content="কেন আরেকটা ফ্রেমওয়ার্ক, আর কাদের জন্য আলো বানানো হলো।">/);
-    assert.match(post, /<time datetime="2026-09-15">১৫ সেপ্টেম্বর, ২০২৬<\/time>/);
+    assert.match(post, /<time datetime="2026-11-06">৬ নভেম্বর, ২০২৬<\/time>/);
     assert.match(post, /<h2 id="যা-আলাদা">যা আলাদা<\/h2>/);
     assert.match(post, /<pre><code class="language-bash">npx @msilabs\/alo init my-site/);
     assert.match(read('blog/components-and-layouts/index.html'), /<th>কোথায় রাখো<\/th>/);
-    assert.match(read('blog/deploy-to-github-pages/index.html'), /একই ফোল্ডারে Markdown আর JSON পাশাপাশি চলে/);
+    const deploy = read('blog/deploy-to-github-pages/index.html');
+    assert.match(deploy, /<pre><code class="language-yaml">name: Pages/);
+    assert.match(deploy, /url: \$\{\{ steps\.deployment\.outputs\.page_url \}\}/, 'post bodies are not templates');
+    assert.match(read('blog/data-and-markdown/index.html'), /<time datetime="2026-11-20">২০ নভেম্বর, ২০২৬<\/time>/);
     assert.ok(!fs.existsSync(path.join(dir, 'dist', 'blog', 'whats-next')), 'draft posts should not be in dist/');
 
     const launch = read('launch/index.html');
@@ -182,6 +185,7 @@ test('example/ production output: hashes, sitemap, robots', (t) => {
         'https://msilabs.github.io/about/',
         'https://msilabs.github.io/blog/',
         'https://msilabs.github.io/blog/components-and-layouts/',
+        'https://msilabs.github.io/blog/data-and-markdown/',
         'https://msilabs.github.io/blog/deploy-to-github-pages/',
         'https://msilabs.github.io/blog/introducing-alo/',
         'https://msilabs.github.io/docs/',

@@ -1,6 +1,0 @@
-{
-    "title": "GitHub Pages-এ সাইট প্রকাশ",
-    "description": "একটা ফ্ল্যাগ দিয়েই সাব-পাথে চলা সাইট।",
-    "tags": ["গাইড", "ডিপ্লয়"],
-    "body": "<p>GitHub Pages-এ সাইট থাকে <code>https://&lt;user&gt;.github.io/&lt;repo&gt;/</code> ঠিকানায়, মানে একটা সাব-পাথে। আলোতে এর জন্য কোনো কনফিগ লাগে না, শুধু বিল্ডের সময় পাথটা বলে দাও:</p>\n<pre><code class=\"language-bash\">node alo build --base /my-repo/</code></pre>\n<p>টেমপ্লেটে লিংক সবসময় লেখো <code>/about/</code>-এর মতো করে। বিল্ডের সময় আলো নিজেই সব লিংক, ছবি, CSS আর JS-এর সামনে <code>/my-repo/</code> বসিয়ে দেয়।</p>\n<p>এই লেখাটা ইচ্ছা করে JSON ফাইলে রাখা, যাতে দেখা যায় যে একই ফোল্ডারে Markdown আর JSON পাশাপাশি চলে।</p>"
-}
