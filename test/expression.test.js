@@ -15,75 +15,75 @@ function evalError(code, scope) {
         assert.ok(err instanceof AloError);
         return err;
     }
-    assert.fail('এরর আশা করা হয়েছিল');
+    assert.fail('expected an error');
 }
 
-test('এক্সপ্রেশন সাধারণ JavaScript, স্কোপের ভেরিয়েবলসহ', () => {
+test('expressions are plain JavaScript with scope variables', () => {
     assert.equal(evaluate('a + b * 2', { a: 1, b: 3 }, where), 7);
     assert.equal(evaluate('list.toReversed().slice(0, 2).join()', { list: [1, 2, 3] }, where), '3,2');
     assert.equal(evaluate('title ?? "নেই"', { title: undefined }, where), 'নেই');
     assert.equal(evaluate('x // কমেন্ট', { x: 5 }, where), 5);
 });
 
-test('ফাংশন "use strict"-এ চলে', () => {
+test('expressions run in strict mode', () => {
     assert.equal(evaluate('(function () { return this; })()', {}, where), undefined);
 });
 
-test('অজানা ভেরিয়েবলে পরামর্শ আর উপলব্ধ তালিকা', () => {
+test('an unknown variable lists suggestions and what is available', () => {
     const err = evalError('titel', { title: 'a', data: {} });
-    assert.equal(err.message, '`titel` নামে কোনো ভেরিয়েবল নেই।');
-    assert.match(err.hint, /`title` বোঝাতে চেয়েছিলে/);
-    assert.match(err.hint, /এখানে আছে: `title`, `data`/);
+    assert.equal(err.message, '`titel` is not defined.');
+    assert.match(err.hint, /Did you mean `title`/);
+    assert.match(err.hint, /Available here: `title`, `data`/);
     assert.deepEqual([err.file, err.line, err.column], ['pages/page.alo', 3, 5]);
 });
 
-test('frozen ডেটা মেথড দিয়ে বা সরাসরি বদলানোর চেষ্টায় এরর', () => {
+test('changing frozen data by method or assignment fails', () => {
     const scope = { posts: Object.freeze([3, 1, 2]), post: Object.freeze({ title: 'a' }) };
     for (const code of ['posts.sort()', 'posts.reverse()', 'posts.push(4)', 'post.title = "b"', 'post.extra = 1', 'delete post.title']) {
         const err = evalError(code, scope);
-        assert.match(err.message, /ডেটা বদলানো যায় না/, code);
-        assert.match(err.hint, /`toReversed\(\)`, `toSorted\(\)` বা `slice\(\)`/, code);
+        assert.match(err.message, /Data cannot be changed/, code);
+        assert.match(err.hint, /`toReversed\(\)`, `toSorted\(\)` or `slice\(\)`/, code);
     }
 });
 
-test('frozen ডেটা থেকে নতুন মান বানানো চলে', () => {
+test('new values can be made from frozen data', () => {
     const scope = { posts: Object.freeze([3, 1, 2]) };
     assert.deepEqual(evaluate('posts.toSorted()', scope, where), [1, 2, 3]);
     assert.deepEqual(evaluate('posts.toReversed()', scope, where), [2, 1, 3]);
 });
 
-test('অবস্থান ছাড়া AloError-এ এক্সপ্রেশনের অবস্থান বসে', () => {
+test('an AloError without a location gets the expression location', () => {
     const scope = {
         boom() {
-            throw new AloError({ message: 'ভেতরের এরর' });
+            throw new AloError({ message: 'inner error' });
         },
     };
     const err = evalError('boom()', scope);
-    assert.equal(err.message, 'ভেতরের এরর');
+    assert.equal(err.message, 'inner error');
     assert.deepEqual([err.file, err.line], ['pages/page.alo', 3]);
 });
 
-test('লেখায়: escape, raw, null আর undefined খালি, \\{{ আক্ষরিক', () => {
+test('in text: escaping, raw HTML, empty null and undefined, literal \\{{', () => {
     const { body } = renderBody(`{{ '<i>' }}|{{{ '<i>' }}}|{{ null }}{{ undefined }}|\\{{ x }}`);
     assert.equal(body, '&lt;i&gt;|<i>||{{ x }}');
 });
 
-test('লেখায় অবজেক্ট, অ্যারে বা ফাংশন বসালে সতর্কবার্তা', () => {
+test('an object, array or function in text warns', () => {
     const { body, warnings } = renderBody(`{{ ({ a: 1 }) }}|{{ [1, 2] }}|{{ 'x'.trim }}`);
     assert.match(body, /^\[object Object\]\|1,2\|function trim/);
     assert.equal(warnings.length, 3);
-    assert.match(warnings[0].message, /একটা অবজেক্ট/);
+    assert.match(warnings[0].message, /is an object/);
     assert.match(warnings[1].hint, /<template for>/);
     assert.match(warnings[2].hint, /`\(\)`/);
 });
 
-test('লুপের ভেতরের একই সতর্কবার্তা একবারই আসে', () => {
+test('the same warning inside a loop is shown once', () => {
     const { warnings } = renderBody(`<template for="x in [1, 2, 3]">{{ [x] }}</template>`);
     assert.equal(warnings.length, 1);
 });
 
-test('এক্সপ্রেশনের এররে অবস্থান থাকে', () => {
+test('expression errors carry their location', () => {
     const err = renderError('\n  <p>{{ data.x.y }}</p>');
     assert.deepEqual([err.line, err.column], [2, 6]);
-    assert.equal(err.message, '`data.x` হলো `undefined`, তাই `.y` পড়া যায় না।');
+    assert.equal(err.message, '`data.x` is `undefined`, so `.y` cannot be read.');
 });

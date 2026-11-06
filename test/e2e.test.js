@@ -31,12 +31,12 @@ function alo(cwd, args) {
     return { code: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
-test('example/ বিল্ড হয়ে হোমপেইজ তৈরি হয়', (t) => {
+test('example/ builds its home page', (t) => {
     const dir = tempProject(t, EXAMPLE);
     const result = alo(dir, ['build']);
 
     assert.equal(result.code, 0, result.stderr);
-    assert.match(result.stdout, /বিল্ড শেষ: 8টা পেইজ/);
+    assert.match(result.stdout, /Built 8 pages/);
 
     const html = withoutScope(fs.readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8'));
     assert.match(html, /^<!DOCTYPE html>\n<html lang="bn">/);
@@ -63,10 +63,10 @@ test('example/ বিল্ড হয়ে হোমপেইজ তৈরি �
     assert.match(html, /<article class="card ">\s*<h3>ফলব্যাক কনটেন্ট<\/h3>\s*<p>এখানে এখনো কিছু লেখা হয়নি।<\/p>/);
     assert.doesNotMatch(html, /<Card|<Blog\.PostCard|<slot/);
     assert.doesNotMatch(result.stderr, /⚠/);
-    assert.ok(!fs.existsSync(path.join(dir, '.alo', 'build')), 'অস্থায়ী ফোল্ডার থেকে যাওয়া উচিত নয়');
+    assert.ok(!fs.existsSync(path.join(dir, '.alo', 'build')), 'the temp folder should not remain');
 });
 
-test('example/-এর রাউট, রাউট গ্রুপ, লেআউট আর 404', (t) => {
+test('example/ routes, route groups, layouts and 404', (t) => {
     const dir = tempProject(t, EXAMPLE);
     assert.equal(alo(dir, ['build']).code, 0);
     const read = (file) => withoutScope(fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8'));
@@ -101,7 +101,7 @@ test('example/-এর রাউট, রাউট গ্রুপ, লেআউ�
     assert.match(read('blog/second-post/index.html'), /<blockquote>\n<p>Markdown-এর ভেতরে <code>\{\{ \}\}<\/code> প্রসেস হয় না/);
     assert.match(read('blog/third-post/index.html'), /<p>প্রতিটা ফাইল থেকে নিজে থেকেই একটা পেইজ তৈরি হয়।<\/p>/);
     assert.match(post, /<section class="blog">/);
-    assert.ok(!fs.existsSync(path.join(dir, 'dist', 'blog', 'coming-soon')), 'খসড়া পোস্ট dist/-এ থাকা উচিত নয়');
+    assert.ok(!fs.existsSync(path.join(dir, 'dist', 'blog', 'coming-soon')), 'draft posts should not be in dist/');
 
     assert.match(about, /রাহিম\s*<span class="badge">প্রধান<\/span>/);
     assert.match(about, /সুমি\s*<span class="badge">ডেভেলপার<\/span>/);
@@ -121,27 +121,27 @@ function linkedAssets(html) {
     return [...html.matchAll(/<(?:script src|link rel="stylesheet" href)="([^"]+)"/g)].map((m) => m[1]);
 }
 
-test('example/-এর CSS: global/ আগে, স্কোপড স্টাইল, মিনিফাই, প্রতিটা পেইজে লিংক', (t) => {
+test('example/ CSS: global/ first, scoped styles, minified, linked on every page', (t) => {
     const dir = tempProject(t, EXAMPLE);
     assert.equal(alo(dir, ['build']).code, 0);
     const read = (file) => fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8');
     const home = read('index.html');
     const href = /<link rel="stylesheet" href="(\/assets\/style\.[0-9a-f]{8}\.css)">\n<\/head>/.exec(home);
-    assert.ok(href, 'হ্যাশসহ stylesheet লিংক থাকা দরকার');
+    assert.ok(href, 'a hashed stylesheet link is expected');
     const css = read(href[1].slice(1));
 
-    assert.ok(css.indexOf('box-sizing') < css.indexOf('--color-text'), 'reset আগে, theme পরে');
-    assert.ok(css.indexOf('--color-text') < css.indexOf('.site-header['), 'global/ আগে, কম্পোনেন্ট পরে');
-    assert.doesNotMatch(css, /\/\* global/, 'build-এ কমেন্ট থাকে না');
-    assert.doesNotMatch(css.trimEnd(), /\n/, 'build-এ CSS এক লাইনে');
+    assert.ok(css.indexOf('box-sizing') < css.indexOf('--color-text'), 'reset before theme');
+    assert.ok(css.indexOf('--color-text') < css.indexOf('.site-header['), 'global/ before components');
+    assert.doesNotMatch(css, /\/\* global/, 'no comments in build');
+    assert.doesNotMatch(css.trimEnd(), /\n/, 'CSS is one line in build');
     const header = /<header class="site-header" (data-a-[0-9a-f]{6})[ >]/.exec(home);
-    assert.ok(header, 'হেডারে স্কোপ অ্যাট্রিবিউট থাকা দরকার');
+    assert.ok(header, 'the header should carry a scope attribute');
     assert.ok(css.includes(`.site-header[${header[1]}]{`));
     assert.ok(css.includes(`nav a[aria-current='page'][${header[1]}]{`));
     assert.match(read('launch/index.html'), /stylesheet/);
 });
 
-test('example/-এর JS: শুধু দরকারি স্ক্রিপ্ট, কম্পোনেন্টের রুটে data-a-c', (t) => {
+test('example/ JS: only the scripts a page needs, data-a-c on component roots', (t) => {
     const dir = tempProject(t, EXAMPLE);
     assert.equal(alo(dir, ['build']).code, 0);
     const read = (file) => fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8');
@@ -164,7 +164,7 @@ test('example/-এর JS: শুধু দরকারি স্ক্রিপ�
     assert.match(pageJs, /getElementById\('today'\)/);
 });
 
-test('example/-এর প্রোডাকশন আউটপুট: হ্যাশ, sitemap, robots', (t) => {
+test('example/ production output: hashes, sitemap, robots', (t) => {
     const dir = tempProject(t, EXAMPLE);
     const result = alo(dir, ['build']);
     assert.equal(result.code, 0);
@@ -189,7 +189,7 @@ test('example/-এর প্রোডাকশন আউটপুট: হ্য�
     assert.equal(read('robots.txt'), 'User-agent: *\nAllow: /\nSitemap: https://example.com/sitemap.xml\n');
 });
 
-test('example/ --base /repo/ দিয়ে: সব লিংক, ছবি, CSS আর JS base-সহ', (t) => {
+test('example/ with --base /repo/: every link, image, CSS and JS has the base', (t) => {
     const dir = tempProject(t, EXAMPLE);
     assert.equal(alo(dir, ['build', '--base', 'repo']).code, 0);
     const read = (file) => fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8');
@@ -207,7 +207,7 @@ test('example/ --base /repo/ দিয়ে: সব লিংক, ছবি, CS
     const home = read('index.html');
     assert.match(home, /<a href="\/repo\/about\/">আমাদের কথা<\/a>|<a href="\/repo\/about\/"/);
     assert.match(read('blog/hello-world/index.html'), /<a href="\/repo\/about\/">আমাদের কথা<\/a>/);
-    assert.match(home, /aria-current="page"/, 'route.path-এ base থাকে না, তাই active লিংক মেলে');
+    assert.match(home, /aria-current="page"/, 'route.path has no base, so the active link still matches');
     assert.match(read('sitemap.xml'), /<loc>https:\/\/example\.com\/repo\/about\/<\/loc>/);
     const about = read('about/index.html');
     assert.match(about, /<img src="\/repo\/images\/logo\.svg"/);
@@ -217,7 +217,7 @@ test('example/ --base /repo/ দিয়ে: সব লিংক, ছবি, CS
     assert.match(read('robots.txt'), /Sitemap: https:\/\/example\.com\/repo\/sitemap\.xml/);
 });
 
-test('example/-এর .alo ফাইলে import, stylesheet লিংক বা লোকাল script src নেই; লজিক শুধু <template>-এ', () => {
+test('example/ .alo files have no import, stylesheet link or local script src; logic only on <template>', () => {
     const { parseSfc } = require('../core/sfc.js');
     const files = [];
     const walk = (dir) => {
@@ -231,7 +231,7 @@ test('example/-এর .alo ফাইলে import, stylesheet লিংক ব�
         }
     };
     walk(EXAMPLE);
-    assert.ok(files.length >= 15, 'উদাহরণে যথেষ্ট .alo ফাইল থাকা দরকার');
+    assert.ok(files.length >= 15, 'the example should have enough .alo files');
 
     const logic = ['for', 'if', 'else-if', 'else'];
     for (const file of files) {
@@ -256,7 +256,7 @@ test('example/-এর .alo ফাইলে import, stylesheet লিংক ব�
     }
 });
 
-test('example/-এর আউটপুটে Alpine.js-এর অ্যাট্রিবিউট অপরিবর্তিত, কোনো রিঅ্যাক্টিভ রানটাইম নেই', (t) => {
+test('example/ output keeps Alpine.js attributes and has no reactive runtime', (t) => {
     const dir = tempProject(t, EXAMPLE);
     assert.equal(alo(dir, ['build']).code, 0);
     const home = fs.readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8');
@@ -270,7 +270,7 @@ test('example/-এর আউটপুটে Alpine.js-এর অ্যাট্�
     }
 });
 
-test('এরর হলে কোড ফ্রেমসহ বাংলা মেসেজ, exit 1, আর আগের dist/ অক্ষত', (t) => {
+test('an error prints a code frame, exits with 1 and keeps the old dist/', (t) => {
     const dir = tempProject(t);
     fs.mkdirSync(path.join(dir, 'pages'));
     fs.writeFileSync(path.join(dir, 'pages', 'page.alo'), '<template>\n  <h1>ঠিক আছে</h1>\n</template>\n');
@@ -280,15 +280,15 @@ test('এরর হলে কোড ফ্রেমসহ বাংলা মে
     const result = alo(dir, ['build']);
 
     assert.equal(result.code, 1);
-    assert.match(result.stderr, /✖ এরর: pages\/page\.alo:2:7/);
-    assert.match(result.stderr, /`titel` নামে কোনো ভেরিয়েবল নেই/);
+    assert.match(result.stderr, /✖ Error: pages\/page\.alo:2:7/);
+    assert.match(result.stderr, /`titel` is not defined/);
     assert.match(result.stderr, /2 \|   <h1>\{\{ titel \}\}<\/h1>/);
     assert.match(fs.readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8'), /ঠিক আছে/);
 });
 
-test('pages/ না থাকলে বিল্ডে পরিষ্কার এরর', (t) => {
+test('a missing pages/ folder gives a clear build error', (t) => {
     const dir = tempProject(t);
     const result = alo(dir, ['build']);
     assert.equal(result.code, 1);
-    assert.match(result.stderr, /`pages\/` ফোল্ডার নেই/);
+    assert.match(result.stderr, /No `pages\/` folder here/);
 });

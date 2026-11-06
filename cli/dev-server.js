@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
-const { createFsReader, writeOutput } = require('./build.js');
+const { createFsReader, writeOutput, count } = require('./build.js');
 const { compile } = require('../core/compile.js');
 const { normalizeBase } = require('../core/base-path.js');
 const { formatDiagnostic, AloError } = require('../core/errors.js');
@@ -47,14 +47,14 @@ function reloadScript(base) {
 function errorPage(err, base) {
     const text =
         err instanceof AloError
-            ? ['এরর: ' + formatDiagnostic(err).join('\n').trimStart()].join('\n')
+            ? 'Error: ' + formatDiagnostic(err).join('\n').trimStart()
             : String(err && err.stack ? err.stack : err);
     return `<!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Alo: বিল্ড এরর</title>
+<title>Alo: build error</title>
 <style>
 body { margin: 0; padding: 2rem; background: #1b1b1f; color: #f2f2f2; font: 15px/1.6 ui-monospace, Menlo, Consolas, monospace; }
 h1 { margin-top: 0; color: #ff6b6b; font: 600 1.2rem system-ui, sans-serif; }
@@ -63,9 +63,9 @@ p { color: #a0a0a8; font-family: system-ui, sans-serif; }
 </style>
 </head>
 <body>
-<h1>✖ বিল্ড এরর</h1>
+<h1>✖ Build error</h1>
 <pre>${escapeHtml(text)}</pre>
-<p>ঠিক করে ফাইলটা সেভ করো, পেইজ নিজে থেকে রিলোড হবে।</p>
+<p>Fix the file and save it; this page reloads by itself.</p>
 ${reloadScript(base)}
 </body>
 </html>
@@ -159,7 +159,7 @@ async function startDevServer({ root, port = 3000, base: rawBase = '/', host = '
     function notFound(res, method) {
         const page = path.join(out, '404.html');
         if (fs.existsSync(page)) return serveFile(res, page, 404, method);
-        return send(res, 404, { 'Content-Type': 'text/plain; charset=utf-8' }, 'পাওয়া যায়নি (404)', method);
+        return send(res, 404, { 'Content-Type': 'text/plain; charset=utf-8' }, 'Not found (404)', method);
     }
 
     function handle(req, res) {
@@ -171,7 +171,7 @@ async function startDevServer({ root, port = 3000, base: rawBase = '/', host = '
         try {
             pathname = decodeURIComponent(url.pathname);
         } catch {
-            return send(res, 400, { 'Content-Type': 'text/plain; charset=utf-8' }, 'ভুল URL', method);
+            return send(res, 400, { 'Content-Type': 'text/plain; charset=utf-8' }, 'Bad URL', method);
         }
 
         if (pathname === base + '__alo/reload') {
@@ -219,7 +219,7 @@ async function startDevServer({ root, port = 3000, base: rawBase = '/', host = '
             for (const name of changed) reader.forget(name);
             changed = new Set();
             const result = rebuild();
-            if (result.ok) say(log.success, `আবার বিল্ড হলো: ${result.pages}টা পেইজ, ${result.ms}ms`);
+            if (result.ok) say(log.success, `Rebuilt ${count(result.pages, 'page')} in ${result.ms}ms`);
             broadcast();
         }, DEBOUNCE_MS);
     }
@@ -247,7 +247,7 @@ async function startDevServer({ root, port = 3000, base: rawBase = '/', host = '
     });
 
     const first = rebuild();
-    if (first.ok) say(log.success, `বিল্ড হলো: ${first.pages}টা পেইজ, ${first.ms}ms`);
+    if (first.ok) say(log.success, `Built ${count(first.pages, 'page')} in ${first.ms}ms`);
 
     const server = http.createServer(handle);
     let actual = null;
@@ -261,12 +261,12 @@ async function startDevServer({ root, port = 3000, base: rawBase = '/', host = '
         }
     }
     if (actual === null) {
-        throw new AloError({ message: `${port} থেকে ${port + PORT_ATTEMPTS - 1} পর্যন্ত সব পোর্ট ব্যস্ত।`, hint: 'অন্য পোর্ট দাও, যেমন `--port 4000`।' });
+        throw new AloError({ message: `Ports ${port} to ${port + PORT_ATTEMPTS - 1} are all in use.`, hint: 'Pick another port, e.g. `--port 4000`.' });
     }
 
     const url = `http://${host}:${actual}${base}`;
-    if (port !== 0 && actual !== port) say(log.info, `পোর্ট ${port} ব্যস্ত ছিল, তাই ${actual}-এ চালু হলো।`);
-    say(log.info, `\nAlo dev সার্ভার চলছে: ${url}\nবন্ধ করতে Ctrl+C\n`);
+    if (port !== 0 && actual !== port) say(log.info, `Port ${port} was in use, so the server started on ${actual}.`);
+    say(log.info, `\nAlo dev server running at ${url}\nPress Ctrl+C to stop\n`);
 
     async function close() {
         clearTimeout(timer);

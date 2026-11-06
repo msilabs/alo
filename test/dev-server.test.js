@@ -66,7 +66,7 @@ const SITE = {
     'public/images/a.svg': '<svg/>',
 };
 
-test('পেইজ, পরিষ্কার URL, 404, Content-Type আর খসড়া', async (t) => {
+test('pages, clean URLs, 404, Content-Type and drafts', async (t) => {
     const { get } = await serve(t, SITE);
 
     const home = await get('/');
@@ -75,7 +75,7 @@ test('পেইজ, পরিষ্কার URL, 404, Content-Type আর খ�
     const html = await home.text();
     assert.match(html, /<h1>হোম<\/h1>/);
     assert.match(html, /new EventSource\("\/__alo\/reload"\)/);
-    assert.match(html, /<link rel="stylesheet" href="\/assets\/style\.css">/, 'dev-এ হ্যাশ নেই');
+    assert.match(html, /<link rel="stylesheet" href="\/assets\/style\.css">/, 'no hashes in dev');
 
     const redirect = await get('/about?x=1');
     assert.equal(redirect.status, 301);
@@ -88,10 +88,10 @@ test('পেইজ, পরিষ্কার URL, 404, Content-Type আর খ�
 
     assert.equal((await get('/assets/style.css')).headers.get('content-type'), 'text/css; charset=utf-8');
     assert.equal((await get('/images/a.svg')).headers.get('content-type'), 'image/svg+xml');
-    assert.match(await (await get('/blog/draft/')).text(), /খসড়া/, 'dev-এ খসড়া দেখা যায়');
+    assert.match(await (await get('/blog/draft/')).text(), /খসড়া/, 'drafts show in dev');
 });
 
-test('প্রজেক্টের বাইরের ফাইল দেওয়া হয় না', async (t) => {
+test('files outside the project are never served', async (t) => {
     const { get } = await serve(t, { ...SITE, 'secret.txt': 'গোপন' });
     for (const pathname of ['/..%2fsecret.txt', '/%2e%2e/%2e%2e/secret.txt', '/../../secret.txt']) {
         const res = await get(pathname);
@@ -100,13 +100,13 @@ test('প্রজেক্টের বাইরের ফাইল দেও�
     }
 });
 
-test('GET আর HEAD ছাড়া অন্য method-এ 405', async (t) => {
+test('methods other than GET and HEAD get 405', async (t) => {
     const { server } = await serve(t, SITE);
     const res = await fetch(`http://localhost:${server.port}/`, { method: 'POST' });
     assert.equal(res.status, 405);
 });
 
-test('ফাইল বদলালে লাইভ রিলোড, আর নতুন কনটেন্ট', async (t) => {
+test('a changed file triggers a live reload with the new content', async (t) => {
     const { root, server, get } = await serve(t, SITE);
     await wait(300);
     const reloads = reloadListener(server.port);
@@ -116,9 +116,9 @@ test('ফাইল বদলালে লাইভ রিলোড, আর ন�
 
     fs.writeFileSync(path.join(root, 'pages', 'page.alo'), '<template><h1>নতুন হোম</h1></template>');
     await eventually(async () => assert.match(await (await get('/')).text(), /নতুন হোম/));
-    await eventually(() => assert.ok(reloads.count() > before, 'রিলোড ইভেন্ট আসা দরকার'));
+    await eventually(() => assert.ok(reloads.count() > before, 'a reload event should arrive'));
 });
-test('বিল্ড এররে overlay, ঠিক করলে আবার স্বাভাবিক', async (t) => {
+test('a build error shows the overlay until it is fixed', async (t) => {
     const { root, get } = await serve(t, SITE);
     await wait(300);
 
@@ -128,23 +128,23 @@ test('বিল্ড এররে overlay, ঠিক করলে আবার 
         assert.equal(res.status, 500);
         return res.text();
     });
-    assert.match(overlay, /বিল্ড এরর/);
+    assert.match(overlay, /Build error/);
     assert.match(overlay, /pages\/about\/page\.alo:2:3/);
-    assert.match(overlay, /`nope` নামে কোনো ভেরিয়েবল নেই/);
+    assert.match(overlay, /`nope` is not defined/);
     assert.match(overlay, /EventSource/);
-    assert.equal((await get('/assets/style.css')).status, 200, 'CSS আগের বিল্ড থেকে চলে');
+    assert.equal((await get('/assets/style.css')).status, 200, 'CSS is served from the last good build');
 
     fs.writeFileSync(path.join(root, 'pages', 'about', 'page.alo'), '<template>ঠিক</template>');
     await eventually(async () => assert.equal((await get('/')).status, 200));
 });
-test('নতুন ফোল্ডার পরে বানালেও নজরে আসে', async (t) => {
+test('a folder created later is picked up', async (t) => {
     const { root, get } = await serve(t, { 'pages/page.alo': '<template><Card /></template>', 'components/Card.alo': '<template>পুরনো</template>' });
     await wait(300);
     fs.mkdirSync(path.join(root, 'data'));
     fs.writeFileSync(path.join(root, 'data', 'site.json'), '{ "name": "নতুন" }');
     await eventually(async () => assert.match(await (await get('/')).text(), /<title>নতুন<\/title>/));
 });
-test('--base: সাইট base-এর নিচে, / থেকে base-এ redirect, রিলোড পাথও base-সহ', async (t) => {
+test('--base: the site lives under base, / redirects there, and the reload path has the base', async (t) => {
     const { get } = await serve(t, SITE, { base: 'repo' });
     const root = await get('/');
     assert.equal(root.status, 302);
@@ -158,7 +158,7 @@ test('--base: সাইট base-এর নিচে, / থেকে base-এ red
     assert.equal((await get('/about/')).status, 404);
 });
 
-test('পোর্ট ব্যস্ত থাকলে পরেরটা নেয়', async (t) => {
+test('a busy port moves to the next one', async (t) => {
     const blocker = http.createServer();
     await new Promise((resolve) => blocker.listen(0, 'localhost', resolve));
     t.after(() => blocker.close());

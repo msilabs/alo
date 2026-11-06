@@ -42,23 +42,23 @@ function scanComponents(reader, warn) {
                 if (!FOLDER_NAME.test(entry.name)) {
                     throw new AloError({
                         file,
-                        message: `কম্পোনেন্টের ফোল্ডারের নাম \`${entry.name}\` চলবে না।`,
-                        hint: `ফোল্ডারের নাম ছোট হাতের kebab-case হয়, যেমন \`${pascalToKebab(entry.name).replace(/[^a-z0-9-]/g, '-')}\`। ট্যাগে এটা PascalCase হয়ে যায়।`,
+                        message: `Component folder name \`${entry.name}\` is not allowed.`,
+                        hint: `Use lowercase kebab-case, e.g. \`${pascalToKebab(entry.name).replace(/[^a-z0-9-]/g, '-')}\`; it becomes PascalCase in the tag.`,
                     });
                 }
                 walk(file, [...prefix, kebabToPascal(entry.name)]);
                 continue;
             }
             if (!entry.name.endsWith('.alo')) {
-                warn({ file, message: '`components/`-এ শুধু `.alo` ফাইল কাজে লাগে, এই ফাইলটা উপেক্ষা করা হলো।' });
+                warn({ file, message: 'Only `.alo` files are used in `components/`; this file was ignored.' });
                 continue;
             }
             if (!FILE_NAME.test(entry.name)) {
                 const base = entry.name.slice(0, -4);
                 throw new AloError({
                     file,
-                    message: `কম্পোনেন্টের ফাইলের নাম \`${entry.name}\` চলবে না।`,
-                    hint: `নাম হবে PascalCase, যেমন \`${kebabToPascal(base.replace(/[^A-Za-z0-9]+/g, '-'))}.alo\`।`,
+                    message: `Component file name \`${entry.name}\` is not allowed.`,
+                    hint: `Use PascalCase, e.g. \`${kebabToPascal(base.replace(/[^A-Za-z0-9]+/g, '-'))}.alo\`.`,
                 });
             }
             const name = [...prefix, entry.name.slice(0, -4)].join('.');

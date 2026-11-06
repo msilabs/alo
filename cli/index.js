@@ -5,9 +5,9 @@ const MIN_NODE_MAJOR = 22;
 const nodeMajor = Number(process.versions.node.split('.')[0]);
 if (nodeMajor < MIN_NODE_MAJOR) {
     process.stderr.write(
-        '✖ এরর: Alo চালাতে Node.js ' + MIN_NODE_MAJOR + ' বা তার নতুন ভার্সন লাগবে। ' +
-            'তোমার আছে v' + process.versions.node + '।\n\n' +
-            '  ইঙ্গিত: https://nodejs.org থেকে নতুন LTS ভার্সন ইনস্টল করো।\n',
+        '✖ Error: Alo needs Node.js ' + MIN_NODE_MAJOR + ' or newer. ' +
+            'You have v' + process.versions.node + '.\n\n' +
+            '  Hint: install a current LTS version from https://nodejs.org\n',
     );
     process.exit(1);
 }
@@ -25,20 +25,20 @@ const FLAGS_BY_COMMAND = {
 };
 const VALUE_FLAGS = ['port', 'base'];
 
-const HELP = `Alo — হালকা স্ট্যাটিক ওয়েব ফ্রেমওয়ার্ক (v${version})
+const HELP = `Alo — a lightweight static web framework (v${version})
 
-ব্যবহার:
-  alo init [folder]                  উদাহরণসহ নতুন প্রজেক্ট
-  alo dev [--port 3000] [--base /]   dev সার্ভার + লাইভ রিলোড
-  alo build [--base /]               dist/ এ প্রোডাকশন বিল্ড
+Usage:
+  alo init [folder]                  create a new project
+  alo dev [--port 3000] [--base /]   dev server with live reload
+  alo build [--base /]               production build into dist/
   alo new page blog/first-post       pages/blog/first-post/page.alo
   alo new layout blog                pages/blog/layout.alo
   alo new component blog/PostCard    components/blog/PostCard.alo
-  alo new post blog/hello-world      data/blog/<আজকের তারিখ>-hello-world.md
-  alo --help                         এই সাহায্য
-  alo --version                      ভার্সন
+  alo new post blog/hello-world      data/blog/<today's date>-hello-world.md
+  alo --help                         show this help
+  alo --version                      show the version
 
-প্রজেক্টের ভেতরে চালাও: node alo <কমান্ড>`;
+Inside a project, run: node alo <command>`;
 
 function parseArgs(argv) {
     const positionals = [];
@@ -71,10 +71,10 @@ function parseArgs(argv) {
         if (!VALUE_FLAGS.includes(name)) {
             const close = suggest(name, [...VALUE_FLAGS, 'help', 'version']);
             throw new AloError({
-                message: `অজানা ফ্ল্যাগ \`${arg}\`।`,
+                message: `Unknown flag \`${arg}\`.`,
                 hint: close
-                    ? `তুমি কি \`--${close}\` বোঝাতে চেয়েছিলে?`
-                    : 'Alo-র ফ্ল্যাগ শুধু `--port` আর `--base`। সব দেখতে `alo --help`।',
+                    ? `Did you mean \`--${close}\`?`
+                    : 'Alo only has `--port` and `--base`. Run `alo --help` for everything.',
             });
         }
 
@@ -82,8 +82,8 @@ function parseArgs(argv) {
             value = argv[i + 1];
             if (value === undefined || value.startsWith('--')) {
                 throw new AloError({
-                    message: `\`--${name}\`-এর পরে একটা মান দাও।`,
-                    hint: name === 'port' ? 'যেমন: `--port 3000`' : 'যেমন: `--base /my-repo/`',
+                    message: `\`--${name}\` needs a value.`,
+                    hint: name === 'port' ? 'For example: `--port 3000`' : 'For example: `--base /my-repo/`',
                 });
             }
             i++;
@@ -99,11 +99,11 @@ function validateFlags(command, flags) {
         if (flags[name] === undefined) continue;
         if (!FLAGS_BY_COMMAND[command].includes(name)) {
             throw new AloError({
-                message: `\`alo ${command}\`-এ \`--${name}\` চলে না।`,
+                message: `\`--${name}\` does not work with \`alo ${command}\`.`,
                 hint:
                     name === 'port'
-                        ? '`--port` শুধু `alo dev`-এ চলে।'
-                        : '`--base` শুধু `alo dev` আর `alo build`-এ চলে।',
+                        ? '`--port` only works with `alo dev`.'
+                        : '`--base` only works with `alo dev` and `alo build`.',
             });
         }
     }
@@ -112,8 +112,8 @@ function validateFlags(command, flags) {
         const port = Number(flags.port);
         if (!Number.isInteger(port) || port < 1 || port > 65535) {
             throw new AloError({
-                message: `\`--port\`-এর মান \`${flags.port}\` সঠিক নয়।`,
-                hint: '১ থেকে ৬৫৫৩৫-এর মধ্যে একটা পূর্ণসংখ্যা দাও, যেমন `--port 3000`।',
+                message: `Invalid \`--port\` value \`${flags.port}\`.`,
+                hint: 'Use a whole number from 1 to 65535, e.g. `--port 3000`.',
             });
         }
         flags.port = port;
@@ -142,7 +142,7 @@ async function runCommand(command, args, flags) {
         process.once('SIGTERM', stop);
         return;
     }
-    throw new AloError({ message: `\`alo ${command}\` কমান্ড এখনো তৈরি হয়নি।` });
+    throw new AloError({ message: `Unknown command \`alo ${command}\`.` });
 }
 
 async function main(argv) {
@@ -162,10 +162,10 @@ async function main(argv) {
     if (!COMMANDS.includes(command)) {
         const close = suggest(command, COMMANDS);
         throw new AloError({
-            message: `অজানা কমান্ড \`${command}\`।`,
+            message: `Unknown command \`${command}\`.`,
             hint: close
-                ? `তুমি কি \`alo ${close}\` বোঝাতে চেয়েছিলে? সব কমান্ড দেখতে \`alo --help\`।`
-                : 'সব কমান্ড দেখতে `alo --help`।',
+                ? `Did you mean \`alo ${close}\`? Run \`alo --help\` for all commands.`
+                : 'Run `alo --help` for all commands.',
         });
     }
 

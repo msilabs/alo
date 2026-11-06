@@ -27,11 +27,11 @@ function read(dir, file) {
     return fs.readFileSync(path.join(dir, ...file.split('/')), 'utf8');
 }
 
-test('init: প্রজেক্টের সব ফাইল আর পরের ধাপ', (t) => {
+test('init: every project file and the next steps', (t) => {
     const cwd = tempDir(t);
     const result = run(cwd, ['init', 'My Site']);
     assert.equal(result.code, 0, result.stderr);
-    assert.match(result.stdout, /নতুন Alo প্রজেক্ট তৈরি হলো: My Site/);
+    assert.match(result.stdout, /Created a new Alo project: My Site/);
     assert.match(result.stdout, /cd "My Site"\n {2}npm install\n {2}node alo dev/);
 
     const dir = path.join(cwd, 'My Site');
@@ -50,22 +50,22 @@ test('init: প্রজেক্টের সব ফাইল আর পরে�
     assert.equal(read(dir, '.gitignore'), 'node_modules/\ndist/\n.alo/\n');
     assert.equal(read(dir, '.gitattributes'), '*.alo linguist-language=HTML\n');
     assert.deepEqual(JSON.parse(read(dir, '.vscode/settings.json'))['files.associations'], { '*.alo': 'html' });
-    if (process.platform !== 'win32') assert.ok(fs.statSync(path.join(dir, 'alo')).mode & 0o100, 'alo ফাইল চালানো যায়');
+    if (process.platform !== 'win32') assert.ok(fs.statSync(path.join(dir, 'alo')).mode & 0o100, 'the alo file is executable');
 });
 
-test('init: ফোল্ডারের নাম থেকে প্যাকেজের নাম', () => {
+test('init: package name from the folder name', () => {
     assert.equal(packageName('/x/My Site'), 'my-site');
     assert.equal(packageName('/x/আলো'), 'my-site');
     assert.equal(packageName('/x/blog_2026'), 'blog-2026');
 });
 
-test('init: খালি নয় এমন ফোল্ডারে চলে না; শুধু .git থাকলে চলে', (t) => {
+test('init: refuses a non-empty folder but allows one with only .git', (t) => {
     const cwd = tempDir(t);
     fs.mkdirSync(path.join(cwd, 'full'));
     fs.writeFileSync(path.join(cwd, 'full', 'notes.txt'), 'x');
     const full = run(cwd, ['init', 'full']);
     assert.equal(full.code, 1);
-    assert.match(full.stderr, /ফোল্ডারটা খালি নয়/);
+    assert.match(full.stderr, /is not empty/);
     assert.deepEqual(fs.readdirSync(path.join(cwd, 'full')), ['notes.txt']);
 
     fs.mkdirSync(path.join(cwd, 'repo', '.git'), { recursive: true });
@@ -73,7 +73,7 @@ test('init: খালি নয় এমন ফোল্ডারে চলে 
     assert.ok(fs.existsSync(path.join(cwd, 'repo', 'pages', 'page.alo')));
 });
 
-test('init: নাম ছাড়া চালালে বর্তমান খালি ফোল্ডারেই', (t) => {
+test('init: without a name it uses the current empty folder', (t) => {
     const cwd = tempDir(t);
     const result = run(cwd, ['init']);
     assert.equal(result.code, 0);
@@ -82,23 +82,23 @@ test('init: নাম ছাড়া চালালে বর্তমান �
     assert.ok(fs.existsSync(path.join(cwd, 'pages', 'page.alo')));
 });
 
-test('init করা প্রজেক্ট এরর আর সতর্কবার্তা ছাড়া বিল্ড হয়', (t) => {
+test('a new init project builds without errors or warnings', (t) => {
     const cwd = tempDir(t);
     run(cwd, ['init', 'site']);
     const result = run(path.join(cwd, 'site'), ['build']);
     assert.equal(result.code, 0, result.stderr);
     assert.equal(result.stderr, '');
-    assert.match(result.stdout, /বিল্ড শেষ: 5টা পেইজ/);
+    assert.match(result.stdout, /Built 5 pages/);
 });
 
-test('রুটের alo ফাইল: npm install ছাড়া সঠিক মেসেজ, ইনস্টলের পরে কাজ করে', (t) => {
+test('the root alo file: a clear message before npm install, works after', (t) => {
     const cwd = tempDir(t);
     run(cwd, ['init', 'site']);
     const dir = path.join(cwd, 'site');
 
     const missing = run(dir, ['build'], path.join(dir, 'alo'));
     assert.equal(missing.code, 1);
-    assert.equal(missing.stderr.trim(), 'Alo ইনস্টল করা নেই। আগে `npm install` চালাও।');
+    assert.equal(missing.stderr.trim(), 'Alo is not installed. Run `npm install` first.');
 
     // Stands in for `npm install`: node_modules/@msilabs/alo points at this repository.
     fs.mkdirSync(path.join(dir, 'node_modules', '@msilabs'), { recursive: true });
@@ -108,7 +108,7 @@ test('রুটের alo ফাইল: npm install ছাড়া সঠিক
     assert.ok(fs.existsSync(path.join(dir, 'dist', 'index.html')));
 });
 
-test('plan: প্রতিটা ধরনের ফাইলের পাথ', () => {
+test('plan: the file path for each kind', () => {
     assert.equal(plan('page', 'blog/first-post').file, 'pages/blog/first-post/page.alo');
     assert.equal(plan('page', '(bare)/launch').note, 'URL: /launch/');
     assert.equal(plan('page', '.').file, 'pages/page.alo');
@@ -116,13 +116,13 @@ test('plan: প্রতিটা ধরনের ফাইলের পাথ',
     assert.equal(plan('layout', 'blog').file, 'pages/blog/layout.alo');
     assert.match(plan('layout', 'blog').contents, /<slot \/>/);
     assert.equal(plan('component', 'Card').file, 'components/Card.alo');
-    assert.equal(plan('component', 'post-list/Item').note, 'ব্যবহার: <PostList.Item />');
+    assert.equal(plan('component', 'post-list/Item').note, 'Use it as <PostList.Item />');
     assert.match(plan('component', 'blog/PostCard').contents, /class="post-card"/);
     assert.match(plan('post', 'blog/hello-world').file, /^data\/blog\/\d{4}-\d{2}-\d{2}-hello-world\.md$/);
     assert.match(plan('post', 'blog/hello-world').contents, /^---\ntitle: hello world\ndraft: true\n---\n/);
 });
 
-test('new: ফাইল বানায়, আর বানানো পেইজ বিল্ড হয়', (t) => {
+test('new: creates files, and the new pages build', (t) => {
     const cwd = tempDir(t);
     run(cwd, ['init', 'site']);
     const dir = path.join(cwd, 'site');
@@ -130,7 +130,7 @@ test('new: ফাইল বানায়, আর বানানো পেই�
     for (const args of [['page', 'contact'], ['layout', 'blog'], ['component', 'Button'], ['post', 'blog/second'], ['page', '(bare)/launch']]) {
         const result = run(dir, ['new', ...args]);
         assert.equal(result.code, 0, `${args.join(' ')}: ${result.stderr}`);
-        assert.match(result.stdout, /✔ তৈরি হলো: /);
+        assert.match(result.stdout, /✔ Created /);
     }
     assert.match(read(dir, 'pages/contact/page.alo'), /<h1>contact<\/h1>/);
     const build = run(dir, ['build']);
@@ -139,32 +139,32 @@ test('new: ফাইল বানায়, আর বানানো পেই�
     assert.ok(fs.existsSync(path.join(dir, 'dist', 'launch', 'index.html')));
 });
 
-test('new: আগের ফাইল ওভাররাইট করে না', (t) => {
+test('new: never overwrites an existing file', (t) => {
     const cwd = tempDir(t);
     run(cwd, ['init', 'site']);
     const dir = path.join(cwd, 'site');
     const before = read(dir, 'components/Card.alo');
     const result = run(dir, ['new', 'component', 'Card']);
     assert.equal(result.code, 1);
-    assert.match(result.stderr, /`components\/Card\.alo` আগে থেকেই আছে/);
+    assert.match(result.stderr, /`components\/Card\.alo` already exists/);
     assert.equal(read(dir, 'components/Card.alo'), before);
 });
 
-test('new: ভুল নাম, একই slug, অজানা ধরন আর প্রজেক্টের বাইরে চালানোয় এরর', (t) => {
+test('new: invalid names, duplicate slugs, unknown kinds and running outside a project fail', (t) => {
     const cwd = tempDir(t);
     run(cwd, ['init', 'site']);
     const dir = path.join(cwd, 'site');
 
     const cases = [
-        [['component', 'card'], /PascalCase নয়/, /`Card`/],
-        [['component', 'Blog/Card'], /ফোল্ডারের নাম `Blog` চলবে না/, /kebab-case/],
-        [['page', 'About'], /ফোল্ডারের নাম `About` চলবে না/, /ছোট হাতের/],
-        [['page', 'blog/[slug]/x'], /`\[slug\]` চলবে না/, /শেষে/],
-        [['post', 'blog/hello-world'], /`hello-world` নামে লেখা আগে থেকেই আছে/, /slug/],
-        [['post', 'hello'], /ফোল্ডার আর নাম দুটোই দাও/, /blog\/hello-world/],
-        [['pag', 'x'], /`alo new pag` বলে কিছু নেই/, /`alo new page`/],
-        [['component'], /`alo new component`-এর পরে একটা নাম দাও/, /Card/],
-        [[], /কী বানাতে হবে বলো/, /alo new post/],
+        [['component', 'card'], /is not PascalCase/, /`Card`/],
+        [['component', 'Blog/Card'], /Folder name `Blog` is not allowed/, /kebab-case/],
+        [['page', 'About'], /Folder name `About` is not allowed/, /lowercase/],
+        [['page', 'blog/[slug]/x'], /`\[slug\]` is not allowed/, /last part/],
+        [['post', 'blog/hello-world'], /slug `hello-world` already exists/, /slug/],
+        [['post', 'hello'], /Give both a folder and a name/, /blog\/hello-world/],
+        [['pag', 'x'], /There is no `alo new pag`/, /`alo new page`/],
+        [['component'], /`alo new component` needs a name/, /Card/],
+        [[], /Tell Alo what to create/, /alo new post/],
     ];
     for (const [args, message, hint] of cases) {
         const result = run(dir, ['new', ...args]);
@@ -175,5 +175,5 @@ test('new: ভুল নাম, একই slug, অজানা ধরন আর
 
     const outside = run(cwd, ['new', 'page', 'x']);
     assert.equal(outside.code, 1);
-    assert.match(outside.stderr, /`pages\/` ফোল্ডার নেই/);
+    assert.match(outside.stderr, /No `pages\/` folder here/);
 });

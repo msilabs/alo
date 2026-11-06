@@ -7,7 +7,7 @@ const { renderMarkdown } = require('./markdown.js');
 const NAME = /^[a-z0-9-]+$/;
 const DATED = /^(\d{4})-(\d{2})-(\d{2})(?:-(.*))?$/;
 const EXTENSIONS = ['.json', '.md'];
-const IMMUTABLE_HINT = 'নতুন মান বানাও: `toReversed()`, `toSorted()` বা `slice()` ব্যবহার করো।';
+const IMMUTABLE_HINT = 'Make a new value instead: use `toReversed()`, `toSorted()` or `slice()`.';
 
 function byName(a, b) {
     if (a.name < b.name) return -1;
@@ -34,7 +34,7 @@ function lockArray(array) {
     for (const method of MUTATING_METHODS) {
         Object.defineProperty(array, method, {
             value() {
-                throw new AloError({ message: `\`${method}()\` ডেটা বদলায়, তাই ডেটার অ্যারেতে চলে না।`, hint: IMMUTABLE_HINT });
+                throw new AloError({ message: `\`${method}()\` changes data, so it cannot be used on data arrays.`, hint: IMMUTABLE_HINT });
             },
         });
     }
@@ -68,8 +68,8 @@ function parseJson(source, file) {
             file,
             ...where,
             source,
-            message: `JSON ঠিক নেই: ${err.message.replace(/ in JSON at position \d+.*$/, '')}`,
-            hint: 'কমা, কোট আর বন্ধনী দেখো। JSON-এ শেষ আইটেমের পরে কমা চলে না, আর key সবসময় ডাবল কোটে থাকে।',
+            message: `Invalid JSON: ${err.message.replace(/ in JSON at position \d+.*$/, '')}`,
+            hint: 'Check commas, quotes and brackets. JSON allows no comma after the last item, and keys need double quotes.',
         });
     }
 }
@@ -93,20 +93,20 @@ function scan(reader, dir, warn) {
         const [base, extension] = entry.isDirectory ? [entry.name, ''] : splitExtension(entry.name);
 
         if (!entry.isDirectory && !EXTENSIONS.includes(extension)) {
-            warn({ file: path, message: '`data/`-এ শুধু `.json` আর `.md` ফাইল পড়া হয়, এটা উপেক্ষা করা হলো।' });
+            warn({ file: path, message: 'Only `.json` and `.md` files are read in `data/`; this file was ignored.' });
             continue;
         }
         if (!NAME.test(base)) {
             throw new AloError({
                 file: path,
-                message: `\`data/\`-এ নাম \`${entry.name}\` চলবে না।`,
-                hint: 'নামে শুধু ছোট হাতের ইংরেজি অক্ষর, সংখ্যা আর হাইফেন চলে, যেমন `footer-links.json`।',
+                message: `Name \`${entry.name}\` is not allowed in \`data/\`.`,
+                hint: 'Use lowercase letters, digits and hyphens, e.g. `footer-links.json`.',
             });
         }
         if (seen.has(base)) {
             const other = seen.get(base);
-            const both = entry.isDirectory || other.endsWith('/') ? 'একই নামে ফাইল আর ফোল্ডার' : 'একই নামে `.json` আর `.md`';
-            throw new AloError({ file: path, message: `${both} আছে: \`${other}\` আর \`${path}\`।`, hint: 'একটা রাখো, অন্যটা সরাও বা নাম বদলাও।' });
+            const both = entry.isDirectory || other.endsWith('/') ? 'A file and a folder share a name' : 'A `.json` and a `.md` file share a name';
+            throw new AloError({ file: path, message: `${both}: \`${other}\` and \`${path}\`.`, hint: 'Keep one, and remove or rename the other.' });
         }
         seen.set(base, entry.isDirectory ? path + '/' : path);
 
@@ -134,14 +134,14 @@ function loadMarkdownFile(input, file) {
     if (/^---[ \t]*$/.test(lines[0])) {
         const end = lines.findIndex((line, i) => i > 0 && /^---[ \t]*$/.test(line));
         if (end === -1) {
-            throw new AloError({ file, line: 1, column: 1, source, message: 'ফ্রন্ট ম্যাটার বন্ধ হয়নি।', hint: 'ফ্রন্ট ম্যাটারের শেষে আরেকটা `---` লাইন দাও।' });
+            throw new AloError({ file, line: 1, column: 1, source, message: 'Front matter is not closed.', hint: 'End the front matter with another `---` line.' });
         }
         frontMatter = parseYaml(lines.slice(1, end).join('\n'), { file, lineOffset: 1, source });
         body = lines.slice(end + 1).join('\n');
 
         if (Object.hasOwn(frontMatter, 'body')) {
             const line = lines.findIndex((text, i) => i > 0 && i < end && /^body\s*:/.test(text)) + 1;
-            throw new AloError({ file, line, column: 1, source, message: '`body` ফ্রন্ট ম্যাটারে রাখা যায় না।', hint: 'Markdown-এর লেখাটাই নিজে থেকে `body`-তে আসে।' });
+            throw new AloError({ file, line, column: 1, source, message: '`body` cannot be set in front matter.', hint: 'The Markdown text itself becomes `body`.' });
         }
     }
 
@@ -159,7 +159,7 @@ function loadMarkdownFile(input, file) {
 }
 
 function immutableError(path) {
-    return new AloError({ message: `\`${path}\` বদলানো যায় না।`, hint: IMMUTABLE_HINT });
+    return new AloError({ message: `\`${path}\` cannot be changed.`, hint: IMMUTABLE_HINT });
 }
 
 // Creates the `data` value for templates. Files are read only when a template first reads them,
@@ -198,10 +198,10 @@ function createData(reader, { mode, warn, loadMarkdown = loadMarkdownFile, cache
         if (dated) {
             const [, year, month, day, rest] = dated;
             if (!isValidDate(Number(year), Number(month), Number(day))) {
-                throw new AloError({ file, message: `ফাইলের নামের তারিখ \`${year}-${month}-${day}\` সঠিক নয়।`, hint: 'তারিখ লেখো `YYYY-MM-DD` ধাঁচে, যেমন `2026-01-10-hello-world.md`।' });
+                throw new AloError({ file, message: `The date \`${year}-${month}-${day}\` in the file name is not valid.`, hint: 'Write dates as `YYYY-MM-DD`, e.g. `2026-01-10-hello-world.md`.' });
             }
             if (!rest) {
-                throw new AloError({ file, message: 'ফাইলের নামে তারিখের পরে কোনো নাম নেই।', hint: 'যেমন `2026-01-10-hello-world.md`; তারিখের পরের অংশটাই URL-এর slug।' });
+                throw new AloError({ file, message: 'The file name has no name after the date.', hint: 'For example `2026-01-10-hello-world.md`; the part after the date is the URL slug.' });
             }
             slug = rest;
             date = `${year}-${month}-${day}`;
@@ -209,13 +209,13 @@ function createData(reader, { mode, warn, loadMarkdown = loadMarkdownFile, cache
 
         const value = loadFile(file);
         if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-            throw new AloError({ file, message: 'অ্যারে ফোল্ডারের প্রতিটা ফাইলের মান অবজেক্ট হতে হবে।', hint: 'JSON ফাইলটা `{ ... }` দিয়ে লেখো।' });
+            throw new AloError({ file, message: 'Every file in a list folder must be an object.', hint: 'Write the JSON file as `{ ... }`.' });
         }
         if (Object.hasOwn(value, 'slug')) {
-            throw new AloError({ file, message: '`slug` ফাইলের নাম থেকে আসে, এখান থেকে সরাও।', hint: `এই ফাইলের slug হবে \`${slug}\`।` });
+            throw new AloError({ file, message: '`slug` comes from the file name; remove it here.', hint: `This file's slug is \`${slug}\`.` });
         }
         if (date && Object.hasOwn(value, 'date')) {
-            throw new AloError({ file, message: 'তারিখ ফাইলের নামেও আছে, ডেটাতেও আছে।', hint: 'যেকোনো একটা রাখো: ফাইলের নামের তারিখ, অথবা ডেটার `date`।' });
+            throw new AloError({ file, message: 'The date is both in the file name and in the data.', hint: 'Keep one: the date in the file name or `date` in the data.' });
         }
 
         // Copying descriptors keeps lazy getters (like a Markdown `body`) lazy.
@@ -236,8 +236,8 @@ function createData(reader, { mode, warn, loadMarkdown = loadMarkdownFile, cache
                 if (bySlug.has(item.slug)) {
                     throw new AloError({
                         file,
-                        message: `দুটো ফাইলের slug একই, \`${item.slug}\`: \`${bySlug.get(item.slug)}\` আর \`${file}\`।`,
-                        hint: 'তারিখ বাদ দেওয়ার পরের নাম আলাদা রাখো।',
+                        message: `Two files have the same slug \`${item.slug}\`: \`${bySlug.get(item.slug)}\` and \`${file}\`.`,
+                        hint: 'Make the names after the date different.',
                     });
                 }
                 bySlug.set(item.slug, file);
@@ -301,8 +301,8 @@ function createData(reader, { mode, warn, loadMarkdown = loadMarkdownFile, cache
             const folder = pageFile.slice(0, pageFile.lastIndexOf('/') + 1);
             throw new AloError({
                 file: pageFile,
-                message: `\`${folder}\`-এর জন্য \`${dir}/\` ফোল্ডারে JSON বা Markdown ফাইল রাখো।`,
-                hint: node && node.kind !== 'array' ? `\`${dir}/\`-এ সাবফোল্ডার আছে, তাই এটা অ্যারে নয়।` : `প্রতিটা ফাইল থেকে একটা পেইজ হবে, যেমন \`${dir}/2026-01-10-hello-world.md\`।`,
+                message: `Add JSON or Markdown files to \`${dir}/\` for \`${folder}\`.`,
+                hint: node && node.kind !== 'array' ? `\`${dir}/\` has subfolders, so it is not a list.` : `Each file becomes one page, e.g. \`${dir}/2026-01-10-hello-world.md\`.`,
             });
         }
         return arrayEntries(node).entries;

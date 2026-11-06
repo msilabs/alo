@@ -83,7 +83,7 @@ function tidyWhitespace(nodes) {
 function checkSlotAttributes(slots, fail) {
     for (const slot of slots) {
         if (slot.attrs.length > 0) {
-            fail(slot, '`<slot>`-এ অ্যাট্রিবিউট চলে না।', 'নামযুক্ত স্লট নেই; একটা ফাইলে শুধু একটা `<slot />` থাকে।');
+            fail(slot, '`<slot>` cannot have attributes.', 'There are no named slots; a file has a single `<slot />`.');
         }
     }
 }
@@ -92,7 +92,7 @@ function checkComponentSlot(blocks, fail) {
     const slots = blocks.template ? findSlots(blocks.template.children) : [];
     checkSlotAttributes(slots, fail);
     if (slots.length > 1) {
-        fail(slots[1], 'কম্পোনেন্টে একটার বেশি `<slot>` আছে।', `একটা কম্পোনেন্টে একটাই \`<slot />\` থাকে। প্রথমটা আছে লাইন ${slots[0].line}-এ।`);
+        fail(slots[1], 'More than one `<slot>` in a component.', `A component has a single \`<slot />\`. The first one is on line ${slots[0].line}.`);
     }
     blocks.hasSlot = slots.length === 1;
 }
@@ -103,12 +103,12 @@ function checkLayoutSlot(blocks, fail) {
     if (slots.length === 0) {
         fail(
             blocks.template ?? { line: 1, column: 1 },
-            'লেআউটে `<slot />` নেই।',
-            'পেইজ কোথায় বসবে, `<template>`-এর ভেতরে সেখানে `<slot />` লেখো।',
+            'The layout has no `<slot />`.',
+            'Put `<slot />` inside `<template>` where the page should go.',
         );
     }
     if (slots.length > 1) {
-        fail(slots[1], 'লেআউটে একটার বেশি `<slot />` আছে।', `লেআউটে ঠিক একটা \`<slot />\` থাকে। প্রথমটা আছে লাইন ${slots[0].line}-এ।`);
+        fail(slots[1], 'More than one `<slot />` in the layout.', `A layout has exactly one \`<slot />\`. The first one is on line ${slots[0].line}.`);
     }
 }
 
@@ -117,8 +117,8 @@ function blockKey(node, fail) {
         return 'styleGlobal';
     }
     if (node.attrs.length > 0) {
-        const hint = node.name === 'style' ? 'একমাত্র ব্যতিক্রম `<style global>`।' : 'টপ-লেভেল ব্লক সবসময় অ্যাট্রিবিউট ছাড়া লেখো।';
-        fail(node, `টপ-লেভেলের \`<${node.name}>\` ব্লকে অ্যাট্রিবিউট চলে না।`, hint);
+        const hint = node.name === 'style' ? 'The only exception is `<style global>`.' : 'Write top-level blocks without attributes.';
+        fail(node, `The top-level \`<${node.name}>\` block cannot have attributes.`, hint);
     }
     return node.name === 'style' ? 'style' : node.name;
 }
@@ -127,7 +127,7 @@ function checkNoDocumentTags(nodes, fail) {
     for (const node of nodes) {
         if (node.type !== 'element') continue;
         if (DOCUMENT_TAGS.includes(node.name)) {
-            fail(node, `\`<${node.name}>\` ট্যাগ এখানে লেখা যায় না।`, '`<html>`, `<head>` আর `<body>` Alo নিজে বানায়।');
+            fail(node, `The \`<${node.name}>\` tag cannot be used here.`, 'Alo creates `<html>`, `<head>` and `<body>` itself.');
         }
         checkNoDocumentTags(node.children, fail);
     }
@@ -152,20 +152,20 @@ function parseSfc(source, file, kind) {
             const lines = before.split('\n');
             const line = node.line + lines.length - 1;
             const column = lines.length === 1 ? node.column + offset : lines[lines.length - 1].length + 1;
-            fail({ line, column }, 'ব্লকের বাইরে লেখা আছে।', 'HTML মার্কআপ `<template>` ব্লকের ভেতরে রাখো।');
+            fail({ line, column }, 'Text outside a block.', 'Put HTML markup inside the `<template>` block.');
         }
 
         if (!BLOCKS.includes(node.name)) {
-            fail(node, `অজানা টপ-লেভেল ব্লক \`<${node.name}>\`।`, 'টপ-লেভেলে শুধু `<head>`, `<template>`, `<style>` আর `<script>` চলে। HTML মার্কআপ `<template>`-এর ভেতরে রাখো।');
+            fail(node, `Unknown top-level block \`<${node.name}>\`.`, 'Only `<head>`, `<template>`, `<style>` and `<script>` are allowed at the top level. Put HTML markup inside `<template>`.');
         }
         if (node.name === 'head' && kind === 'component') {
-            fail(node, 'কম্পোনেন্টে `<head>` চলে না।', '`<head>` শুধু page আর layout-এ লেখা যায়।');
+            fail(node, 'Components cannot have `<head>`.', '`<head>` is only for pages and layouts.');
         }
 
         const key = blockKey(node, fail);
         if (blocks[key]) {
             const label = key === 'styleGlobal' ? '<style global>' : `<${node.name}>`;
-            fail(node, `\`${label}\` ব্লক একবারের বেশি আছে।`, `প্রথম \`${label}\` আছে লাইন ${blocks[key].line}-এ। দুটো এক করো।`);
+            fail(node, `The \`${label}\` block appears more than once.`, `The first \`${label}\` is on line ${blocks[key].line}. Merge them.`);
         }
         blocks[key] = node;
     }

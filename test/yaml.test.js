@@ -12,10 +12,10 @@ function yamlError(text, lineOffset = 0) {
         assert.ok(err instanceof AloError, String(err));
         return err;
     }
-    assert.fail('এরর আশা করা হয়েছিল');
+    assert.fail('expected an error');
 }
 
-test('স্কেলার: কোট ছাড়া, সিঙ্গেল আর ডাবল কোট, সংখ্যা, boolean, null', () => {
+test('scalars: plain, single and double quoted, numbers, booleans, null', () => {
     assert.deepEqual(
         parseYaml(
             [
@@ -54,7 +54,7 @@ test('স্কেলার: কোট ছাড়া, সিঙ্গেল �
     );
 });
 
-test('inline আর block লিস্ট, শুধু স্কেলার দিয়ে', () => {
+test('inline and block lists of scalars', () => {
     assert.deepEqual(parseYaml('tags: [intro, "c d", 3, true]\nempty: []\nitems:\n  - a\n  - 2\n- b\nnone:'), {
         tags: ['intro', 'c d', 3, true],
         empty: [],
@@ -63,7 +63,7 @@ test('inline আর block লিস্ট, শুধু স্কেলার �
     });
 });
 
-test('কমেন্ট আর খালি লাইন; কোটের ভেতরে বা শব্দের মাঝে # কমেন্ট নয়', () => {
+test('comments and blank lines; # inside quotes or words is not a comment', () => {
     assert.deepEqual(parseYaml('# শুরু\n\ntitle: ক # কমেন্ট\nurl: https://x.com/a#b\nq: "a # b"\ntags: [a, "#b"] # শেষ\n'), {
         title: 'ক',
         url: 'https://x.com/a#b',
@@ -72,7 +72,7 @@ test('কমেন্ট আর খালি লাইন; কোটের ভ�
     });
 });
 
-test('key যেমন লেখা তেমন থাকে, মানের ভেতরে : চলে', () => {
+test('keys stay as written and values may contain :', () => {
     assert.deepEqual(parseYaml('Post Title: a\ntime: 10:30\nlink: https://example.com'), {
         'Post Title': 'a',
         time: '10:30',
@@ -80,15 +80,15 @@ test('key যেমন লেখা তেমন থাকে, মানের �
     });
 });
 
-test('অসাপোর্টেড গঠনে লাইনসহ এরর আর .json-এর ইঙ্গিত', () => {
+test('unsupported syntax fails with the line and a .json hint', () => {
     const cases = [
-        ['author:\n  name: ক', 2, /নেস্টেড অবজেক্ট/],
-        ['bio: |\n  লাইন', 1, /কয়েক লাইনের মান/],
-        ['bio: >', 1, /কয়েক লাইনের মান/],
-        ['a: &anchor x', 1, /anchor, tag বা অবজেক্ট/],
+        ['author:\n  name: ক', 2, /Nested objects/],
+        ['bio: |\n  লাইন', 1, /Multi-line values/],
+        ['bio: >', 1, /Multi-line values/],
+        ['a: &anchor x', 1, /anchors, tags or objects/],
         ['a: *ref', 1, /anchor/],
-        ['a: {b: 1}', 1, /অবজেক্ট/],
-        ['tags: [[a]]', 1, /লিস্টের ভেতরে লিস্ট/],
+        ['a: {b: 1}', 1, /objects/],
+        ['tags: [[a]]', 1, /Lists cannot contain lists/],
     ];
     for (const [text, line, pattern] of cases) {
         const err = yamlError(text);
@@ -98,16 +98,16 @@ test('অসাপোর্টেড গঠনে লাইনসহ এরর �
     }
 });
 
-test('tab indent, ডুপ্লিকেট key, কোলন ছাড়া লাইন আর বন্ধ না করা কোটে এরর', () => {
-    assert.match(yamlError('tags:\n\t- a').message, /tab/);
+test('tab indents, duplicate keys, lines without a colon and unclosed quotes fail', () => {
+    assert.match(yamlError('tags:\n\t- a').message, /Tabs/);
     const dup = yamlError('title: a\ntitle: b');
-    assert.match(dup.message, /`title` key দুবার/);
+    assert.match(dup.message, /Duplicate key `title`/);
     assert.equal(dup.line, 2);
-    assert.match(yamlError('শুধু লেখা').message, /বোঝা যাচ্ছে না/);
-    assert.match(yamlError('title: "খোলা').message, /কোট বন্ধ হয়নি/);
-    assert.match(yamlError('- a').message, /কোনো key-এর নিচে নেই/);
+    assert.match(yamlError('শুধু লেখা').message, /Cannot parse the line/);
+    assert.match(yamlError('title: "খোলা').message, /Unclosed quote/);
+    assert.match(yamlError('- a').message, /List item without a key/);
 });
 
-test('lineOffset দিয়ে ফাইলের আসল লাইন', () => {
+test('lineOffset gives the real line in the file', () => {
     assert.equal(yamlError('title: a\na: {', 1).line, 3);
 });

@@ -25,17 +25,17 @@ function cssError(css) {
         assert.ok(err instanceof AloError, String(err));
         return err;
     }
-    assert.fail('এরর আশা করা হয়েছিল');
+    assert.fail('expected an error');
 }
 
-test('স্পেকের অংশ ১২-এর সিলেক্টর উদাহরণ', () => {
+test('selector examples from spec section 12', () => {
     assert.equal(scopeSelector('.card h2', A), `.card h2[${A}]`);
     assert.equal(scopeSelector('.btn:hover', A), `.btn[${A}]:hover`);
     assert.equal(scopeSelector('.card::before', A), `.card[${A}]::before`);
     assert.equal(scopeSelector('a, b', A), `a[${A}], b[${A}]`);
 });
 
-test('কম্বিনেটর, অ্যাট্রিবিউট সিলেক্টর আর আর্গুমেন্টওয়ালা pseudo-class', () => {
+test('combinators, attribute selectors and pseudo-classes with arguments', () => {
     assert.equal(scopeSelector('ul > li + li ~ p', A), `ul > li + li ~ p[${A}]`);
     assert.equal(scopeSelector('input[type="a b"]:focus', A), `input[type="a b"][${A}]:focus`);
     assert.equal(scopeSelector('.a:not(.b > .c)', A), `.a[${A}]:not(.b > .c)`);
@@ -45,7 +45,7 @@ test('কম্বিনেটর, অ্যাট্রিবিউট সি�
     assert.equal(scopeSelector('.a\\:b', A), `.a\\:b[${A}]`);
 });
 
-test('@media, @supports, @container, @layer-এর ভেতরে রিকার্সিভ; @keyframes, @font-face, @import, @charset অপরিবর্তিত', () => {
+test('scoping recurses into @media, @supports, @container, @layer; @keyframes, @font-face, @import, @charset stay', () => {
     const css = [
         '@charset "utf-8";',
         '@import url("x.css");',
@@ -69,7 +69,7 @@ test('@media, @supports, @container, @layer-এর ভেতরে রিকা�
     assert.match(out, /@font-face \{ font-family: X; src: url\(x\.woff2\); \}/);
 });
 
-test('কমেন্ট আর স্ট্রিংয়ের ভেতরের { } গোনা হয় না', () => {
+test('braces inside comments and strings are not counted', () => {
     const items = parseCss('/* { */ .a::after { content: "}"; } .b { content: \'{\' }');
     assert.deepEqual(
         items.map((item) => item.type + ':' + (item.selector ?? item.text)),
@@ -78,22 +78,22 @@ test('কমেন্ট আর স্ট্রিংয়ের ভেতর�
     assert.equal(scopeCss('.a{content:"a, b"}', A), `.a[${A}] {content:"a, b"}`);
 });
 
-test('ভাঙা CSS-এ .alo ফাইলের লাইনসহ এরর', () => {
+test('broken CSS fails with the line in the .alo file', () => {
     const unclosed = cssError('\n.a {\n  color: red;\n');
-    assert.match(unclosed.message, /`\{` বন্ধ হয়নি/);
+    assert.match(unclosed.message, /Unclosed `\{`/);
     assert.deepEqual([unclosed.file, unclosed.line], ['components/Card.alo', 11]);
-    assert.match(cssError('.a { x: y }\n}').message, /বাড়তি `\}`/);
-    assert.match(cssError('/* খোলা').message, /কমেন্ট বন্ধ হয়নি/);
+    assert.match(cssError('.a { x: y }\n}').message, /Unexpected `\}`/);
+    assert.match(cssError('/* খোলা').message, /Unclosed CSS comment/);
     assert.equal(cssError('.a {}\n\n@media x {\n .b {').line, 12);
 });
 
-test('স্কোপ আইডি পাথের SHA-1-এর প্রথম ৬ অক্ষর', () => {
+test('the scope id is the first 6 chars of the path SHA-1', () => {
     assert.match(scopeAttribute('components/Card.alo'), /^data-a-[0-9a-f]{6}$/);
     assert.equal(scopeAttribute('components/Card.alo'), scopeAttribute('components/Card.alo'));
     assert.notEqual(scopeAttribute('components/Card.alo'), scopeAttribute('components/Badge.alo'));
 });
 
-test('স্কোপড style থাকলে ফাইলের প্রতিটা এলিমেন্টে অ্যাট্রিবিউট, head-এ নয়', () => {
+test('with a scoped style, every element of the file gets the attribute, head elements do not', () => {
     const page = scopeAttribute('pages/page.alo');
     const { body, out } = build({
         'pages/page.alo': '<head><meta name="x" content="y"></head><template><div><p>a</p><template id="t"><b>x</b></template></div></template><style>p { color: red }</style>',
@@ -102,11 +102,11 @@ test('স্কোপড style থাকলে ফাইলের প্রত�
     assert.match(out['index.html'], /<meta name="x" content="y">\n/);
 });
 
-test('style না থাকলে অ্যাট্রিবিউট বসে না', () => {
+test('without a style there is no attribute', () => {
     assert.equal(build({ 'pages/page.alo': '<template><p>a</p></template><style> </style>' }).body('index.html'), '<p>a</p>');
 });
 
-test('স্লট কনটেন্ট প্যারেন্টের অ্যাট্রিবিউট পায়; চাইল্ডের রুট শুধু নিজেরটা', () => {
+test('slot content gets the parent attribute; a child root gets only its own', () => {
     const page = scopeAttribute('pages/page.alo');
     const card = scopeAttribute('components/Card.alo');
     const { body } = build({
@@ -116,7 +116,7 @@ test('স্লট কনটেন্ট প্যারেন্টের অ�
     assert.equal(body('index.html'), `<section ${page}><article class="card x" ${card}><em ${page}>ভেতর</em></article></section>`);
 });
 
-test('style.css: global/ আগে পূর্ণ পাথ ক্রমে, তারপর ব্যবহৃত .alo ফাইল; অব্যবহৃতটা বাদ', () => {
+test('style.css: global/ first by full path, then used .alo files; unused ones left out', () => {
     const { out } = build({
         'global/theme.css': ':root { --c: red; }',
         'global/base/01-reset.css': '* { margin: 0 }',
@@ -142,7 +142,7 @@ test('style.css: global/ আগে পূর্ণ পাথ ক্রমে, �
     assert.match(css, new RegExp(`\\.c\\[${scopeAttribute('components/Card.alo')}\\]`));
 });
 
-test('CSS থাকলে প্রতিটা পেইজে <link>, না থাকলে নেই', () => {
+test('every page links the CSS when there is any, and none otherwise', () => {
     const withCss = build({ 'pages/page.alo': '', 'pages/about/page.alo': '', 'global/x.css': 'a {}' }).out;
     assert.match(withCss['index.html'], /<link rel="stylesheet" href="\/assets\/style\.css">\n<\/head>/);
     assert.match(withCss['about/index.html'], /<link rel="stylesheet" href="\/assets\/style\.css">/);
@@ -152,16 +152,16 @@ test('CSS থাকলে প্রতিটা পেইজে <link>, না �
     assert.equal(none['assets/style.css'], undefined);
 });
 
-test('global/-এ অন্য ফাইলে সতর্কবার্তা, ডটফাইল চুপচাপ বাদ', () => {
+test('other files in global/ warn; dotfiles are skipped quietly', () => {
     const { warnings } = build({ 'pages/page.alo': '', 'global/x.css': '', 'global/menu.json': '{}', 'global/.DS_Store': '' });
     assert.deepEqual(warnings.map((w) => w.file), ['global/menu.json']);
-    assert.match(warnings[0].hint, /JSON ডেটা `data\/`-এ রাখো/);
+    assert.match(warnings[0].hint, /Put JSON data in `data\/`/);
 });
 
-test('কম্পোনেন্টের ভাঙা CSS-এ .alo ফাইলের আসল লাইন', () => {
+test('broken component CSS points at the real line of the .alo file', () => {
     try {
         build({ 'pages/page.alo': '<template><Card /></template>', 'components/Card.alo': '<template><div></div></template>\n\n<style>\n.a {\n  x: y;\n</style>' });
-        assert.fail('এরর আশা করা হয়েছিল');
+        assert.fail('expected an error');
     } catch (err) {
         assert.ok(err instanceof AloError, String(err));
         assert.deepEqual([err.file, err.line], ['components/Card.alo', 4]);

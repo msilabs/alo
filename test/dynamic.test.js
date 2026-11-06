@@ -24,7 +24,7 @@ function buildError(files) {
         assert.ok(err instanceof AloError, String(err));
         return err;
     }
-    assert.fail('এরর আশা করা হয়েছিল');
+    assert.fail('expected an error');
 }
 
 const BLOG = {
@@ -34,19 +34,19 @@ const BLOG = {
     'data/blog/2026-03-01-later.json': '{ "title": "পরে", "draft": true }',
 };
 
-test('[slug] প্রতিটা আইটেমের জন্য একটা পেইজ বানায়, item আর route.path সহ', () => {
+test('[slug] makes one page per item, with item and route.path', () => {
     const { pages, paths } = build(BLOG);
     assert.deepEqual(paths, ['blog/hello-world/index.html', 'blog/second/index.html']);
     assert.equal(pages['blog/hello-world/index.html'], '<h1>হ্যালো</h1><time>2026-01-10</time><p>/blog/hello-world/</p>');
     assert.match(pages['blog/second/index.html:html'], /<title>দ্বিতীয়<\/title>/);
 });
 
-test('খসড়ার পেইজ শুধু dev-এ তৈরি হয়', () => {
+test('draft pages are built only in dev', () => {
     assert.ok(build(BLOG, 'dev').paths.includes('blog/later/index.html'));
     assert.ok(!build(BLOG).paths.includes('blog/later/index.html'));
 });
 
-test('কম্পোনেন্ট item দেখে না; প্রপ দিয়ে পাঠাতে হয়', () => {
+test('components do not see item; pass it as a prop', () => {
     const { pages } = build({
         ...BLOG,
         'pages/(site)/blog/[slug]/page.alo': '<template><Meta post="{{ item }}" /></template>',
@@ -55,47 +55,47 @@ test('কম্পোনেন্ট item দেখে না; প্রপ দ�
     assert.equal(pages['blog/second/index.html'], 'second');
 
     const err = buildError({ ...BLOG, 'pages/(site)/blog/[slug]/page.alo': '<template><Meta /></template>', 'components/Meta.alo': '<template>{{ item.slug }}</template>' });
-    assert.match(err.message, /`item` নামে কোনো ভেরিয়েবল নেই/);
+    assert.match(err.message, /`item` is not defined/);
 });
 
-test('স্ট্যাটিক পেইজ আর কোনো আইটেমের slug মিলে গেলে দুটো উৎসসহ এরর', () => {
+test('a static page clashing with an item slug fails, naming both sources', () => {
     const err = buildError({ ...BLOG, 'pages/blog/second/page.alo': '' });
-    assert.match(err.message, /`dist\/blog\/second\/index\.html` দুই জায়গা থেকে তৈরি হচ্ছে: `pages\/blog\/second\/page\.alo` আর `data\/blog\/2026-02-01-second\.json`/);
+    assert.match(err.message, /`dist\/blog\/second\/index\.html` is produced twice: by `pages\/blog\/second\/page\.alo` and `data\/blog\/2026-02-01-second\.json`/);
 });
 
-test('ডেটা ফোল্ডার না থাকলে স্পেকের এরর', () => {
+test('a missing data folder fails as the spec says', () => {
     const err = buildError({ 'pages/(site)/blog/[slug]/page.alo': '' });
-    assert.equal(err.message, '`pages/(site)/blog/[slug]/`-এর জন্য `data/blog/` ফোল্ডারে JSON বা Markdown ফাইল রাখো।');
+    assert.equal(err.message, 'Add JSON or Markdown files to `data/blog/` for `pages/(site)/blog/[slug]/`.');
 });
 
-test('টেমপ্লেট থেকে ডেটা বদলানোর চেষ্টায় অবস্থানসহ এরর', () => {
+test('changing data from a template fails with its location', () => {
     const err = buildError({ ...BLOG, 'pages/page.alo': '<template>\n{{ data.blog.reverse() }}\n</template>' });
     assert.equal(err.file, 'pages/page.alo');
     assert.equal(err.line, 2);
-    assert.match(err.message, /`reverse\(\)` ডেটা বদলায়/);
+    assert.match(err.message, /`reverse\(\)` changes data/);
 
     const assign = buildError({ ...BLOG, 'pages/page.alo': '<template>{{ data.blog = [] }}</template>' });
-    assert.match(assign.message, /`data\.blog` বদলানো যায় না/);
+    assert.match(assign.message, /`data\.blog` cannot be changed/);
     assert.equal(assign.file, 'pages/page.alo');
 });
 
-test('data.site থেকে lang আর ডিফল্ট title', () => {
+test('lang and the default title come from data.site', () => {
     const { pages } = build({ 'pages/page.alo': '', 'data/site.json': '{ "name": "আমার সাইট", "lang": "en" }' });
     assert.match(pages['index.html:html'], /<html lang="en">/);
     assert.match(pages['index.html:html'], /<title>আমার সাইট<\/title>/);
 });
 
-test('site.url-এ শুধু origin; পাথ থাকলে --base-এর ইঙ্গিত', () => {
+test('site.url is only an origin; a path gets a --base hint', () => {
     assert.ok(build({ 'pages/page.alo': '', 'data/site.json': '{ "url": "https://example.com" }' }));
 
     const path = buildError({ 'pages/page.alo': '', 'data/site.json': '{ "url": "https://example.com/blog" }' });
     assert.equal(path.file, 'data/site.json');
     assert.match(path.hint, /`--base \/blog`/);
-    assert.match(buildError({ 'pages/page.alo': '', 'data/site.json': '{ "url": "https://example.com/" }' }).hint, /শেষে `\/` ছাড়া/);
-    assert.match(buildError({ 'pages/page.alo': '', 'data/site.json': '{ "url": "example.com" }' }).message, /সঠিক URL নয়/);
+    assert.match(buildError({ 'pages/page.alo': '', 'data/site.json': '{ "url": "https://example.com/" }' }).hint, /without a trailing `\/`/);
+    assert.match(buildError({ 'pages/page.alo': '', 'data/site.json': '{ "url": "example.com" }' }).message, /is not a valid URL/);
 });
 
-test('Markdown পোস্ট: ফ্রন্ট ম্যাটার item-এ, বডি {{{ item.body }}} দিয়ে', () => {
+test('Markdown posts: front matter in item, body through {{{ item.body }}}', () => {
     const { pages } = build({
         'pages/blog/[slug]/page.alo': '<template><h1>{{ item.title }}</h1>{{{ item.body }}}</template>',
         'data/blog/2026-01-10-hello.md': '---\ntitle: হ্যালো\ntags: [a, b]\n---\n\n## প্রথম অংশ\n\nএটা **গাঢ়** আর {{ না }}।\n',
@@ -103,17 +103,17 @@ test('Markdown পোস্ট: ফ্রন্ট ম্যাটার item-�
     assert.equal(pages['blog/hello/index.html'], '<h1>হ্যালো</h1><h2 id="প্রথম-অংশ">প্রথম অংশ</h2>\n<p>এটা <strong>গাঢ়</strong> আর {{ না }}।</p>');
 });
 
-test('Markdown ফ্রন্ট ম্যাটারের এররে .md ফাইলের আসল লাইন', () => {
+test('front matter errors point at the real line of the .md file', () => {
     const err = buildError({
         'pages/page.alo': '<template>{{ data.post.title }}</template>',
         'data/post.md': '---\ntitle: ক\nauthor:\n  name: খ\n---\nবডি',
     });
     assert.deepEqual([err.file, err.line], ['data/post.md', 4]);
-    assert.match(err.hint, /`\.json` ফাইল ব্যবহার করো/);
+    assert.match(err.hint, /Use a `\.json` file/);
 });
 
-test('এক পোস্টের ব্লগেও টেমপ্লেটে reverse() লিখলে অবস্থানসহ এরর', () => {
+test('reverse() fails with its location even on a one-post blog', () => {
     const err = buildError({ 'pages/page.alo': '<template>\n  {{ data.blog.reverse() }}\n</template>', 'data/blog/a.json': '{}' });
     assert.deepEqual([err.file, err.line], ['pages/page.alo', 2]);
-    assert.match(err.message, /`reverse\(\)` ডেটা বদলায়/);
+    assert.match(err.message, /`reverse\(\)` changes data/);
 });

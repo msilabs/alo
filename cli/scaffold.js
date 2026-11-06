@@ -18,7 +18,7 @@ try {
         e.code === 'MODULE_NOT_FOUND' &&
         String(e.message).includes('@msilabs/alo')
     ) {
-        console.error('Alo ইনস্টল করা নেই। আগে \`npm install\` চালাও।');
+        console.error('Alo is not installed. Run \`npm install\` first.');
         process.exit(1);
     }
     throw e;
@@ -65,13 +65,13 @@ function init(cwd, folder = '.') {
     const target = path.resolve(cwd, folder);
     if (fs.existsSync(target)) {
         if (!fs.statSync(target).isDirectory()) {
-            throw new AloError({ message: `\`${folder}\` একটা ফাইল, ফোল্ডার নয়।`, hint: 'নতুন প্রজেক্টের জন্য অন্য নাম দাও।' });
+            throw new AloError({ message: `\`${folder}\` is a file, not a folder.`, hint: 'Choose another name for the new project.' });
         }
         const contents = fs.readdirSync(target).filter((name) => !IGNORABLE.has(name));
         if (contents.length > 0) {
             throw new AloError({
-                message: `\`${folder}\` ফোল্ডারটা খালি নয়, তাই এখানে নতুন প্রজেক্ট বানানো হলো না।`,
-                hint: 'নতুন নাম দাও, যেমন `npx @msilabs/alo init my-site`, অথবা একটা খালি ফোল্ডারে চালাও।',
+                message: `The folder \`${folder}\` is not empty, so no project was created.`,
+                hint: 'Use a new name, e.g. `npx @msilabs/alo init my-site`, or run it in an empty folder.',
             });
         }
     }
@@ -89,8 +89,8 @@ function init(cwd, folder = '.') {
     const steps = [];
     if (relative) steps.push(`cd ${relative.includes(' ') ? JSON.stringify(relative) : relative}`);
     steps.push('npm install', 'node alo dev');
-    log.success(`নতুন Alo প্রজেক্ট তৈরি হলো: ${relative || '.'}`);
-    log.info(`\nএরপর চালাও:\n${steps.map((step) => '  ' + step).join('\n')}\n`);
+    log.success(`Created a new Alo project: ${relative || '.'}`);
+    log.info(`\nNext steps:\n${steps.map((step) => '  ' + step).join('\n')}\n`);
 }
 
 // ---------------------------------------------------------------- alo new
@@ -104,7 +104,7 @@ function usage(kind) {
     return {
         page: '`alo new page blog/first-post`',
         layout: '`alo new layout blog`',
-        component: '`alo new component Card` অথবা `alo new component blog/PostCard`',
+        component: '`alo new component Card` or `alo new component blog/PostCard`',
         post: '`alo new post blog/hello-world`',
     }[kind];
 }
@@ -121,11 +121,11 @@ function checkPageSegments(segments, kind) {
         if (PLAIN.test(segment) || GROUP.test(segment)) return;
         if (segment === '[slug]' && kind === 'page' && i === segments.length - 1) return;
         throw new AloError({
-            message: `ফোল্ডারের নাম \`${segment}\` চলবে না।`,
+            message: `Folder name \`${segment}\` is not allowed.`,
             hint:
                 segment === '[slug]'
-                    ? '`[slug]` থাকে শুধু পেইজের পাথের শেষে, যেমন `alo new page blog/[slug]`।'
-                    : 'নামে শুধু ছোট হাতের ইংরেজি অক্ষর, সংখ্যা আর হাইফেন চলে; রাউট গ্রুপ হলে `(name)`।',
+                    ? '`[slug]` can only be the last part of a page path, e.g. `alo new page blog/[slug]`.'
+                    : 'Use lowercase letters, digits and hyphens; `(name)` for a route group.',
         });
     });
 }
@@ -189,13 +189,13 @@ function plan(kind, name) {
         checkPageSegments(segments, 'page');
         const file = ['pages', ...segments, 'page.alo'].join('/');
         const last = segments[segments.length - 1];
-        const note = last === '[slug]' ? `ডেটা রাখো \`data/${segments.slice(0, -1).filter((s) => !GROUP.test(s)).join('/')}/\`-এ` : `URL: ${urlOf(segments)}`;
+        const note = last === '[slug]' ? `Put the data in \`data/${segments.slice(0, -1).filter((s) => !GROUP.test(s)).join('/')}/\`` : `URL: ${urlOf(segments)}`;
         return { file, contents: pageTemplate(segments), note };
     }
 
     if (kind === 'layout') {
         checkPageSegments(segments, 'layout');
-        return { file: ['pages', ...segments, 'layout.alo'].join('/'), contents: LAYOUT_TEMPLATE, note: `${urlOf(segments)}-এর নিচের সব পেইজে খাটে` };
+        return { file: ['pages', ...segments, 'layout.alo'].join('/'), contents: LAYOUT_TEMPLATE, note: `Wraps every page under ${urlOf(segments)}` };
     }
 
     if (kind === 'component') {
@@ -203,52 +203,52 @@ function plan(kind, name) {
         if (!componentName || !PASCAL.test(componentName)) {
             const fixed = (componentName ?? '').replace(/(^|[-_ ]+)([a-zA-Z0-9])/g, (_, __, ch) => ch.toUpperCase());
             throw new AloError({
-                message: `কম্পোনেন্টের নাম \`${componentName ?? ''}\` PascalCase নয়।`,
-                hint: PASCAL.test(fixed) ? `যেমন \`${fixed}\`: বড় হাতে শুরু, শব্দগুলো জোড়া।` : 'বড় হাতে শুরু করো, যেমন `Card` বা `PostCard`।',
+                message: `Component name \`${componentName ?? ''}\` is not PascalCase.`,
+                hint: PASCAL.test(fixed) ? `For example \`${fixed}\`: a capital first letter, words joined.` : 'Start with a capital letter, e.g. `Card` or `PostCard`.',
             });
         }
         for (const folder of segments) {
             if (!PLAIN.test(folder)) {
-                throw new AloError({ message: `ফোল্ডারের নাম \`${folder}\` চলবে না।`, hint: 'কম্পোনেন্টের ফোল্ডারের নাম ছোট হাতের kebab-case, যেমন `blog` বা `post-list`।' });
+                throw new AloError({ message: `Folder name \`${folder}\` is not allowed.`, hint: 'Component folders use lowercase kebab-case, e.g. `blog` or `post-list`.' });
             }
         }
         const tag = [...segments.map((s) => s.replace(/(^|-)([a-z0-9])/g, (_, __, ch) => ch.toUpperCase())), componentName].join('.');
-        return { file: ['components', ...segments, componentName + '.alo'].join('/'), contents: componentTemplate(componentName), note: `ব্যবহার: <${tag} />` };
+        return { file: ['components', ...segments, componentName + '.alo'].join('/'), contents: componentTemplate(componentName), note: `Use it as <${tag} />` };
     }
 
     // post
     const slug = segments.pop();
     if (segments.length === 0 || !slug) {
-        throw new AloError({ message: 'লেখার জন্য ফোল্ডার আর নাম দুটোই দাও।', hint: usage('post') });
+        throw new AloError({ message: 'Give both a folder and a name for the post.', hint: usage('post') });
     }
     for (const part of [...segments, slug]) {
         if (!PLAIN.test(part)) {
-            throw new AloError({ message: `নাম \`${part}\` চলবে না।`, hint: 'শুধু ছোট হাতের ইংরেজি অক্ষর, সংখ্যা আর হাইফেন, যেমন `blog/hello-world`।' });
+            throw new AloError({ message: `Name \`${part}\` is not allowed.`, hint: 'Use lowercase letters, digits and hyphens, e.g. `blog/hello-world`.' });
         }
     }
     const file = ['data', ...segments, `${today()}-${slug}.md`].join('/');
     const contents = `---\ntitle: ${slug.replace(/-/g, ' ')}\ndraft: true\n---\n\nএখানে লেখা শুরু করো।\n`;
-    return { file, contents, note: 'খসড়া: `draft: true` সরালে build-এ আসবে' };
+    return { file, contents, note: 'Draft: remove `draft: true` to include it in the build' };
 }
 
 function create(cwd, args) {
     const [kind, name] = args;
     if (!kind) {
-        throw new AloError({ message: 'কী বানাতে হবে বলো।', hint: KINDS.map((k) => usage(k)).join('\n') });
+        throw new AloError({ message: 'Tell Alo what to create.', hint: KINDS.map((k) => usage(k)).join('\n') });
     }
     if (!KINDS.includes(kind)) {
         const close = suggest(kind, KINDS);
         throw new AloError({
-            message: `\`alo new ${kind}\` বলে কিছু নেই।`,
-            hint: (close ? `তুমি কি \`alo new ${close}\` বোঝাতে চেয়েছিলে?\n` : '') + `বানানো যায়: ${KINDS.map((k) => `\`${k}\``).join(', ')}।`,
+            message: `There is no \`alo new ${kind}\`.`,
+            hint: (close ? `Did you mean \`alo new ${close}\`?\n` : '') + `You can create: ${KINDS.map((k) => `\`${k}\``).join(', ')}.`,
         });
     }
     // `alo new page .` is allowed and makes the home page; every other kind needs a real name.
     if (name === undefined || (kind !== 'page' && splitName(name).length === 0)) {
-        throw new AloError({ message: `\`alo new ${kind}\`-এর পরে একটা নাম দাও।`, hint: `যেমন: ${usage(kind)}` });
+        throw new AloError({ message: `\`alo new ${kind}\` needs a name.`, hint: `For example: ${usage(kind)}` });
     }
     if (!fs.existsSync(path.join(cwd, 'pages'))) {
-        throw new AloError({ message: 'এখানে `pages/` ফোল্ডার নেই। তুমি কি প্রজেক্টের রুট ফোল্ডারে আছো?', hint: 'নতুন প্রজেক্টের জন্য `npx @msilabs/alo init`।' });
+        throw new AloError({ message: 'No `pages/` folder here. Are you in the project root?', hint: 'Start a new project with `npx @msilabs/alo init`.' });
     }
 
     const { file, contents, note } = plan(kind, name);
@@ -259,15 +259,15 @@ function create(cwd, args) {
         const slug = path.basename(file).replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.md$/, '');
         const twin = fs.readdirSync(path.dirname(target)).find((entry) => entry.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.(md|json)$/, '') === slug);
         if (twin) {
-            throw new AloError({ message: `\`${slug}\` নামে লেখা আগে থেকেই আছে: \`${path.posix.join(path.posix.dirname(file), twin)}\`।`, hint: 'অন্য নাম দাও; তারিখ আলাদা হলেও slug একই হলে URL মিলে যায়।' });
+            throw new AloError({ message: `A post with the slug \`${slug}\` already exists: \`${path.posix.join(path.posix.dirname(file), twin)}\`.`, hint: 'Choose another name; posts with the same slug share a URL even with different dates.' });
         }
     }
 
     if (fs.existsSync(target)) {
-        throw new AloError({ message: `\`${file}\` আগে থেকেই আছে, তাই নতুন করে বানানো হলো না।`, hint: 'অন্য নাম দাও, অথবা ফাইলটা নিজে খুলে বদলাও।' });
+        throw new AloError({ message: `\`${file}\` already exists, so nothing was created.`, hint: 'Choose another name, or open the file and edit it.' });
     }
     writeNew(target, contents);
-    log.success(`তৈরি হলো: ${file}`);
+    log.success(`Created ${file}`);
     log.dim(`  ${note}`);
 }
 

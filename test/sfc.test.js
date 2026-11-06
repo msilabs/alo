@@ -12,10 +12,10 @@ function sfcError(source, kind = 'page') {
         assert.ok(err instanceof AloError);
         return err;
     }
-    assert.fail('এরর আশা করা হয়েছিল');
+    assert.fail('expected an error');
 }
 
-test('ব্লকগুলো আলাদা হয়, ক্রম যেকোনো', () => {
+test('splits blocks in any order', () => {
     const sfc = parseSfc(
         '<!-- কমেন্ট চলে -->\n<script>go()</script>\n<template><p>a</p></template>\n<style>p {}</style>\n<style global>body {}</style>\n<head><title>t</title></head>\n',
         'pages/page.alo',
@@ -28,71 +28,71 @@ test('ব্লকগুলো আলাদা হয়, ক্রম যেক
     assert.equal(sfc.head.children[0].name, 'title');
 });
 
-test('সব ব্লক ঐচ্ছিক', () => {
+test('every block is optional', () => {
     const sfc = parseSfc('', 'x.alo', 'component');
     assert.equal(sfc.template, undefined);
 });
 
-test('ব্লকের বাইরে লেখায় সঠিক লাইনসহ এরর', () => {
+test('text outside a block fails with the right line', () => {
     const err = sfcError('<template></template>\n\n  হ্যালো');
-    assert.match(err.message, /ব্লকের বাইরে/);
+    assert.match(err.message, /Text outside a block/);
     assert.deepEqual([err.line, err.column], [3, 3]);
 });
 
-test('অজানা টপ-লেভেল ব্লকে এরর', () => {
+test('an unknown top-level block fails', () => {
     const err = sfcError('<div></div>');
-    assert.match(err.message, /অজানা টপ-লেভেল ব্লক `<div>`/);
+    assert.match(err.message, /Unknown top-level block `<div>`/);
 });
 
-test('একই ব্লক দুবার থাকলে এরর', () => {
+test('a repeated block fails', () => {
     const err = sfcError('<template></template>\n<template></template>');
-    assert.match(err.message, /একবারের বেশি/);
+    assert.match(err.message, /appears more than once/);
     assert.equal(err.line, 2);
 });
 
-test('কম্পোনেন্টে <head> থাকলে এরর', () => {
-    assert.match(sfcError('<head></head>', 'component').message, /কম্পোনেন্টে `<head>` চলে না/);
+test('a component with <head> fails', () => {
+    assert.match(sfcError('<head></head>', 'component').message, /Components cannot have `<head>`/);
     assert.ok(parseSfc('<head></head><template><slot /></template>', 'x.alo', 'layout').head);
 });
 
-test('লেআউটে ঠিক একটা <slot /> থাকতে হয়', () => {
+test('a layout needs exactly one <slot />', () => {
     assert.ok(parseSfc('<template><header></header><main><slot /></main></template>', 'x.alo', 'layout'));
 
     const none = sfcError('<template>\n  <main></main>\n</template>', 'layout');
-    assert.match(none.message, /লেআউটে `<slot \/>` নেই/);
+    assert.match(none.message, /The layout has no `<slot \/>`/);
     assert.equal(none.line, 1);
-    assert.match(sfcError('<style></style>', 'layout').message, /লেআউটে `<slot \/>` নেই/);
+    assert.match(sfcError('<style></style>', 'layout').message, /The layout has no `<slot \/>`/);
 
     const two = sfcError('<template>\n  <slot />\n  <slot />\n</template>', 'layout');
-    assert.match(two.message, /একটার বেশি/);
+    assert.match(two.message, /More than one/);
     assert.equal(two.line, 3);
-    assert.match(two.hint, /লাইন 2/);
+    assert.match(two.hint, /line 2/);
 });
 
-test('লেআউটের slot গোনায় লজিক-template আর কম্পোনেন্ট ধরা হয়, সাধারণ template নয়', () => {
+test('layout slot counting includes logic templates and components, not plain templates', () => {
     assert.ok(parseSfc('<template><template if="x"><slot /></template></template>', 'x.alo', 'layout'));
     assert.ok(parseSfc('<template><Card><slot /></Card></template>', 'x.alo', 'layout'));
 
     const webComponent = '<template><template id="wc"><slot name="x"></slot></template><slot /></template>';
     assert.ok(parseSfc(webComponent, 'x.alo', 'layout'));
-    assert.match(sfcError('<template><template id="wc"><slot></slot></template></template>', 'layout').message, /`<slot \/>` নেই/);
+    assert.match(sfcError('<template><template id="wc"><slot></slot></template></template>', 'layout').message, /has no `<slot \/>`/);
 });
 
-test('পেইজ আর কম্পোনেন্টে slot গোনা হয় না', () => {
+test('pages and components do not need a slot', () => {
     assert.ok(parseSfc('<template><p>a</p></template>', 'x.alo', 'page'));
     assert.ok(parseSfc('<template><p>a</p></template>', 'x.alo', 'component'));
 });
 
-test('টপ-লেভেল ব্লকে অ্যাট্রিবিউট থাকলে এরর; <style global> ছাড়া', () => {
-    assert.match(sfcError('<template class="x"></template>').message, /অ্যাট্রিবিউট চলে না/);
+test('attributes on top-level blocks fail, except <style global>', () => {
+    assert.match(sfcError('<template class="x"></template>').message, /cannot have attributes/);
     assert.match(sfcError('<style scoped></style>').hint, /<style global>/);
-    assert.match(sfcError('<style global="1"></style>').message, /অ্যাট্রিবিউট চলে না/);
+    assert.match(sfcError('<style global="1"></style>').message, /cannot have attributes/);
 });
 
-test('template-এর ভেতরে html, head বা body থাকলে এরর', () => {
+test('html, head or body inside a template fails', () => {
     for (const tag of ['html', 'head', 'body']) {
         const err = sfcError(`<template>\n  <div><${tag}></${tag}></div>\n</template>`);
-        assert.match(err.message, new RegExp(`\`<${tag}>\` ট্যাগ এখানে লেখা যায় না`));
+        assert.match(err.message, new RegExp(`The \`<${tag}>\` tag cannot be used here`));
         assert.equal(err.line, 2);
     }
 });

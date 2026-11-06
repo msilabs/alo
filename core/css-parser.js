@@ -95,12 +95,12 @@ function parseCss(css, where = {}) {
         }
         if (css.startsWith('/*', i)) {
             const close = css.indexOf('*/', i + 2);
-            if (close === -1) fail(i, 'CSS কমেন্ট বন্ধ হয়নি।', '`*/` দিয়ে কমেন্ট শেষ করো।');
+            if (close === -1) fail(i, 'Unclosed CSS comment.', 'Close it with `*/`.');
             items.push({ type: 'comment', text: css.slice(i, close + 2) });
             i = close + 2;
             continue;
         }
-        if (css[i] === '}') fail(i, 'বাড়তি `}` আছে।', 'বন্ধনী গুনে দেখো; একটা `}` বেশি।');
+        if (css[i] === '}') fail(i, 'Unexpected `}`.', 'Count the braces; there is one `}` too many.');
 
         if (css[i] === '@') {
             const name = /^@([\w-]+)/.exec(css.slice(i))?.[1] ?? '';
@@ -116,7 +116,7 @@ function parseCss(css, where = {}) {
                 continue;
             }
             const end = findBlockEnd(css, stop);
-            if (end === -1) fail(stop, `\`@${name}\`-এর \`{\` বন্ধ হয়নি।`, '`}` দিয়ে ব্লক শেষ করো।');
+            if (end === -1) fail(stop, `Unclosed \`{\` in \`@${name}\`.`, 'Close the block with `}`.');
             const body = css.slice(stop + 1, end - 1);
             const lineBefore = (css.slice(0, stop + 1).match(/\n/g) ?? []).length + (where.lineBefore ?? 0);
             const children = NESTING_AT_RULES.has(name.toLowerCase()) ? parseCss(body, { ...where, lineBefore }) : null;
@@ -127,10 +127,10 @@ function parseCss(css, where = {}) {
 
         const open = findTopLevel(css, i, ['{', '}', ';']);
         if (open === -1 || css[open] !== '{') {
-            fail(i, `\`${css.slice(i, i + 30).split('\n')[0].trim()}\` বোঝা যাচ্ছে না।`, 'CSS রুল লেখো এভাবে: `selector { property: value; }`');
+            fail(i, `Cannot parse \`${css.slice(i, i + 30).split('\n')[0].trim()}\`.`, 'Write CSS rules as `selector { property: value; }`.');
         }
         const end = findBlockEnd(css, open);
-        if (end === -1) fail(open, '`{` বন্ধ হয়নি।', '`}` দিয়ে রুল শেষ করো।');
+        if (end === -1) fail(open, 'Unclosed `{`.', 'Close the rule with `}`.');
         items.push({ type: 'rule', selector: css.slice(i, open).trim(), body: css.slice(open + 1, end - 1) });
         i = end;
     }

@@ -28,16 +28,16 @@ function printDiagnostic(icon, label, color, diagnostic, source) {
 }
 
 function error(diagnostic, source) {
-    printDiagnostic('✖', 'এরর', 'red', diagnostic, source);
+    printDiagnostic('✖', 'Error', 'red', diagnostic, source);
 }
 
 function warn(diagnostic, source) {
-    printDiagnostic('⚠', 'সতর্কবার্তা', 'yellow', diagnostic, source);
+    printDiagnostic('⚠', 'Warning', 'yellow', diagnostic, source);
 }
 
 function bug(err) {
     const stream = process.stderr;
-    stream.write(paint(stream, 'red', '✖ অপ্রত্যাশিত এরর (সম্ভবত Alo-র নিজের বাগ):') + '\n');
+    stream.write(paint(stream, 'red', '✖ Unexpected error (probably a bug in Alo):') + '\n');
     stream.write(String(err && err.stack ? err.stack : err) + '\n');
 }
 

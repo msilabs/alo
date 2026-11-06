@@ -110,7 +110,7 @@ function parseHtml(input, file) {
         const closer = triple ? '}}}' : '}}';
         const close = findExpressionEnd(source, i + open, closer);
         if (close === -1) {
-            fail(i, `\`${triple ? '{{{' : '{{'}\` বন্ধ হয়নি।`, `\`${closer}\` দিয়ে শেষ করো। আক্ষরিক \`{{\` লিখতে চাইলে \`\\{{\` লেখো।`);
+            fail(i, `Unclosed \`${triple ? '{{{' : '{{'}\`.`, `Close it with \`${closer}\`. To write a literal \`{{\`, use \`\\{{\`.`);
         }
         return { triple, open, closer, close, end: close + closer.length };
     }
@@ -156,7 +156,7 @@ function parseHtml(input, file) {
 
                 const { triple, open, close, end: next } = expressionBounds(i);
                 const code = source.slice(i + open, close).trim();
-                if (!code) fail(i, 'খালি `{{ }}`।', 'ভেতরে একটা এক্সপ্রেশন লেখো, যেমন `{{ title }}`।');
+                if (!code) fail(i, 'Empty `{{ }}`.', 'Put an expression inside, e.g. `{{ title }}`.');
                 parts.push({ type: 'expr', code, raw: triple, offset: i, ...position(i) });
 
                 i = next;
@@ -207,13 +207,13 @@ function parseHtml(input, file) {
         const start = i;
         while (i < length && !/[\s"'>=/]/.test(source[i])) {
             if (source.startsWith('{{', i)) {
-                fail(i, 'অ্যাট্রিবিউটের নামে `{{ }}` চলে না।', 'মানের ভেতরে লেখো, যেমন `title="{{ x }}"`।');
+                fail(i, '`{{ }}` cannot be used in an attribute name.', 'Use it in the value, e.g. `title="{{ x }}"`.');
             }
             i++;
         }
 
         const name = source.slice(start, i);
-        if (!name) fail(i, `\`<${tagName}>\` ট্যাগে অপ্রত্যাশিত \`${source[i]}\`।`);
+        if (!name) fail(i, `Unexpected \`${source[i]}\` in the \`<${tagName}>\` tag.`);
 
         let j = skipWhitespace(i);
         if (source[j] !== '=') {
@@ -230,12 +230,12 @@ function parseHtml(input, file) {
             quote = source[j];
             valueStart = j + 1;
             valueEnd = scanUntil(valueStart, (ch) => ch === quote);
-            if (valueEnd >= length) fail(j, `\`${name}\`-এর মানের কোট বন্ধ হয়নি।`, `মানের শেষে \`${quote}\` দাও।`);
+            if (valueEnd >= length) fail(j, `Unclosed quote in the value of \`${name}\`.`, `Add \`${quote}\` at the end of the value.`);
             i = valueEnd + 1;
         } else {
             valueStart = j;
             valueEnd = scanUntil(j, (ch, k) => WHITESPACE.test(ch) || ch === '>' || source.startsWith('/>', k));
-            if (valueEnd === valueStart) fail(j, `\`${name}=\`-এর পরে কোনো মান নেই।`);
+            if (valueEnd === valueStart) fail(j, `Missing value after \`${name}=\`.`);
             i = valueEnd;
         }
 
@@ -252,7 +252,7 @@ function parseHtml(input, file) {
     }
 
     function failExpressionInTagName(offset) {
-        fail(offset, 'ট্যাগের নামে `{{ }}` চলে না।', 'ট্যাগের নাম সবসময় সরাসরি লেখো, যেমন `<div>` বা `<Card />`।');
+        fail(offset, '`{{ }}` cannot be used in a tag name.', 'Write tag names directly, e.g. `<div>` or `<Card />`.');
     }
 
     function parseOpeningTag(start) {
@@ -264,7 +264,7 @@ function parseHtml(input, file) {
 
         for (;;) {
             i = skipWhitespace(i);
-            if (i >= length) fail(start, `\`<${name}>\` ট্যাগ শেষ হয়নি।`, '`>` দিয়ে ট্যাগ শেষ করো।');
+            if (i >= length) fail(start, `The \`<${name}>\` tag is not finished.`, 'End the tag with `>`.');
             if (source[i] === '>') {
                 i++;
                 break;
@@ -286,7 +286,7 @@ function parseHtml(input, file) {
             const closing = new RegExp(`</${name}\\s*>`, 'gi');
             closing.lastIndex = i;
             const match = closing.exec(source);
-            if (!match) fail(start, `\`<${name}>\` বন্ধ হয়নি।`, `\`</${name}>\` দিয়ে বন্ধ করো।`);
+            if (!match) fail(start, `\`<${name}>\` is never closed.`, `Close it with \`</${name}>\`.`);
             const value = source.slice(i, match.index);
             if (value) {
                 node.children.push({ type: 'text', rawText: true, value, parts: [{ type: 'text', value }], offset: i, ...position(i) });
@@ -301,11 +301,11 @@ function parseHtml(input, file) {
     function parseClosingTag(start) {
         const name = readTagName(start + 2);
         let i = skipWhitespace(start + 2 + name.length);
-        if (source[i] !== '>') fail(start, `\`</${name}\` ট্যাগ \`>\` দিয়ে শেষ হয়নি।`);
+        if (source[i] !== '>') fail(start, `The \`</${name}\` tag is not finished with \`>\`.`);
         i++;
 
         if (VOID_ELEMENTS.has(name)) {
-            fail(start, `\`<${name}>\` নিজে থেকেই বন্ধ হয়, \`</${name}>\` লাগে না।`, `\`</${name}>\` সরিয়ে দাও।`);
+            fail(start, `\`<${name}>\` closes itself; \`</${name}>\` is not needed.`, `Remove \`</${name}>\`.`);
         }
 
         const open = current();
@@ -314,12 +314,12 @@ function parseHtml(input, file) {
             return i;
         }
         if (stack.some((node) => node.name === name)) {
-            fail(open.offset, `\`<${open.name}>\` বন্ধ হয়নি, তার আগেই \`</${name}>\` এসেছে।`, `\`</${name}>\`-এর আগে \`</${open.name}>\` দাও।`);
+            fail(open.offset, `\`<${open.name}>\` is not closed before \`</${name}>\`.`, `Add \`</${open.name}>\` before \`</${name}>\`.`);
         }
         if (open.type === 'element' && open.name.toLowerCase() === name.toLowerCase()) {
-            fail(start, `\`</${name}>\` দিয়ে \`<${open.name}>\` বন্ধ হয় না।`, `ট্যাগের নামে বড়-ছোট হাত মিলতে হবে: \`</${open.name}>\` লেখো।`);
+            fail(start, `\`</${name}>\` does not close \`<${open.name}>\`.`, `Tag names are case-sensitive: write \`</${open.name}>\`.`);
         }
-        fail(start, `\`</${name}>\`-এর কোনো খোলা \`<${name}>\` নেই।`, 'বাড়তি বন্ধ করার ট্যাগটা সরাও।');
+        fail(start, `\`</${name}>\` has no matching \`<${name}>\`.`, 'Remove the extra closing tag.');
     }
 
     let i = 0;
@@ -330,7 +330,7 @@ function parseHtml(input, file) {
             if (source.startsWith('<!--', i)) {
                 flushText(i);
                 const end = source.indexOf('-->', i + 4);
-                if (end === -1) fail(i, 'HTML কমেন্ট বন্ধ হয়নি।', '`-->` দিয়ে কমেন্ট শেষ করো।');
+                if (end === -1) fail(i, 'Unclosed HTML comment.', 'Close it with `-->`.');
                 current().children.push({ type: 'comment', value: source.slice(i, end + 3), offset: i, ...position(i) });
                 i = textStart = end + 3;
                 continue;
@@ -349,7 +349,7 @@ function parseHtml(input, file) {
                 failExpressionInTagName(i + 1);
             }
             if (source[i + 1] === '!') {
-                fail(i, '`<!...>` এখানে চলে না।', '`<!DOCTYPE>` Alo নিজে বসায়; কমেন্টের জন্য `<!-- -->` লেখো।');
+                fail(i, '`<!...>` is not allowed here.', 'Alo adds `<!DOCTYPE>` itself; use `<!-- -->` for comments.');
             }
         }
 
@@ -367,7 +367,7 @@ function parseHtml(input, file) {
 
     if (stack.length > 1) {
         const open = current();
-        fail(open.offset, `\`<${open.name}>\` বন্ধ হয়নি।`, `\`</${open.name}>\` দিয়ে বন্ধ করো।`);
+        fail(open.offset, `\`<${open.name}>\` is never closed.`, `Close it with \`</${open.name}>\`.`);
     }
 
     root.source = source;

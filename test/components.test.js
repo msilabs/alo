@@ -27,7 +27,7 @@ function siteError(files) {
         assert.ok(err instanceof AloError, String(err));
         return err;
     }
-    assert.fail('এরর আশা করা হয়েছিল');
+    assert.fail('expected an error');
 }
 
 function usage(template) {
@@ -35,7 +35,7 @@ function usage(template) {
     return { names: [...result.props].sort(), dynamic: result.dynamic };
 }
 
-test('ফোল্ডার মানে Dot নাম; kebab ফোল্ডার PascalCase হয়', () => {
+test('folders become dotted names; kebab folders become PascalCase', () => {
     const { map } = scan({
         'components/Card.alo': '',
         'components/blog/PostCard.alo': '',
@@ -46,15 +46,15 @@ test('ফোল্ডার মানে Dot নাম; kebab ফোল্ডা
     assert.equal(map.get('PostList.Item').file, 'components/post-list/Item.alo');
 });
 
-test('components/ না থাকলে খালি ম্যাপ', () => {
+test('no components/ folder gives an empty map', () => {
     assert.equal(scan({ 'pages/page.alo': '' }).map.size, 0);
 });
 
-test('PascalCase নয় এমন ফাইল আর kebab-case নয় এমন ফোল্ডারে এরর', () => {
+test('non-PascalCase files and non-kebab-case folders fail', () => {
     for (const [path, pattern] of [
-        ['components/card.alo', /`card\.alo` চলবে না/],
+        ['components/card.alo', /`card\.alo` is not allowed/],
         ['components/post-card.alo', /PostCard\.alo/],
-        ['components/Blog/Card.alo', /ফোল্ডারের নাম `Blog` চলবে না/],
+        ['components/Blog/Card.alo', /folder name `Blog` is not allowed/],
         ['components/post_list/Item.alo', /`post_list`/],
     ]) {
         try {
@@ -67,38 +67,38 @@ test('PascalCase নয় এমন ফাইল আর kebab-case নয় �
     }
 });
 
-test('.alo নয় এমন ফাইলে সতর্কবার্তা', () => {
+test('a non-.alo file warns', () => {
     const { map, warnings } = scan({ 'components/Card.alo': '', 'components/notes.txt': '' });
     assert.equal(map.size, 1);
     assert.equal(warnings[0].file, 'components/notes.txt');
 });
 
-test('expectedPath Dot নাম থেকে ফাইলের পাথ বানায়', () => {
+test('expectedPath turns a dotted name into a file path', () => {
     assert.equal(expectedPath('Card'), 'components/Card.alo');
     assert.equal(expectedPath('Blog.PostCard'), 'components/blog/PostCard.alo');
     assert.equal(expectedPath('PostList.Item'), 'components/post-list/Item.alo');
 });
 
-test('অজানা কম্পোনেন্টে কাছাকাছি নামের পরামর্শ আর ফাইল', () => {
+test('an unknown component suggests a close name and its file', () => {
     const err = siteError({
         'pages/page.alo': '<template>\n  <Blog.PostLst />\n</template>',
         'components/blog/PostList.alo': '',
     });
-    assert.equal(err.message, '`<Blog.PostLst>` কম্পোনেন্ট পাওয়া যায়নি।');
-    assert.equal(err.hint, 'তুমি কি `<Blog.PostList>` বোঝাতে চেয়েছিলে? (components/blog/PostList.alo)');
+    assert.equal(err.message, 'Component `<Blog.PostLst>` not found.');
+    assert.equal(err.hint, 'Did you mean `<Blog.PostList>`? (components/blog/PostList.alo)');
     assert.deepEqual([err.line, err.column], [2, 3]);
 });
 
-test('বড় হাতে লেখা HTML ট্যাগে ছোট হাতের ইঙ্গিত', () => {
-    assert.match(siteError({ 'pages/page.alo': '<template><DIV>a</DIV></template>' }).hint, /ছোট হাতে `<div>` লেখো/);
+test('an uppercase HTML tag name gets a lowercase hint', () => {
+    assert.match(siteError({ 'pages/page.alo': '<template><DIV>a</DIV></template>' }).hint, /write `<div>` in lowercase/);
     assert.match(siteError({ 'pages/page.alo': '<template><Header /></template>' }).hint, /`<header>`/);
 });
 
-test('কাছাকাছি কিছু না থাকলে ফাইল বানানোর ইঙ্গিত', () => {
-    assert.equal(siteError({ 'pages/page.alo': '<template><Blog.Sidebar /></template>' }).hint, 'কম্পোনেন্টটা বানাও: `components/blog/Sidebar.alo`');
+test('without a close name, the hint says which file to create', () => {
+    assert.equal(siteError({ 'pages/page.alo': '<template><Blog.Sidebar /></template>' }).hint, 'Create the component: `components/blog/Sidebar.alo`');
 });
 
-test('একই নামের কম্পোনেন্ট থাকলে HTML ট্যাগের নামও চলে', () => {
+test('a component may share its name with an HTML tag', () => {
     const { body } = site({
         'pages/page.alo': '<template><Header /></template>',
         'components/Header.alo': '<template><header>শিরোনাম</header></template>',
@@ -106,7 +106,7 @@ test('একই নামের কম্পোনেন্ট থাকলে H
     assert.equal(body, '<header>শিরোনাম</header>');
 });
 
-test('অব্যবহৃত কম্পোনেন্টের সতর্কবার্তা; মিথ্যা শাখা বা নেস্টেড ব্যবহারও গোনা হয়', () => {
+test('unused components warn; use in a false branch or nested use still counts', () => {
     const { warnings } = site({
         'pages/page.alo': '<template><template if="false"><Card /></template></template>',
         'components/Card.alo': '<template><Badge /></template>',
@@ -115,11 +115,11 @@ test('অব্যবহৃত কম্পোনেন্টের সতর্
     });
     assert.deepEqual(
         warnings.map((w) => [w.file, w.message]),
-        [['components/Unused.alo', '`<Unused>` কোথাও ব্যবহার হয়নি।']],
+        [['components/Unused.alo', '`<Unused>` is never used.']],
     );
 });
 
-test('tokenize স্ট্রিং আর প্রপার্টি আলাদা করে', () => {
+test('tokenize separates strings and properties', () => {
     const tokens = tokenize("a.b + 'c d' + `x ${ e } y` + 1.5 + f?.g + [...h]");
     assert.deepEqual(
         tokens.filter((t) => t.type === 'ident').map((t) => t.value),
@@ -127,7 +127,7 @@ test('tokenize স্ট্রিং আর প্রপার্টি আল�
     );
 });
 
-test('propUsage শুধু props.x ধরে, আর পুরো props ব্যবহার হলে ডায়নামিক', () => {
+test('propUsage records props.x and marks whole-props use as dynamic', () => {
     assert.deepEqual(usage(`<h2 class="{{ props.class }}">{{ props.title }}</h2><p>{{ post.date }}</p>`), {
         names: ['class', 'title'],
         dynamic: false,

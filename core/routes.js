@@ -16,22 +16,22 @@ function checkFolderName(name, file, afterSlug) {
     if (GROUP_FOLDER.test(name)) return 'group';
     if (name === '[slug]') {
         if (afterSlug) {
-            throw new AloError({ file, message: 'একটা পাথে `[slug]` একবারই থাকতে পারে।', hint: 'ডায়নামিক রাউট এক লেভেলের; ভেতরের `[slug]` সরাও।' });
+            throw new AloError({ file, message: 'A path can contain `[slug]` only once.', hint: 'Dynamic routes have one level; remove the inner `[slug]`.' });
         }
         return 'slug';
     }
     if (/^\[.*\]$/.test(name)) {
-        throw new AloError({ file, message: `ডায়নামিক ফোল্ডারের নাম \`${name}\` চলবে না।`, hint: 'ডায়নামিক ফোল্ডারের নাম সবসময় `[slug]`।' });
+        throw new AloError({ file, message: `Dynamic folder name \`${name}\` is not allowed.`, hint: 'A dynamic folder is always named `[slug]`.' });
     }
     if (!PLAIN_FOLDER.test(name)) {
         throw new AloError({
             file,
-            message: `\`pages/\`-এ ফোল্ডারের নাম \`${name}\` চলবে না।`,
-            hint: 'নামে শুধু ছোট হাতের ইংরেজি অক্ষর, সংখ্যা আর হাইফেন চলে; রাউট গ্রুপ হলে `(name)`, ডায়নামিক হলে `[slug]`।',
+            message: `Folder name \`${name}\` is not allowed in \`pages/\`.`,
+            hint: 'Use lowercase letters, digits and hyphens; `(name)` for a route group, `[slug]` for a dynamic route.',
         });
     }
     if (afterSlug) {
-        throw new AloError({ file, message: '`[slug]` পাথের শেষ ফোল্ডার হতে হবে।', hint: '`[slug]`-এর ভেতরে শুধু `page.alo` রাখো।' });
+        throw new AloError({ file, message: '`[slug]` must be the last folder in the path.', hint: 'Put only `page.alo` inside `[slug]`.' });
     }
     return 'plain';
 }
@@ -47,8 +47,8 @@ function urlFor(segments) {
 function findRoutes(reader, warn) {
     if (!reader.exists('pages')) {
         throw new AloError({
-            message: 'এখানে `pages/` ফোল্ডার নেই। তুমি কি প্রজেক্টের রুট ফোল্ডারে আছো?',
-            hint: 'নতুন প্রজেক্টের জন্য `npx @msilabs/alo init`।',
+            message: 'No `pages/` folder here. Are you in the project root?',
+            hint: 'Start a new project with `npx @msilabs/alo init`.',
         });
     }
 
@@ -61,8 +61,8 @@ function findRoutes(reader, warn) {
         if (other) {
             throw new AloError({
                 file,
-                message: `\`dist/${output}\` দুই জায়গা থেকে তৈরি হচ্ছে: \`${other}\` আর \`${file}\`।`,
-                hint: 'রাউট গ্রুপ `(name)` URL-এ গোনা হয় না; একটা পেইজ সরাও বা অন্য ফোল্ডারে রাখো।',
+                message: `\`dist/${output}\` is produced twice: by \`${other}\` and \`${file}\`.`,
+                hint: 'Route groups `(name)` do not count in the URL; remove one page or move it.',
             });
         }
         outputs.set(output, file);
@@ -104,17 +104,17 @@ function findRoutes(reader, warn) {
                 if (dir === 'pages') {
                     notFound = { file, path: '/404.html', output: '404.html', layouts: ownLayout ? ['pages/layout.alo'] : [] };
                 } else {
-                    warn({ file, message: '`not-found.alo` শুধু `pages/`-এর রুটে কাজ করে, এটা উপেক্ষা করা হলো।', hint: '`pages/not-found.alo`-এ সরাও।' });
+                    warn({ file, message: '`not-found.alo` only works at the root of `pages/`; this one was ignored.', hint: 'Move it to `pages/not-found.alo`.' });
                 }
             } else if (entry.name.endsWith('.alo') && !ROUTE_FILES.includes(entry.name)) {
-                warn({ file, message: `\`pages/\`-এ \`${entry.name}\` কাজে লাগে না।`, hint: 'কম্পোনেন্ট `components/`-এ রাখো। `pages/`-এ শুধু `page.alo`, `layout.alo` আর `not-found.alo` থাকে।' });
+                warn({ file, message: `\`${entry.name}\` is not used in \`pages/\`.`, hint: 'Put components in `components/`. `pages/` only holds `page.alo`, `layout.alo` and `not-found.alo`.' });
             } else if (!entry.name.endsWith('.alo')) {
-                warn({ file, message: `\`pages/\`-এ \`${entry.name}\` কাজে লাগে না।`, hint: 'ছবি বা অন্য ফাইল `public/`-এ রাখো, ডেটা `data/`-এ।' });
+                warn({ file, message: `\`${entry.name}\` is not used in \`pages/\`.`, hint: 'Put images and other files in `public/`, and data in `data/`.' });
             }
         }
 
         if (ownLayout && count === 0) {
-            warn({ file: `${dir}/layout.alo`, message: 'এই লেআউটের নিচে কোনো `page.alo` নেই।', hint: 'দরকার না থাকলে লেআউটটা সরাও।' });
+            warn({ file: `${dir}/layout.alo`, message: 'No `page.alo` uses this layout.', hint: 'Remove the layout if you do not need it.' });
         }
         return count;
     }

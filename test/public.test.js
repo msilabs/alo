@@ -28,7 +28,7 @@ function alo(cwd, args) {
     return { code: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
-test('public/-এর ফাইল কপির তালিকা; OS-এর জঞ্জাল বাদ, .well-known থাকে', () => {
+test('public/ copy list skips OS clutter and keeps .well-known', () => {
     const { copies } = compile({
         reader: createMemoryReader({
             'pages/page.alo': '',
@@ -47,27 +47,27 @@ test('public/-এর ফাইল কপির তালিকা; OS-এর জ
     ]);
 });
 
-test('public/-এর ফাইল আর তৈরি হওয়া ফাইলের নাম মিললে এরর', () => {
+test('a public/ file with the name of a generated file fails', () => {
     for (const clash of ['public/index.html', 'public/about/index.html', 'public/404.html']) {
         assert.throws(
             () => compile({ reader: createMemoryReader({ 'pages/page.alo': '', 'pages/about/page.alo': '', 'pages/not-found.alo': '', [clash]: 'x' }) }),
-            (err) => err instanceof AloError && err.file === clash && /একই জায়গায় যাচ্ছে/.test(err.message),
+            (err) => err instanceof AloError && err.file === clash && /would be the same file/.test(err.message),
             clash,
         );
     }
 });
 
-test('build: public/ হুবহু কপি হয়, বাইনারি ফাইলও', (t) => {
+test('build: public/ is copied byte for byte, binary files too', (t) => {
     const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff, 0xfe, 0x0a, 0x0d]);
     const dir = tempProject(t, { 'pages/page.alo': '<template>হোম</template>', 'public/images/pixel.png': bytes, 'public/CNAME': 'example.com\n' });
     const result = alo(dir, ['build']);
     assert.equal(result.code, 0, result.stderr);
     assert.deepEqual(fs.readFileSync(path.join(dir, 'dist', 'images', 'pixel.png')), bytes);
     assert.equal(fs.readFileSync(path.join(dir, 'dist', 'CNAME'), 'utf8'), 'example.com\n');
-    assert.match(result.stdout, /বিল্ড শেষ: 1টা পেইজ, 0টা asset, public\/ থেকে 2টা ফাইল, \d+ms → dist\//);
+    assert.match(result.stdout, /Built 1 page, 0 assets, 2 files from public\/ in \d+ms → dist\//);
 });
 
-test('build: আগের dist/-এর পুরনো ফাইল থাকে না', (t) => {
+test('build: old files from the previous dist/ do not remain', (t) => {
     const dir = tempProject(t, { 'pages/page.alo': '', 'pages/old/page.alo': '' });
     assert.equal(alo(dir, ['build']).code, 0);
     fs.rmSync(path.join(dir, 'pages', 'old'), { recursive: true });
@@ -75,7 +75,7 @@ test('build: আগের dist/-এর পুরনো ফাইল থাকে
     assert.ok(!fs.existsSync(path.join(dir, 'dist', 'old')));
 });
 
-test('build: এরর হলে exit 1, আগের dist/ অক্ষত, অস্থায়ী ফোল্ডার থাকে না', (t) => {
+test('build: an error exits with 1, keeps the old dist/ and removes the temp folder', (t) => {
     const dir = tempProject(t, { 'pages/page.alo': '<template>ঠিক</template>' });
     assert.equal(alo(dir, ['build']).code, 0);
     fs.writeFileSync(path.join(dir, 'pages', 'page.alo'), '<template>{{ </template>');
@@ -85,14 +85,14 @@ test('build: এরর হলে exit 1, আগের dist/ অক্ষত, অ
     assert.ok(!fs.existsSync(path.join(dir, '.alo', 'build')));
 });
 
-test('build: সারাংশে সতর্কবার্তার সংখ্যা আর অব্যবহৃত কম্পোনেন্ট', (t) => {
+test('build: the summary lists the warning count and unused components', (t) => {
     const dir = tempProject(t, {
         'pages/page.alo': '<template><li if="x">a</li></template>',
         'components/Lonely.alo': '<template><div></div></template>',
     });
     const result = alo(dir, ['build']);
     assert.equal(result.code, 0);
-    assert.match(result.stdout, /অব্যবহৃত কম্পোনেন্ট: <Lonely>/);
-    assert.match(result.stdout, /3টা সতর্কবার্তা, উপরে দেখো।/);
-    assert.match(result.stderr, /⚠ সতর্কবার্তা: pages\/page\.alo:1:15/);
+    assert.match(result.stdout, /Unused components: <Lonely>/);
+    assert.match(result.stdout, /3 warnings, see above\./);
+    assert.match(result.stderr, /⚠ Warning: pages\/page\.alo:1:15/);
 });

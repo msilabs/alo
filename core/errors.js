@@ -90,7 +90,7 @@ function formatDiagnostic(diagnostic, source = diagnostic.source) {
 
     lines.push('  ' + diagnostic.message);
     if (diagnostic.calledFrom) {
-        lines.push('  ডাকা হয়েছে: ' + formatLocation(diagnostic.calledFrom));
+        lines.push('  Called from: ' + formatLocation(diagnostic.calledFrom));
     }
 
     if (source && diagnostic.line) {
@@ -103,7 +103,7 @@ function formatDiagnostic(diagnostic, source = diagnostic.source) {
 
     if (diagnostic.hint) {
         lines.push('');
-        lines.push(...indentContinuation(diagnostic.hint, '  ইঙ্গিত: '));
+        lines.push(...indentContinuation(diagnostic.hint, '  Hint: '));
     }
     return lines;
 }

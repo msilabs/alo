@@ -17,72 +17,72 @@ function alo(args, nodeArgs = []) {
     return { code: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
-test('--version ভার্সন দেখায়', () => {
+test('--version prints the version', () => {
     const result = alo(['--version']);
     assert.equal(result.code, 0);
     assert.equal(result.stdout.trim(), version);
 });
 
-test('--help আর শুধু alo সাহায্য দেখায়', () => {
+test('--help and a bare alo print the help', () => {
     for (const args of [['--help'], []]) {
         const result = alo(args);
         assert.equal(result.code, 0);
-        assert.match(result.stdout, /ব্যবহার:/);
+        assert.match(result.stdout, /Usage:/);
         assert.match(result.stdout, /alo build \[--base \/\]/);
     }
 });
 
-test('অজানা কমান্ডে কাছাকাছি কমান্ডের পরামর্শ', () => {
+test('an unknown command suggests a close one', () => {
     const result = alo(['biuld']);
     assert.equal(result.code, 1);
-    assert.match(result.stderr, /✖ এরর:/);
-    assert.match(result.stderr, /অজানা কমান্ড `biuld`/);
-    assert.match(result.stderr, /`alo build` বোঝাতে চেয়েছিলে/);
+    assert.match(result.stderr, /✖ Error:/);
+    assert.match(result.stderr, /Unknown command `biuld`/);
+    assert.match(result.stderr, /Did you mean `alo build`/);
 });
 
-test('অনেক দূরের অজানা কমান্ডে শুধু সাহায্যের ইঙ্গিত', () => {
+test('a distant unknown command only points to help', () => {
     const result = alo(['xyzzy']);
     assert.equal(result.code, 1);
     assert.match(result.stderr, /alo --help/);
-    assert.doesNotMatch(result.stderr, /বোঝাতে চেয়েছিলে/);
+    assert.doesNotMatch(result.stderr, /Did you mean/);
 });
 
-test('অজানা ফ্ল্যাগে এরর আর পরামর্শ', () => {
+test('an unknown flag fails with a suggestion', () => {
     const result = alo(['dev', '--prot', '3000']);
     assert.equal(result.code, 1);
-    assert.match(result.stderr, /অজানা ফ্ল্যাগ `--prot`/);
-    assert.match(result.stderr, /`--port` বোঝাতে চেয়েছিলে/);
+    assert.match(result.stderr, /Unknown flag `--prot`/);
+    assert.match(result.stderr, /Did you mean `--port`/);
 });
 
-test('ভুল কমান্ডে ফ্ল্যাগ দিলে এরর', () => {
+test('a flag on the wrong command fails', () => {
     const result = alo(['build', '--port', '3000']);
     assert.equal(result.code, 1);
-    assert.match(result.stderr, /`alo build`-এ `--port` চলে না/);
+    assert.match(result.stderr, /`--port` does not work with `alo build`/);
 });
 
-test('মান ছাড়া ফ্ল্যাগে এরর', () => {
+test('a flag without a value fails', () => {
     const result = alo(['dev', '--port']);
     assert.equal(result.code, 1);
-    assert.match(result.stderr, /`--port`-এর পরে একটা মান দাও/);
+    assert.match(result.stderr, /`--port` needs a value/);
 });
 
-test('ভুল পোর্টে এরর', () => {
+test('an invalid port fails', () => {
     for (const port of ['abc', '0', '70000', '30.5']) {
         const result = alo(['dev', `--port=${port}`]);
         assert.equal(result.code, 1, port);
-        assert.match(result.stderr, /`--port`-এর মান/);
+        assert.match(result.stderr, /Invalid `--port` value/);
     }
 });
 
-test('Node-এর ভার্সন কম হলে বাংলা এরর', () => {
+test('an old Node version gets a clear error', () => {
     const result = alo(['--version'], ['--require', FAKE_NODE_20]);
     assert.equal(result.code, 1);
-    assert.match(result.stderr, /Node\.js 22 বা তার নতুন ভার্সন লাগবে/);
+    assert.match(result.stderr, /Alo needs Node\.js 22 or newer/);
     assert.match(result.stderr, /v20\.1\.0/);
     assert.equal(result.stdout, '');
 });
 
-test('NO_COLOR থাকলে ANSI কোড নেই', () => {
+test('NO_COLOR turns off ANSI codes', () => {
     const result = alo(['biuld']);
     assert.doesNotMatch(result.stderr, /\x1b\[/);
 });

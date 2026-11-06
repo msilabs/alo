@@ -21,10 +21,10 @@ function renderError(snippet) {
     try {
         renderBody(snippet);
     } catch (err) {
-        assert.ok(err instanceof AloError, `AloError আশা করা হয়েছিল, পাওয়া গেছে: ${err}`);
+        assert.ok(err instanceof AloError, `expected an AloError, got: ${err}`);
         return err;
     }
-    assert.fail('এরর আশা করা হয়েছিল');
+    assert.fail('expected an error');
 }
 
 module.exports = { renderBody, renderError, FILE };

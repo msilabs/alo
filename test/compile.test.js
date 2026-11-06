@@ -12,7 +12,7 @@ function build(files, options = {}) {
 
 function output(result, path) {
     const file = result.files.find((f) => f.path === path);
-    assert.ok(file, `${path} তৈরি হয়নি`);
+    assert.ok(file, `${path} was not created`);
     return file.contents;
 }
 
@@ -23,10 +23,10 @@ function compileError(files) {
         assert.ok(err instanceof AloError);
         return err;
     }
-    assert.fail('এরর আশা করা হয়েছিল');
+    assert.fail('expected an error');
 }
 
-test('pages/page.alo থেকে index.html, ফোল্ডার থেকে পরিষ্কার URL', () => {
+test('pages/page.alo becomes index.html and folders become clean URLs', () => {
     const result = build({
         'pages/page.alo': '<template><h1>হোম</h1></template>',
         'pages/about/page.alo': '<template><h1>{{ route.path }}</h1></template>',
@@ -35,7 +35,7 @@ test('pages/page.alo থেকে index.html, ফোল্ডার থেকে
     assert.match(output(result, 'about/index.html'), /<h1>\/about\/<\/h1>/);
 });
 
-test('HTML শেল: doctype, lang, charset, viewport, ডিফল্ট title', () => {
+test('HTML shell: doctype, lang, charset, viewport, default title', () => {
     const html = output(build({ 'pages/page.alo': '<template><p>a</p></template>' }), 'index.html');
     assert.equal(
         html,
@@ -56,7 +56,7 @@ test('HTML শেল: doctype, lang, charset, viewport, ডিফল্ট title
     );
 });
 
-test('পেইজের <head> বসে, আর নিজের title থাকলে ডিফল্টটা বসে না', () => {
+test('the page head is used, and its own title replaces the default', () => {
     const html = output(
         build({ 'pages/page.alo': '<head><title>{{ "আমার" + " সাইট" }}</title></head><template></template>' }),
         'index.html',
@@ -65,7 +65,7 @@ test('পেইজের <head> বসে, আর নিজের title থা�
     assert.doesNotMatch(html, /<title>Alo<\/title>/);
 });
 
-test('{{ }} escape করে, {{{ }}} করে না, null আর undefined খালি', () => {
+test('{{ }} escapes, {{{ }}} does not, null and undefined are empty', () => {
     const html = output(
         build({ 'pages/page.alo': `<template><p>{{ '<b>&"\\'' }}|{{{ '<b>x</b>' }}}|{{ null }}{{ undefined }}|{{ 0 }}|{{ false }}</p></template>` }),
         'index.html',
@@ -73,7 +73,7 @@ test('{{ }} escape করে, {{{ }}} করে না, null আর undefined �
     assert.match(html, /<p>&lt;b&gt;&amp;&quot;&#39;\|<b>x<\/b>\|\|0\|false<\/p>/);
 });
 
-test('অ্যাট্রিবিউটে {{ }} বসে; স্ট্যাটিক আর অচেনা অ্যাট্রিবিউট হুবহু থাকে', () => {
+test('{{ }} works in attributes; static and unknown attributes stay as written', () => {
     const html = output(
         build({
             'pages/page.alo': `<template><a href="/x/{{ 1 + 1 }}/" title='{{ "a\\"b" }}' x-data="{ open: false }" @click='open = !open' hidden>x</a></template>`,
@@ -83,17 +83,17 @@ test('অ্যাট্রিবিউটে {{ }} বসে; স্ট্য�
     assert.match(html, /<a href="\/x\/2\/" title='a&quot;b' x-data="\{ open: false \}" @click='open = !open' hidden>x<\/a>/);
 });
 
-test('অ্যাট্রিবিউটের \\{{ আউটপুটে আক্ষরিক {{ হয়', () => {
+test('\\{{ in an attribute outputs a literal {{', () => {
     const html = output(build({ 'pages/page.alo': '<template><code title="\\{{ x }}">a</code></template>' }), 'index.html');
     assert.match(html, /<code title="\{\{ x \}\}">a<\/code>/);
 });
 
-test('void আর self-closing HTML এলিমেন্ট', () => {
+test('void and self-closing HTML elements', () => {
     const html = output(build({ 'pages/page.alo': '<template><br><div /><img src="a.png" /></template>' }), 'index.html');
     assert.match(html, /<br><div><\/div><img src="a.png">/);
 });
 
-test('script আর style-এর ভেতরে {{ }} প্রসেস হয় না', () => {
+test('{{ }} is not processed inside script and style', () => {
     const html = output(
         build({ 'pages/page.alo': '<template><script>const a = "{{ x }}";</script><style>a::after { content: "{{" }</style></template>' }),
         'index.html',
@@ -102,35 +102,35 @@ test('script আর style-এর ভেতরে {{ }} প্রসেস হয
     assert.match(html, /content: "\{\{"/);
 });
 
-test('অজানা ভেরিয়েবলে লাইন, কলাম আর উপলব্ধ ভেরিয়েবলসহ এরর', () => {
+test('an unknown variable fails with line, column and available variables', () => {
     const err = compileError({ 'pages/about/page.alo': '<template>\n  <h1>{{ titel }}</h1>\n</template>' });
     assert.equal(err.file, 'pages/about/page.alo');
     assert.deepEqual([err.line, err.column], [2, 7]);
-    assert.match(err.message, /`titel` নামে কোনো ভেরিয়েবল নেই/);
+    assert.match(err.message, /`titel` is not defined/);
     assert.match(err.hint, /`data`, `route`, `base`/);
-    assert.ok(err.source.includes('titel'), 'কোড ফ্রেমের জন্য source থাকা দরকার');
+    assert.ok(err.source.includes('titel'), 'the source is needed for the code frame');
 });
 
-test('ভুল এক্সপ্রেশন আর রানটাইম এরর বাংলায়', () => {
-    assert.match(compileError({ 'pages/page.alo': '<template>{{ a b }}</template>' }).message, /বোঝা যাচ্ছে না/);
+test('invalid expressions and runtime errors are explained', () => {
+    assert.match(compileError({ 'pages/page.alo': '<template>{{ a b }}</template>' }).message, /Cannot parse the expression/);
     const missing = compileError({ 'pages/page.alo': '<template>{{ data.missing.title }}</template>' });
-    assert.equal(missing.message, '`data.missing` হলো `undefined`, তাই `.title` পড়া যায় না।');
+    assert.equal(missing.message, '`data.missing` is `undefined`, so `.title` cannot be read.');
     assert.match(missing.hint, /`data\.missing\?\.title`/);
     const runtime = compileError({ 'pages/page.alo': '<template>{{ (1).toFixed(200) }}</template>' });
-    assert.match(runtime.message, /এক্সপ্রেশন চালাতে গিয়ে এরর/);
+    assert.match(runtime.message, /Error while evaluating an expression/);
 });
 
-test('অ্যাট্রিবিউটে {{{ }}} থাকলে এরর', () => {
-    assert.match(compileError({ 'pages/page.alo': '<template><a title="{{{ x }}}"></a></template>' }).message, /অ্যাট্রিবিউটে `\{\{\{ \}\}\}` চলে না/);
+test('{{{ }}} in an attribute fails', () => {
+    assert.match(compileError({ 'pages/page.alo': '<template><a title="{{{ x }}}"></a></template>' }).message, /`\{\{\{ \}\}\}` cannot be used in an attribute/);
 });
 
-test('pages/ না থাকলে স্পেকের এরর', () => {
+test('a missing pages/ folder fails as the spec says', () => {
     const err = compileError({ 'components/Card.alo': '' });
-    assert.match(err.message, /`pages\/` ফোল্ডার নেই/);
+    assert.match(err.message, /No `pages\/` folder here/);
     assert.match(err.hint, /npx @msilabs\/alo init/);
 });
 
-test('রাউটগুলো কোড-পয়েন্ট ক্রমে আসে', () => {
+test('routes come in code-point order', () => {
     const result = build({
         'pages/b/page.alo': '',
         'pages/a-b/page.alo': '',
@@ -140,7 +140,7 @@ test('রাউটগুলো কোড-পয়েন্ট ক্রমে �
     assert.deepEqual(result.files.map((f) => f.path), ['1/index.html', 'a/index.html', 'a-b/index.html', 'b/index.html']);
 });
 
-test('ক্যাশ: না বদলানো ফাইল আবার পার্স হয় না, বদলানোটা হয়', () => {
+test('cache: unchanged files are not parsed again, changed ones are', () => {
     const cache = { sfc: new Map(), data: new Map() };
     const files = {
         'pages/page.alo': '<template>{{ data.post.body }}</template>',
@@ -153,7 +153,7 @@ test('ক্যাশ: না বদলানো ফাইল আবার প�
 
     files['data/post.md'] = '# দুই';
     const second = compile({ reader: createMemoryReader(files), mode: 'dev', cache });
-    assert.equal(cache.sfc.get('page\npages/page.alo').sfc, page, 'না বদলানো পেইজ আগের পার্স থেকেই আসে');
-    assert.notEqual(cache.data.get('data/post.md').value, post, 'বদলানো Markdown নতুন করে পড়া হয়');
+    assert.equal(cache.sfc.get('page\npages/page.alo').sfc, page, 'an unchanged page comes from the earlier parse');
+    assert.notEqual(cache.data.get('data/post.md').value, post, 'changed Markdown is read again');
     assert.match(second.files[0].contents, /দুই/);
 });

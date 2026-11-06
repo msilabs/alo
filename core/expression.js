@@ -18,8 +18,8 @@ function compileExpression(code, names, location) {
     } catch (err) {
         throw new AloError({
             ...location,
-            message: `এক্সপ্রেশনটা বোঝা যাচ্ছে না: \`${code}\``,
-            hint: `JavaScript বলছে: ${err.message}`,
+            message: `Cannot parse the expression \`${code}\``,
+            hint: `JavaScript says: ${err.message}`,
         });
     }
     cache.set(key, fn);
@@ -65,8 +65,8 @@ function evaluate(code, scope, location) {
             const available = names.map((name) => `\`${name}\``).join(', ');
             throw new AloError({
                 ...location,
-                message: `\`${missing[1]}\` নামে কোনো ভেরিয়েবল নেই।`,
-                hint: (close ? `তুমি কি \`${close}\` বোঝাতে চেয়েছিলে? ` : '') + `এখানে আছে: ${available}।`,
+                message: `\`${missing[1]}\` is not defined.`,
+                hint: (close ? `Did you mean \`${close}\`? ` : '') + `Available here: ${available}.`,
             });
         }
 
@@ -77,24 +77,24 @@ function evaluate(code, scope, location) {
             throw new AloError({
                 ...location,
                 message: owner
-                    ? `\`${owner}\` হলো \`${empty}\`, তাই \`.${property}\` পড়া যায় না।`
-                    : `\`${empty}\` থেকে \`.${property}\` পড়া যায় না।`,
-                hint: `মান না-ও থাকতে পারলে \`?.\` লেখো, যেমন \`${owner ?? 'x'}?.${property}\`। কম্পোনেন্টে হলে প্রপটা পাঠানো হয়েছে কিনা দেখো।`,
+                    ? `\`${owner}\` is \`${empty}\`, so \`.${property}\` cannot be read.`
+                    : `Cannot read \`.${property}\` of \`${empty}\`.`,
+                hint: `If the value may be missing, use \`?.\`, e.g. \`${owner ?? 'x'}?.${property}\`. In a component, check that the prop is passed.`,
             });
         }
 
         if (err instanceof TypeError && FROZEN_WRITE.test(err.message)) {
             throw new AloError({
                 ...location,
-                message: `ডেটা বদলানো যায় না: \`${code}\``,
-                hint: 'নতুন মান বানাও: `toReversed()`, `toSorted()` বা `slice()` ব্যবহার করো।',
+                message: `Data cannot be changed: \`${code}\``,
+                hint: 'Make a new value instead: use `toReversed()`, `toSorted()` or `slice()`.',
             });
         }
 
         throw new AloError({
             ...location,
-            message: `এক্সপ্রেশন চালাতে গিয়ে এরর: ${err.message}`,
-            hint: `এক্সপ্রেশন: \`${code}\``,
+            message: `Error while evaluating an expression: ${err.message}`,
+            hint: `Expression: \`${code}\``,
         });
     }
 }

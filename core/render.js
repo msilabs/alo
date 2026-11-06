@@ -31,8 +31,8 @@ function fail(ctx, node, message, hint) {
 function describe(value) {
     if (value === null) return '`null`';
     if (value === undefined) return '`undefined`';
-    if (typeof value === 'object') return 'একটা অবজেক্ট';
-    if (typeof value === 'string') return 'একটা স্ট্রিং';
+    if (typeof value === 'object') return 'an object';
+    if (typeof value === 'string') return 'a string';
     return `\`${String(value)}\``;
 }
 
@@ -41,17 +41,17 @@ function stringify(value, part, ctx) {
     if (typeof value === 'function') {
         ctx.warn({
             ...location(ctx, part),
-            message: `\`{{ ${part.code} }}\` একটা ফাংশন, তাই আউটপুটে তার কোড বসবে।`,
-            hint: 'ফাংশনটা ডাকতে চাইলে শেষে `()` দাও।',
+            message: `\`{{ ${part.code} }}\` is a function, so its source code will be printed.`,
+            hint: 'Add `()` to call the function.',
         });
     } else if (typeof value === 'object') {
-        const what = Array.isArray(value) ? 'একটা অ্যারে, তাই আউটপুটে কমা দিয়ে জোড়া লেখা' : 'একটা অবজেক্ট, তাই আউটপুটে `[object Object]`';
+        const what = Array.isArray(value) ? 'an array, so it will be printed as comma-separated text' : 'an object, so it will be printed as `[object Object]`';
         ctx.warn({
             ...location(ctx, part),
-            message: `\`{{ ${part.code} }}\` ${what} বসবে।`,
+            message: `\`{{ ${part.code} }}\` is ${what}.`,
             hint: Array.isArray(value)
-                ? 'প্রতিটা আইটেম দেখাতে `<template for>` লেখো, অথবা `.join(\', \')`।'
-                : 'নির্দিষ্ট ফিল্ড লেখো, যেমন `{{ post.title }}`।',
+                ? 'Use `<template for>` to show each item, or `.join(\', \')`.'
+                : 'Print a single field, e.g. `{{ post.title }}`.',
         });
     }
     return String(value);
@@ -69,7 +69,7 @@ function renderParts(parts, ctx, inAttribute) {
             continue;
         }
         if (part.raw && inAttribute) {
-            fail(ctx, part, 'অ্যাট্রিবিউটে `{{{ }}}` চলে না।', '`{{{ }}}` শুধু লেখার জায়গায় চলে। অ্যাট্রিবিউটে `{{ }}` লেখো।');
+            fail(ctx, part, '`{{{ }}}` cannot be used in an attribute.', '`{{{ }}}` only works in text. Use `{{ }}` in attributes.');
         }
         const text = stringify(evaluatePart(part, ctx), part, ctx);
         out += part.raw ? text : escapeHtml(text);
@@ -98,7 +98,7 @@ function checkElementLogic(node, ctx) {
     if (isComponentName(node.name)) {
         const value = logic.value === null ? '' : `="${logic.value}"`;
         const rest = node.attrs.filter((attr) => attr !== logic).map((attr) => ' ' + attr.raw).join('');
-        fail(ctx, node, 'লজিক শুধু <template> ট্যাগে লেখা যায়।', `<template ${logic.name}${value}>\n  <${node.name}${rest} />\n</template>`);
+        fail(ctx, node, 'Logic can only be written on a <template> tag.', `<template ${logic.name}${value}>\n  <${node.name}${rest} />\n</template>`);
     }
 
     for (const attr of node.attrs) {
@@ -107,8 +107,8 @@ function checkElementLogic(node, ctx) {
         if (!LOGIC_ATTRIBUTES.includes(attr.name)) continue;
         ctx.warn({
             ...location(ctx, attr),
-            message: `\`<${node.name} ${attr.name}>\` কাজ করবে না।`,
-            hint: `লজিক শুধু \`<template>\`-এ চলে: \`<template ${attr.name}${attr.value === null ? '' : `="${attr.value}"`}>\` দিয়ে মোড়াও।`,
+            message: `\`<${node.name} ${attr.name}>\` will not work.`,
+            hint: `Logic only works on \`<template>\`: wrap the element in \`<template ${attr.name}${attr.value === null ? '' : `="${attr.value}"`}>\`.`,
         });
     }
 }
@@ -122,10 +122,10 @@ function failUnknownComponent(node, ctx) {
     const close = suggest(node.name, [...components.keys()]);
     const lower = node.name.toLowerCase();
     const hints = [];
-    if (HTML_TAGS.has(lower)) hints.push(`HTML ট্যাগ চাইলে ছোট হাতে \`<${lower}>\` লেখো।`);
-    if (close) hints.push(`তুমি কি \`<${close}>\` বোঝাতে চেয়েছিলে? (${components.get(close).file})`);
-    if (hints.length === 0) hints.push(`কম্পোনেন্টটা বানাও: \`${expectedPath(node.name)}\``);
-    fail(ctx, node, `\`<${node.name}>\` কম্পোনেন্ট পাওয়া যায়নি।`, hints.join('\n'));
+    if (HTML_TAGS.has(lower)) hints.push(`For the HTML tag, write \`<${lower}>\` in lowercase.`);
+    if (close) hints.push(`Did you mean \`<${close}>\`? (${components.get(close).file})`);
+    if (hints.length === 0) hints.push(`Create the component: \`${expectedPath(node.name)}\``);
+    fail(ctx, node, `Component \`<${node.name}>\` not found.`, hints.join('\n'));
 }
 
 // Whole-value `{{ }}` passes the real value; everything else becomes a plain (unescaped) string.
@@ -134,7 +134,7 @@ function propValue(attr, ctx) {
     if (isStatic(attr)) return decodeEntities(attr.value);
 
     const raw = attr.parts.find((part) => part.type === 'expr' && part.raw);
-    if (raw) fail(ctx, raw, 'অ্যাট্রিবিউটে `{{{ }}}` চলে না।', 'প্রপে `{{ }}` লেখো; পুরো মান `{{ }}` হলে আসল মানটাই যায়।');
+    if (raw) fail(ctx, raw, '`{{{ }}}` cannot be used in an attribute.', 'Use `{{ }}` in props; when the whole value is `{{ }}`, the real value is passed.');
     if (isWholeExpression(attr)) return evaluatePart(attr.parts[0], ctx);
 
     let out = '';
@@ -155,10 +155,10 @@ function checkPropUsage(node, entry, sfc, ctx) {
         const access = /^[A-Za-z_$][\w$]*$/.test(name) ? `props.${name}` : `props['${name}']`;
         ctx.warn({
             ...location(ctx, attr),
-            message: `\`<${node.name}>\`-এ \`${name}\` কোথাও ব্যবহার হয়নি।`,
+            message: `\`<${node.name}>\` never uses \`${name}\`.`,
             hint: close
-                ? `তুমি কি \`${close}\` বোঝাতে চেয়েছিলে?`
-                : `${entry.file}-এ \`{{ ${access} }}\` লিখে ব্যবহার করো, নয়তো প্রপটা সরাও।`,
+                ? `Did you mean \`${close}\`?`
+                : `Use it in ${entry.file} as \`{{ ${access} }}\`, or remove the prop.`,
         });
     }
 }
@@ -169,7 +169,7 @@ function renderComponent(node, ctx) {
 
     if (ctx.stack.includes(node.name)) {
         const chain = [...ctx.stack.slice(ctx.stack.indexOf(node.name)), node.name].map((name) => `<${name}>`).join(' → ');
-        fail(ctx, node, `কম্পোনেন্টগুলো একে অপরকে ঘুরে ঘুরে ডাকছে: ${chain}`, 'চেইনের কোনো একটা কম্পোনেন্ট থেকে ডাকটা সরাও।');
+        fail(ctx, node, `Components call each other in a loop: ${chain}`, 'Remove the call from one of the components in the chain.');
     }
 
     const sfc = ctx.project.loadComponent(entry);
@@ -181,8 +181,8 @@ function renderComponent(node, ctx) {
     if (content && !sfc.hasSlot) {
         ctx.warn({
             ...location(ctx, node),
-            message: `\`<${node.name}>\`-এ \`<slot />\` নেই, তাই ভেতরের কনটেন্ট দেখানো হবে না।`,
-            hint: `${entry.file}-এ কনটেন্ট যেখানে বসবে সেখানে \`<slot />\` লেখো।`,
+            message: `\`<${node.name}>\` has no \`<slot />\`, so the content inside it will not be shown.`,
+            hint: `Add \`<slot />\` in ${entry.file} where the content should go.`,
         });
     }
 
@@ -262,14 +262,14 @@ function warnAboutScriptRoot(node, sfc, ctx) {
     if (roots.length === 0) {
         ctx.warn({
             ...where,
-            message: `\`<${node.name}>\`-এর স্ক্রিপ্টে \`$el\` পাওয়া যাবে না, কারণ টেমপ্লেটে কোনো এলিমেন্ট নেই।`,
-            hint: 'পুরো মার্কআপ একটা এলিমেন্টে মোড়াও, যেমন `<div>…</div>`।',
+            message: `The script of \`<${node.name}>\` gets no \`$el\`, because its template has no element.`,
+            hint: 'Wrap the markup in one element, e.g. `<div>…</div>`.',
         });
     } else if (roots.length > 1) {
         ctx.warn({
             ...where,
-            message: `\`<${node.name}>\`-এ একাধিক রুট এলিমেন্ট আছে, তাই \`$el\` হবে প্রথমটা।`,
-            hint: 'সব মার্কআপ একটা এলিমেন্টে মোড়ালে `$el` দিয়ে পুরোটা পাওয়া যায়।',
+            message: `\`<${node.name}>\` has several root elements, so \`$el\` is the first one.`,
+            hint: 'Wrap the markup in one element to reach all of it through `$el`.',
         });
     }
 }
@@ -312,31 +312,31 @@ function logicOf(node, ctx) {
         fail(
             ctx,
             logic[1],
-            `একই \`<template>\`-এ \`${logic[0].name}\` আর \`${logic[1].name}\` একসাথে চলে না।`,
-            `একটার ভেতরে আরেকটা রাখো:\n<template ${logic[0].name}="...">\n  <template ${logic[1].name}="...">…</template>\n</template>`,
+            `\`${logic[0].name}\` and \`${logic[1].name}\` cannot be on the same \`<template>\`.`,
+            `Nest one inside the other:\n<template ${logic[0].name}="...">\n  <template ${logic[1].name}="...">…</template>\n</template>`,
         );
     }
 
     const other = node.attrs.find((attr) => !LOGIC_ATTRIBUTES.includes(attr.name));
     if (other) {
-        fail(ctx, other, `এই \`<template>\` আউটপুটে যায় না, তাই \`${other.name}\` এখানে কাজ করবে না।`, 'ভেতরের এলিমেন্টে দাও।');
+        fail(ctx, other, `This \`<template>\` is not part of the output, so \`${other.name}\` has no effect here.`, 'Put it on an element inside.');
     }
 
     const [attr] = logic;
     if (attr.name === 'else') {
         if (attr.value !== null) {
-            fail(ctx, attr, '`else`-এ কোনো মান থাকে না।', 'শুধু `<template else>` লেখো। শর্ত লাগলে `<template else-if="...">`।');
+            fail(ctx, attr, '`else` takes no value.', 'Write just `<template else>`. For a condition, use `<template else-if="...">`.');
         }
         return attr;
     }
 
     if (attr.value === null || attr.value.trim() === '') {
         const example = attr.name === 'for' ? 'post in data.blog' : 'post.featured';
-        fail(ctx, attr, `\`${attr.name}\`-এ মান দাও।`, `যেমন: \`<template ${attr.name}="${example}">\``);
+        fail(ctx, attr, `\`${attr.name}\` needs a value.`, `For example: \`<template ${attr.name}="${example}">\``);
     }
     if (attr.parts.some((part) => part.type === 'expr')) {
         const plain = attr.parts.map((part) => (part.type === 'expr' ? part.code : part.value)).join('');
-        fail(ctx, attr, `\`${attr.name}\`-এর মানে \`{{ }}\` লাগে না।`, `সরাসরি লেখো: \`${attr.name}="${plain}"\``);
+        fail(ctx, attr, `\`${attr.name}\` does not need \`{{ }}\`.`, `Write it directly: \`${attr.name}="${plain}"\``);
     }
     return attr;
 }
@@ -344,7 +344,7 @@ function logicOf(node, ctx) {
 function renderFor(node, attr, ctx) {
     const match = FOR_PATTERN.exec(attr.value);
     if (!match) {
-        fail(ctx, attr, `\`for="${attr.value}"\` বোঝা যাচ্ছে না।`, 'লেখো `post in data.blog`, অথবা ইনডেক্সসহ `(post, i) in data.blog`।');
+        fail(ctx, attr, `Cannot parse \`for="${attr.value}"\`.`, 'Write `post in data.blog`, or with an index `(post, i) in data.blog`.');
     }
 
     const [, single, pairItem, indexName, listCode] = match;
@@ -353,9 +353,9 @@ function renderFor(node, attr, ctx) {
     if (!Array.isArray(list)) {
         const hint =
             list !== null && typeof list === 'object'
-                ? `অবজেক্টের ওপর লুপ চালাতে লেখো: \`${itemName} in Object.entries(${listCode.trim()})\``
-                : 'নামের বানান ঠিক আছে কিনা দেখো।';
-        fail(ctx, attr, `\`for\`-এর মান অ্যারে হতে হবে, কিন্তু \`${listCode.trim()}\` হলো ${describe(list)}।`, hint);
+                ? `To loop over an object, write \`${itemName} in Object.entries(${listCode.trim()})\``
+                : 'Check the spelling of the name.';
+        fail(ctx, attr, `\`for\` needs an array, but \`${listCode.trim()}\` is ${describe(list)}.`, hint);
     }
 
     let out = '';
@@ -421,8 +421,8 @@ function renderNodes(nodes, ctx) {
             fail(
                 ctx,
                 attr,
-                `\`<template ${attr.name}>\`-এর আগে কোনো \`<template if>\` নেই।`,
-                '`else-if` আর `else` থাকে `<template if>` বা `<template else-if>`-এর ঠিক পরে; মাঝে শুধু ফাঁকা জায়গা বা কমেন্ট চলে।',
+                `\`<template ${attr.name}>\` has no \`<template if>\` before it.`,
+                '`else-if` and `else` must come right after `<template if>` or `<template else-if>`; only whitespace or comments may be in between.',
             );
         }
     }

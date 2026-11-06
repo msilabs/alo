@@ -21,14 +21,14 @@ function routeError(paths) {
         assert.ok(err instanceof AloError, String(err));
         return err;
     }
-    assert.fail('এরর আশা করা হয়েছিল');
+    assert.fail('expected an error');
 }
 
 function summary(result) {
     return result.pages.map((page) => [page.file, page.path, page.output]);
 }
 
-test('স্ট্যাটিক পেইজ: ফোল্ডার মানে URL', () => {
+test('static pages: folders are URLs', () => {
     assert.deepEqual(summary(routes(['pages/page.alo', 'pages/about/page.alo', 'pages/docs/getting-started/page.alo'])), [
         ['pages/about/page.alo', '/about/', 'about/index.html'],
         ['pages/docs/getting-started/page.alo', '/docs/getting-started/', 'docs/getting-started/index.html'],
@@ -36,7 +36,7 @@ test('স্ট্যাটিক পেইজ: ফোল্ডার মান�
     ]);
 });
 
-test('রাউট গ্রুপ URL-এ যায় না; গ্রুপের page.alo প্যারেন্টের URL পায়', () => {
+test('route groups stay out of the URL; a group page.alo gets the parent URL', () => {
     assert.deepEqual(summary(routes(['pages/(site)/page.alo', 'pages/(site)/about/page.alo', 'pages/(bare)/(inner)/launch/page.alo'])), [
         ['pages/(bare)/(inner)/launch/page.alo', '/launch/', 'launch/index.html'],
         ['pages/(site)/about/page.alo', '/about/', 'about/index.html'],
@@ -44,7 +44,7 @@ test('রাউট গ্রুপ URL-এ যায় না; গ্রুপ�
     ]);
 });
 
-test('লেআউট চেইন রুট থেকে কাছের দিকে, গ্রুপসহ', () => {
+test('layout chain runs from the root inwards, groups included', () => {
     const { pages } = routes([
         'pages/layout.alo',
         'pages/(site)/layout.alo',
@@ -59,40 +59,40 @@ test('লেআউট চেইন রুট থেকে কাছের দি
     assert.deepEqual(chain['pages/(bare)/launch/page.alo'], ['pages/layout.alo']);
 });
 
-test('[slug] ডায়নামিক রাউট: ডেটার ফোল্ডার গ্রুপ বাদ দিয়ে', () => {
+test('[slug] dynamic route: the data folder ignores groups', () => {
     const [page] = routes(['pages/(site)/blog/[slug]/page.alo']).pages;
     assert.deepEqual(page.dynamic, { dataDir: 'data/blog', prefix: ['blog'] });
 });
 
-test('[slug] ছাড়া অন্য বন্ধনী-নামে এরর আর ইঙ্গিত', () => {
+test('other bracket names than [slug] fail with a hint', () => {
     const err = routeError(['pages/blog/[id]/page.alo']);
-    assert.match(err.message, /`\[id\]` চলবে না/);
-    assert.equal(err.hint, 'ডায়নামিক ফোল্ডারের নাম সবসময় `[slug]`।');
+    assert.match(err.message, /`\[id\]` is not allowed/);
+    assert.equal(err.hint, 'A dynamic folder is always named `[slug]`.');
 });
 
-test('[slug] মাঝখানে বা দুবার থাকলে এরর', () => {
-    assert.match(routeError(['pages/blog/[slug]/comments/page.alo']).message, /`\[slug\]` পাথের শেষ ফোল্ডার হতে হবে/);
-    assert.match(routeError(['pages/[slug]/[slug]/page.alo']).message, /একবারই থাকতে পারে/);
+test('[slug] in the middle or twice fails', () => {
+    assert.match(routeError(['pages/blog/[slug]/comments/page.alo']).message, /`\[slug\]` must be the last folder in the path/);
+    assert.match(routeError(['pages/[slug]/[slug]/page.alo']).message, /only once/);
     assert.ok(routes(['pages/blog/[slug]/(x)/page.alo']).pages[0].dynamic);
 });
 
-test('অবৈধ ফোল্ডারের নামে এরর', () => {
+test('invalid folder names fail', () => {
     for (const name of ['About', 'my_page', 'হোম', '(Site)']) {
         const err = routeError([`pages/${name}/page.alo`]);
-        assert.match(err.message, /চলবে না/, name);
+        assert.match(err.message, /is not allowed/, name);
         assert.equal(err.file, `pages/${name}`);
     }
 });
 
-test('একই আউটপুট দুই জায়গা থেকে এলে দুটো ফাইলসহ এরর', () => {
+test('the same output from two sources fails, naming both', () => {
     const err = routeError(['pages/(a)/about/page.alo', 'pages/(b)/about/page.alo']);
-    assert.match(err.message, /`dist\/about\/index\.html` দুই জায়গা থেকে তৈরি হচ্ছে: `pages\/\(a\)\/about\/page\.alo` আর `pages\/\(b\)\/about\/page\.alo`/);
+    assert.match(err.message, /`dist\/about\/index\.html` is produced twice: by `pages\/\(a\)\/about\/page\.alo` and `pages\/\(b\)\/about\/page\.alo`/);
 
     assert.match(routeError(['pages/page.alo', 'pages/(site)/page.alo']).message, /`dist\/index\.html`/);
     assert.match(routeError(['pages/(a)/blog/[slug]/page.alo', 'pages/(b)/blog/[slug]/page.alo']).message, /blog\/\[slug\]/);
 });
 
-test('not-found শুধু রুটে; শুধু pages/layout.alo পায়', () => {
+test('not-found works only at the root and gets only pages/layout.alo', () => {
     const { notFound } = routes(['pages/not-found.alo', 'pages/layout.alo', 'pages/page.alo']);
     assert.deepEqual(notFound, { file: 'pages/not-found.alo', path: '/404.html', output: '404.html', layouts: ['pages/layout.alo'] });
 
@@ -101,21 +101,21 @@ test('not-found শুধু রুটে; শুধু pages/layout.alo পা�
 
     const nested = routes(['pages/blog/not-found.alo', 'pages/blog/page.alo']);
     assert.equal(nested.notFound, null);
-    assert.match(nested.warnings[0].message, /শুধু `pages\/`-এর রুটে/);
+    assert.match(nested.warnings[0].message, /only works at the root of `pages\/`/);
 });
 
-test('pages/-এ অন্য ফাইলে সতর্কবার্তা', () => {
+test('other files in pages/ warn', () => {
     const { warnings } = routes(['pages/page.alo', 'pages/Card.alo', 'pages/logo.png']);
     assert.deepEqual(
         warnings.map((w) => w.file),
         ['pages/Card.alo', 'pages/logo.png'],
     );
-    assert.match(warnings[0].hint, /কম্পোনেন্ট `components\/`-এ রাখো/);
+    assert.match(warnings[0].hint, /Put components in `components\/`/);
 });
 
-test('নিচে কোনো পেইজ ছাড়া লেআউটে সতর্কবার্তা', () => {
+test('a layout with no page below it warns', () => {
     const { warnings } = routes(['pages/page.alo', 'pages/blog/layout.alo']);
     assert.equal(warnings.length, 1);
     assert.equal(warnings[0].file, 'pages/blog/layout.alo');
-    assert.match(warnings[0].message, /কোনো `page\.alo` নেই/);
+    assert.match(warnings[0].message, /No `page\.alo` uses this layout/);
 });

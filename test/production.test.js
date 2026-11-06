@@ -15,7 +15,7 @@ function build(files, options = {}) {
     return { out, paths: Object.keys(out).sort(), warnings: result.warnings };
 }
 
-test('base-এর মান স্বাভাবিক করা হয়', () => {
+test('base values are normalized', () => {
     assert.equal(normalizeBase(), '/');
     assert.equal(normalizeBase('/'), '/');
     assert.equal(normalizeBase('my-repo'), '/my-repo/');
@@ -24,13 +24,13 @@ test('base-এর মান স্বাভাবিক করা হয়', ()
     assert.equal(normalizeBase('//a//b.c_d~//'), '/a/b.c_d~/');
 });
 
-test('base-এ অবৈধ অক্ষরে এরর', () => {
+test('invalid characters in base fail', () => {
     for (const value of ['my repo', 'a?b', 'https://x.com/', 'আলো']) {
         assert.throws(() => normalizeBase(value), (err) => err instanceof AloError && /`--base`/.test(err.message), value);
     }
 });
 
-test('base সব URL অ্যাট্রিবিউটে বসে', () => {
+test('base goes into every URL attribute', () => {
     const html = applyBase(
         '<a href="/a/"></a><img src="/i.png"><form action="/f" ><button formaction=\'/b\'></button></form><video poster=/p.jpg></video>' +
             '<object data="/o.svg"></object><div data="/not-object"></div><svg><use xlink:href="/s.svg#x"></use></svg>' +
@@ -45,24 +45,24 @@ test('base সব URL অ্যাট্রিবিউটে বসে', () => 
     );
 });
 
-test('srcset-এর প্রতিটা URL, meta refresh আর inline style-এর url()', () => {
+test('every srcset URL, meta refresh and inline style url()', () => {
     assert.equal(applyBase('<img srcset="/a.png 1x,/b.png 2x, https://c/d.png 3x">', '/r/'), '<img srcset="/r/a.png 1x,/r/b.png 2x, https://c/d.png 3x">');
     assert.equal(applyBase('<meta http-equiv="refresh" content="0; url=/new/">', '/r/'), '<meta http-equiv="refresh" content="0; url=/r/new/">');
     assert.equal(applyBase('<meta name="x" content="/not-a-url">', '/r/'), '<meta name="x" content="/not-a-url">');
     assert.equal(applyBase(`<div style="background: url('/bg.png'), url(//cdn/x.png)"></div>`, '/r/'), `<div style="background: url('/r/bg.png'), url(//cdn/x.png)"></div>`);
 });
 
-test('//cdn, https://, #, আপেক্ষিক পাথ, স্ক্রিপ্টের লেখা আর কমেন্ট অক্ষত', () => {
+test('//cdn, https://, #, relative paths, script text and comments stay as they are', () => {
     const html = '<a href="//cdn.x/a"></a><a href="https://x/"></a><a href="#top"></a><a href="about/"></a><a href="mailto:a@b"></a><script>const u = "<a href=\'/x\'>";</script><!-- <a href="/c"> -->';
     assert.equal(applyBase(html, '/r/'), html);
 });
 
-test('base "/" হলে HTML হুবহু থাকে', () => {
+test('with base "/" the HTML is unchanged', () => {
     const html = '<a href="/a/">x</a>';
     assert.equal(applyBase(html, '/'), html);
 });
 
-test('কম্পাইলে base: লিংক, asset, CSS url(), data-base; route.path-এ base নেই', () => {
+test('compiling with base: links, assets, CSS url(), data-base; no base in route.path', () => {
     const { out } = build({
         'pages/page.alo': `<template><a href="/about/">{{ route.path }}</a><img src="/logo.svg"></template><style>.a { background: url("/bg.png") }</style><script>go()</script>`,
         'pages/about/page.alo': '',
@@ -78,7 +78,7 @@ test('কম্পাইলে base: লিংক, asset, CSS url(), data-base; 
     assert.doesNotMatch(out['about/index.html'], /data-base="\/"/);
 });
 
-test('হ্যাশ: শুধু build-এ, কনটেন্ট বদলালে বদলায়', () => {
+test('hashes: build only, and they change with the content', () => {
     const files = { 'pages/page.alo': '<template><p>a</p></template><style>p { color: red }</style>' };
     const first = build(files).paths.find((p) => p.startsWith('assets/'));
     const same = build(files).paths.find((p) => p.startsWith('assets/'));
@@ -89,10 +89,10 @@ test('হ্যাশ: শুধু build-এ, কনটেন্ট বদল�
 
     const dev = compile({ reader: createMemoryReader(files), mode: 'dev' }).files.map((f) => f.path);
     assert.ok(dev.includes('assets/style.css'));
-    assert.ok(!dev.includes('robots.txt'), 'dev-এ robots.txt তৈরি হয় না');
+    assert.ok(!dev.includes('robots.txt'), 'dev does not create robots.txt');
 });
 
-test('CSS মিনিফাই: কমেন্ট যায়, /*! থাকে, স্ট্রিং, url() আর কাস্টম প্রপার্টি হুবহু', () => {
+test('CSS minify: comments go, /*! stays, strings, url() and custom properties are kept', () => {
     const css = `/*! লাইসেন্স */
 /* সাধারণ */
 :root {
@@ -121,7 +121,7 @@ test('CSS মিনিফাই: কমেন্ট যায়, /*! থাক�
     assert.doesNotMatch(min, /\n/);
 });
 
-test('sitemap: site.url থাকলে; 404 আর noindex বাদ; base-সহ absolute URL', () => {
+test('sitemap: with site.url; 404 and noindex left out; absolute URLs with base', () => {
     const { out } = build({
         'data/site.json': '{ "url": "https://example.com" }',
         'pages/page.alo': '',
@@ -143,14 +143,14 @@ test('sitemap: site.url থাকলে; 404 আর noindex বাদ; base-স�
     assert.equal(out['robots.txt'], 'User-agent: *\nAllow: /\nSitemap: https://example.com/repo/sitemap.xml\n');
 });
 
-test('site.url না থাকলে sitemap নেই, সতর্কবার্তা; robots.txt তবুও তৈরি হয়', () => {
+test('without site.url there is no sitemap and a warning; robots.txt is still made', () => {
     const { out, warnings } = build({ 'pages/page.alo': '' });
     assert.equal(out['sitemap.xml'], undefined);
     assert.equal(out['robots.txt'], 'User-agent: *\nAllow: /\n');
-    assert.match(warnings[0].message, /`url` দিলে sitemap\.xml তৈরি হবে/);
+    assert.match(warnings[0].message, /Add `url` to `data\/site\.json` to get a sitemap\.xml/);
 });
 
-test('public/-এ robots.txt বা sitemap.xml থাকলে সেগুলো তৈরি হয় না', () => {
+test('robots.txt or sitemap.xml in public/ replace the generated ones', () => {
     const { out, warnings } = build({
         'data/site.json': '{ "url": "https://example.com" }',
         'pages/page.alo': '',

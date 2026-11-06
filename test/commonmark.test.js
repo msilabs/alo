@@ -27,10 +27,10 @@ for (const [section, examples] of sections) {
             const actual = renderMarkdown(example.markdown, { headingIds: false });
             const reason = known.examples[example.example];
             if (reason) {
-                assert.ok(known.reasons[reason], `#${example.example}-এর কারণ "${reason}" reasons-এ নেই`);
-                assert.notEqual(actual, example.html, `#${example.example} এখন পাস করে; known-differences.json থেকে সরাও`);
+                assert.ok(known.reasons[reason], `#${example.example}: reason "${reason}" is missing from reasons`);
+                assert.notEqual(actual, example.html, `#${example.example} passes now; remove it from known-differences.json`);
             } else {
-                assert.equal(actual, example.html, `উদাহরণ #${example.example}\n${example.markdown}`);
+                assert.equal(actual, example.html, `example #${example.example}\n${example.markdown}`);
             }
         }
     });

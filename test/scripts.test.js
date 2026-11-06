@@ -21,7 +21,7 @@ function buildError(files) {
         assert.ok(err instanceof AloError, String(err));
         return err;
     }
-    assert.fail('এরর আশা করা হয়েছিল');
+    assert.fail('expected an error');
 }
 
 function scriptTags(html) {
@@ -44,7 +44,7 @@ function runComponents(code, elements) {
 
 const COUNTER = '<template><div class="counter" data-start="{{ props.start ?? 0 }}"><button>+</button></div></template><script>calls.push("Counter:" + $el.id);</script>';
 
-test('কম্পোনেন্টের রুটে data-a-c, আর প্রতিটা ইনস্ট্যান্সের জন্য আলাদা $el', () => {
+test('data-a-c on the component root, and a separate $el per instance', () => {
     const { out } = build({
         'pages/page.alo': '<template><Counter start="{{ 5 }}" /><Counter /></template>',
         'components/Counter.alo': COUNTER,
@@ -58,13 +58,13 @@ test('কম্পোনেন্টের রুটে data-a-c, আর প্�
     assert.deepEqual(calls, ['Counter:a', 'Counter:b']);
 });
 
-test('স্ক্রিপ্ট ছাড়া কম্পোনেন্টে data-a-c বসে না', () => {
+test('components without a script get no data-a-c', () => {
     const { out } = build({ 'pages/page.alo': '<template><Card /></template>', 'components/Card.alo': '<template><div></div></template>' });
     assert.doesNotMatch(out['index.html'], /data-a-c/);
     assert.equal(out['assets/components.js'], undefined);
 });
 
-test('চাইল্ড কম্পোনেন্টই রুট হলে দুটো নাম একসাথে', () => {
+test('when a child component is the root, both names are kept', () => {
     const { out } = build({
         'pages/page.alo': '<template><Blog.PostCard /></template>',
         'components/Card.alo': '<template><article><slot /></article></template><script>calls.push("Card");</script>',
@@ -75,7 +75,7 @@ test('চাইল্ড কম্পোনেন্টই রুট হলে �
     assert.deepEqual(calls, ['Card', 'PostCard']);
 });
 
-test('একটা কম্পোনেন্টের এরর অন্যগুলো থামায় না', () => {
+test('an error in one component does not stop the others', () => {
     const { out } = build({
         'pages/page.alo': '<template><Broken /><Fine /></template>',
         'components/Broken.alo': '<template><div></div></template><script>throw new Error("ভাঙা");</script>',
@@ -89,7 +89,7 @@ test('একটা কম্পোনেন্টের এরর অন্য�
     assert.match(errors[0], /^\[alo\] Broken: Error: ভাঙা/);
 });
 
-test('স্ক্রিপ্টে return চলে; কোড উৎস ফাইলের কমেন্টসহ', () => {
+test('return works in a script; code is marked with its source file', () => {
     const { out } = build({
         'pages/page.alo': '<template><Early /></template>',
         'components/Early.alo': '<template><div></div></template><script>\n    if (!$el) return;\n    calls.push(1);\n</script>',
@@ -98,17 +98,17 @@ test('স্ক্রিপ্টে return চলে; কোড উৎস ফ�
     assert.deepEqual(runComponents(out['assets/components.js'], [{ id: 1, names: 'Early' }]).calls, [1]);
 });
 
-test('একাধিক রুট বা কোনো রুট না থাকলে সতর্কবার্তা', () => {
+test('several roots or no root warn', () => {
     const many = build({ 'pages/page.alo': '<template><Two /></template>', 'components/Two.alo': '<template><p>a</p><p>b</p></template><script>x()</script>' });
-    assert.match(many.warnings[0].message, /একাধিক রুট এলিমেন্ট/);
+    assert.match(many.warnings[0].message, /has several root elements/);
     assert.match(many.out['index.html'], /<p data-a-c="Two">a<\/p><p>b<\/p>/);
 
     const none = build({ 'pages/page.alo': '<template><Text /></template>', 'components/Text.alo': '<template>শুধু লেখা</template><script>x()</script>' });
-    assert.match(none.warnings[0].message, /`\$el` পাওয়া যাবে না/);
+    assert.match(none.warnings[0].message, /gets no `\$el`/);
     assert.equal(none.warnings[0].file, 'components/Text.alo');
 });
 
-test('কোন পেইজে কোন স্ক্রিপ্ট: শুধু দরকার হলে', () => {
+test('pages load scripts only when they need them', () => {
     const { out } = build({
         'pages/layout.alo': '<template><slot /></template>',
         'pages/page.alo': '<template><Counter /></template>',
@@ -119,7 +119,7 @@ test('কোন পেইজে কোন স্ক্রিপ্ট: শুধ
     assert.deepEqual(scriptTags(out['plain/index.html']), []);
 });
 
-test('page আর layout স্ক্রিপ্ট: রুট লেআউট আগে, প্রতিটা আলাদা IIFE-তে, $el নেই', () => {
+test('page and layout scripts: root layout first, each in its own IIFE, no $el', () => {
     const { out } = build({
         'pages/layout.alo': '<template><slot /></template><script>root();</script>',
         'pages/blog/layout.alo': '<template><slot /></template><script>blog();</script>',
@@ -135,7 +135,7 @@ test('page আর layout স্ক্রিপ্ট: রুট লেআউট 
     assert.match(out['assets/pages/about.js'], /root\(\);/);
 });
 
-test('পেইজ স্ক্রিপ্টের নাম: index, নেস্টেড, [slug] আর 404', () => {
+test('page script names: index, nested, [slug] and 404', () => {
     const { out } = build({
         'pages/(site)/page.alo': '<script>a()</script>',
         'pages/docs/getting-started/page.alo': '<script>b()</script>',
@@ -152,7 +152,7 @@ test('পেইজ স্ক্রিপ্টের নাম: index, নেস
     assert.deepEqual(scriptTags(out['blog/two/index.html']), ['/assets/pages/blog__slug.js']);
 });
 
-test('global/ JS: পূর্ণ পাথ ক্রমে, IIFE ছাড়া, ;\\n দিয়ে জোড়া, সব পেইজে প্রথমে', () => {
+test('global/ JS: full path order, no IIFE, joined with ;\\n, first on every page', () => {
     const { out } = build({
         'global/main.js': 'function hello() {}',
         'global/a/first.js': 'var first = 1',
@@ -163,23 +163,23 @@ test('global/ JS: পূর্ণ পাথ ক্রমে, IIFE ছাড়�
     assert.deepEqual(scriptTags(out['index.html']), ['/assets/global.js', '/assets/components.js', '/assets/pages/index.js']);
 });
 
-test('JavaScript-এর সিনট্যাক্স ভুলে বিল্ডেই আসল লাইনসহ এরর', () => {
+test('JavaScript syntax errors fail the build with the real line', () => {
     const component = buildError({
         'pages/page.alo': '<template><Bad /></template>',
         'components/Bad.alo': '<template><div></div></template>\n\n<script>\n    const a = 1;\n    let b = ;\n</script>',
     });
     assert.deepEqual([component.file, component.line], ['components/Bad.alo', 5]);
-    assert.match(component.message, /JavaScript-এ ভুল/);
+    assert.match(component.message, /JavaScript syntax error/);
 
     const global = buildError({ 'pages/page.alo': '', 'global/main.js': 'ok();\nif (x {\n' });
     assert.deepEqual([global.file, global.line], ['global/main.js', 2]);
 
     const page = buildError({ 'pages/page.alo': '<script>\nimport x from "y";\n</script>' });
     assert.equal(page.line, 2);
-    assert.match(page.hint, /`import` চলে না/);
+    assert.match(page.hint, /`import` is not supported/);
 });
 
-test('অব্যবহৃত কম্পোনেন্টের স্ক্রিপ্ট components.js-এ যায় না', () => {
+test('scripts of unused components stay out of components.js', () => {
     const { out } = build({
         'pages/page.alo': '<template><Counter /></template>',
         'components/Counter.alo': COUNTER,

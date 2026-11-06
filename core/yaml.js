@@ -2,7 +2,7 @@
 
 const { AloError } = require('./errors.js');
 
-const COMPLEX_HINT = 'জটিল ডেটার জন্য `.json` ফাইল ব্যবহার করো।';
+const COMPLEX_HINT = 'Use a `.json` file for complex data.';
 const NUMBER = /^-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?$/;
 
 // Front matter supports only a small part of YAML: `key: value`, scalars, and flat lists.
@@ -17,25 +17,25 @@ function parseYaml(text, { file, lineOffset = 0, source } = {}) {
     }
 
     lines.forEach((raw, index) => {
-        if (/^ *\t/.test(raw)) fail(index, 'ফ্রন্ট ম্যাটারে tab দিয়ে indent চলে না।', 'স্পেস ব্যবহার করো।');
+        if (/^ *\t/.test(raw)) fail(index, 'Tabs cannot indent front matter.', 'Use spaces.');
         const line = stripComment(raw, index, fail).trimEnd();
         if (line.trim() === '') return;
 
         const item = /^(\s*)- (.*)$|^(\s*)-$/.exec(line);
         if (item) {
-            if (listKey === null) fail(index, 'লিস্টের আইটেম কোনো key-এর নিচে নেই।', 'আগে `tags:` লেখো, তারপর পরের লাইনগুলোতে `- মান`।');
+            if (listKey === null) fail(index, 'List item without a key.', 'Write `tags:` first, then `- value` on the following lines.');
             if (result[listKey] === null) result[listKey] = [];
             result[listKey].push(parseScalar((item[2] ?? '').trim(), index, fail));
             return;
         }
 
-        if (/^\s/.test(line)) fail(index, 'নেস্টেড অবজেক্ট ফ্রন্ট ম্যাটারে চলে না।');
+        if (/^\s/.test(line)) fail(index, 'Nested objects are not supported in front matter.');
 
         const colon = findColon(line);
-        if (colon === -1) fail(index, `\`${line.trim()}\` লাইনটা বোঝা যাচ্ছে না।`, 'প্রতিটা লাইন হবে `key: value`।');
+        if (colon === -1) fail(index, `Cannot parse the line \`${line.trim()}\`.`, 'Each line must be `key: value`.');
         const key = line.slice(0, colon).trim();
-        if (key === '') fail(index, '`:`-এর আগে কোনো key নেই।', 'প্রতিটা লাইন হবে `key: value`।');
-        if (Object.hasOwn(result, key)) fail(index, `\`${key}\` key দুবার আছে।`, 'একটা রাখো।');
+        if (key === '') fail(index, 'Missing key before `:`.', 'Each line must be `key: value`.');
+        if (Object.hasOwn(result, key)) fail(index, `Duplicate key \`${key}\`.`, 'Keep only one.');
 
         const value = line.slice(colon + 1).trim();
         // `key:` with nothing after it is null, unless `- item` lines follow.
@@ -83,18 +83,18 @@ function stripComment(line, index, fail) {
             return line.slice(0, i);
         }
     }
-    if (quote) fail(index, 'কোট বন্ধ হয়নি।', `মানের শেষে \`${quote}\` দাও।`);
+    if (quote) fail(index, 'Unclosed quote.', `Add \`${quote}\` at the end of the value.`);
     return line;
 }
 
 function parseValue(value, index, fail) {
-    if (value === '|' || value === '>' || /^[|>][+-]?\d*$/.test(value)) fail(index, '`|` বা `>` দিয়ে কয়েক লাইনের মান ফ্রন্ট ম্যাটারে চলে না।');
+    if (value === '|' || value === '>' || /^[|>][+-]?\d*$/.test(value)) fail(index, 'Multi-line values with `|` or `>` are not supported in front matter.');
     if (value.startsWith('[')) return parseInlineList(value, index, fail);
     return parseScalar(value, index, fail);
 }
 
 function parseInlineList(value, index, fail) {
-    if (!value.endsWith(']')) fail(index, '`[` লিস্ট `]` দিয়ে বন্ধ হয়নি।', 'যেমন: `tags: [intro, news]`');
+    if (!value.endsWith(']')) fail(index, 'List `[` is not closed with `]`.', 'For example: `tags: [intro, news]`');
     const inner = value.slice(1, -1).trim();
     if (inner === '') return [];
 
@@ -114,7 +114,7 @@ function parseInlineList(value, index, fail) {
             items.push(current.trim());
             current = '';
         } else if (ch === '[' || ch === '{') {
-            fail(index, 'লিস্টের ভেতরে লিস্ট বা অবজেক্ট চলে না।');
+            fail(index, 'Lists cannot contain lists or objects.');
         } else {
             current += ch;
         }
@@ -125,14 +125,14 @@ function parseInlineList(value, index, fail) {
 
 function parseScalar(value, index, fail) {
     if (value.startsWith('"')) {
-        if (value.length < 2 || !value.endsWith('"')) fail(index, 'কোট বন্ধ হয়নি।', 'মানের শেষে `"` দাও।');
+        if (value.length < 2 || !value.endsWith('"')) fail(index, 'Unclosed quote.', 'Add `"` at the end of the value.');
         return value.slice(1, -1).replace(/\\(.)/g, (_, ch) => ({ n: '\n', t: '\t', '"': '"', '\\': '\\' })[ch] ?? '\\' + ch);
     }
     if (value.startsWith("'")) {
-        if (value.length < 2 || !value.endsWith("'")) fail(index, 'কোট বন্ধ হয়নি।', "মানের শেষে `'` দাও।");
+        if (value.length < 2 || !value.endsWith("'")) fail(index, 'Unclosed quote.', "Add `'` at the end of the value.");
         return value.slice(1, -1).replace(/''/g, "'");
     }
-    if (/^[&*!{]/.test(value)) fail(index, `\`${value[0]}\` দিয়ে শুরু হওয়া মান (anchor, tag বা অবজেক্ট) ফ্রন্ট ম্যাটারে চলে না।`, 'লেখা হলে কোটে রাখো, যেমন `"*দারুণ*"`। জটিল ডেটার জন্য `.json` ফাইল ব্যবহার করো।');
+    if (/^[&*!{]/.test(value)) fail(index, `Values starting with \`${value[0]}\` (anchors, tags or objects) are not supported in front matter.`, 'Quote it if it is text, e.g. `"*great*"`. Use a `.json` file for complex data.');
     if (value === 'true') return true;
     if (value === 'false') return false;
     if (value === 'null' || value === '~') return null;

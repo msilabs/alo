@@ -23,7 +23,7 @@ function scanGlobal(reader, warn) {
             if (entry.isDirectory) walk(file);
             else if (entry.name.endsWith('.css')) css.push(file);
             else if (entry.name.endsWith('.js')) js.push(file);
-            else warn({ file, message: '`global/`-এ শুধু `.css` আর `.js` ফাইল কাজে লাগে, এটা উপেক্ষা করা হলো।', hint: 'JSON ডেটা `data/`-এ রাখো; ছবি বা ফন্ট `public/`-এ।' });
+            else warn({ file, message: 'Only `.css` and `.js` files are used in `global/`; this file was ignored.', hint: 'Put JSON data in `data/`, and images or fonts in `public/`.' });
         }
     }
 
@@ -70,8 +70,8 @@ function checkSyntax(code, file, line, source, wrap) {
             file,
             line: at ? Number(at[1]) : line,
             source,
-            message: `JavaScript-এ ভুল: ${err.message}`,
-            hint: 'বন্ধনী, কোট আর কমা দেখো। এই স্ক্রিপ্ট ব্রাউজারে চলে, তাই সাধারণ JavaScript লেখো; `import` চলে না।',
+            message: `JavaScript syntax error: ${err.message}`,
+            hint: 'Check brackets, quotes and commas. This script runs in the browser as plain JavaScript; `import` is not supported.',
         });
     }
 }

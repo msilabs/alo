@@ -135,11 +135,11 @@ function checkSiteUrl(site) {
     try {
         url = new URL(site.url);
     } catch {
-        throw new AloError({ file, message: `\`url\`-এর মান \`${site.url}\` সঠিক URL নয়।`, hint: 'পুরো origin লেখো, যেমন `"https://example.com"`।' });
+        throw new AloError({ file, message: `\`url\` value \`${site.url}\` is not a valid URL.`, hint: 'Write the full origin, e.g. `"https://example.com"`.' });
     }
     if (!/^https?:$/.test(url.protocol) || url.pathname !== '/' || url.search || url.hash || site.url.endsWith('/')) {
-        const hint = url.pathname !== '/' ? `পাথ \`--base\` দিয়ে দাও: \`url\`-এ লেখো \`"${url.origin}"\`, আর বিল্ড করো \`--base ${url.pathname}\`।` : `শুধু origin লেখো, শেষে \`/\` ছাড়া: \`"${url.origin}"\`।`;
-        throw new AloError({ file, message: '`url`-এ শুধু সাইটের origin থাকে।', hint });
+        const hint = url.pathname !== '/' ? `Pass the path with \`--base\`: set \`url\` to \`"${url.origin}"\` and build with \`--base ${url.pathname}\`.` : `Write only the origin, without a trailing \`/\`: \`"${url.origin}"\`.`;
+        throw new AloError({ file, message: '`url` must be just the site origin.', hint });
     }
 }
 
@@ -183,7 +183,7 @@ function findUsedComponents(project, roots, warn, unused) {
 
     for (const entry of project.components.values()) {
         if (!used.has(entry.name)) {
-            warn({ file: entry.file, message: `\`<${entry.name}>\` কোথাও ব্যবহার হয়নি।`, hint: 'দরকার না থাকলে ফাইলটা মুছে ফেলো।' });
+            warn({ file: entry.file, message: `\`<${entry.name}>\` is never used.`, hint: 'Delete the file if you no longer need it.' });
         }
     }
     unused.push(...[...project.components.values()].filter((entry) => !used.has(entry.name)).map((entry) => entry.name));
@@ -281,8 +281,8 @@ function compile({ reader, mode = 'build', base: rawBase = '/', cache = null }) 
                 if (sources.has(output)) {
                     throw new AloError({
                         file,
-                        message: `\`dist/${output}\` দুই জায়গা থেকে তৈরি হচ্ছে: \`${sources.get(output)}\` আর \`${file}\`।`,
-                        hint: 'ডেটা ফাইলের নাম বা স্ট্যাটিক পেইজের ফোল্ডার বদলাও।',
+                        message: `\`dist/${output}\` is produced twice: by \`${sources.get(output)}\` and \`${file}\`.`,
+                        hint: 'Rename the data file or the static page folder.',
                     });
                 }
                 sources.set(output, file);
@@ -297,7 +297,7 @@ function compile({ reader, mode = 'build', base: rawBase = '/', cache = null }) 
             const siteUrl = typeof data.site?.url === 'string' ? data.site.url : null;
             if (!reader.exists('public/sitemap.xml')) {
                 if (siteUrl) files.push({ path: 'sitemap.xml', contents: buildSitemap(built, siteUrl, base) });
-                else warn({ file: 'data/site.json', message: '`data/site.json`-এ `url` দিলে sitemap.xml তৈরি হবে।', hint: 'যেমন: `"url": "https://example.com"`' });
+                else warn({ file: 'data/site.json', message: 'Add `url` to `data/site.json` to get a sitemap.xml.', hint: 'For example: `"url": "https://example.com"`' });
             }
             if (!reader.exists('public/robots.txt')) {
                 files.push({ path: 'robots.txt', contents: buildRobots(siteUrl, base) });
@@ -310,8 +310,8 @@ function compile({ reader, mode = 'build', base: rawBase = '/', cache = null }) 
             if (generated.has(copy.to)) {
                 throw new AloError({
                     file: copy.from,
-                    message: `\`${copy.from}\` আর Alo-র তৈরি করা \`dist/${copy.to}\` একই জায়গায় যাচ্ছে।`,
-                    hint: 'public/-এর ফাইলটার নাম বা ফোল্ডার বদলাও।',
+                    message: `\`${copy.from}\` and the generated \`dist/${copy.to}\` would be the same file.`,
+                    hint: 'Rename or move the file in public/.',
                 });
             }
         }

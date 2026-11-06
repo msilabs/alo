@@ -10,8 +10,8 @@ function normalizeBase(value = '/') {
     const trimmed = String(value).trim();
     if (!/^[A-Za-z0-9\-._~/]*$/.test(trimmed)) {
         throw new AloError({
-            message: `\`--base\`-এর মান \`${value}\` চলবে না।`,
-            hint: 'শুধু ইংরেজি অক্ষর, সংখ্যা, `-`, `_`, `.` আর `/` চলে, যেমন `--base /my-repo/`।',
+            message: `Invalid \`--base\` value \`${value}\`.`,
+            hint: 'Use only letters, digits, `-`, `_`, `.` and `/`, e.g. `--base /my-repo/`.',
         });
     }
     const inner = trimmed.split('/').filter(Boolean).join('/');

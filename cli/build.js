@@ -45,12 +45,17 @@ function compileProject(root, mode, base, { reader = createFsReader(root), cache
     }
 }
 
+// 1 page, 8 pages
+function count(n, word) {
+    return `${n} ${word}${n === 1 ? '' : 's'}`;
+}
+
 function summary(result, ms) {
     const pages = result.files.filter((file) => file.path.endsWith('.html')).length;
     const assets = result.files.filter((file) => file.path.startsWith('assets/')).length;
-    const parts = [`${pages}টা পেইজ`, `${assets}টা asset`];
-    if (result.copies.length > 0) parts.push(`public/ থেকে ${result.copies.length}টা ফাইল`);
-    return `বিল্ড শেষ: ${parts.join(', ')}, ${ms}ms → dist/`;
+    const parts = [count(pages, 'page'), count(assets, 'asset')];
+    if (result.copies.length > 0) parts.push(`${count(result.copies.length, 'file')} from public/`);
+    return `Built ${parts.join(', ')} in ${ms}ms → dist/`;
 }
 
 // Builds into .alo/build first and only then replaces dist/, so a failed build leaves the old dist/ intact.
@@ -72,8 +77,8 @@ async function build({ root, base }) {
     }
 
     log.success(summary(result, Math.round(performance.now() - started)));
-    if (result.unused.length > 0) log.dim(`  অব্যবহৃত কম্পোনেন্ট: ${result.unused.map((name) => `<${name}>`).join(', ')}`);
-    if (result.warnings.length > 0) log.dim(`  ${result.warnings.length}টা সতর্কবার্তা, উপরে দেখো।`);
+    if (result.unused.length > 0) log.dim(`  Unused components: ${result.unused.map((name) => `<${name}>`).join(', ')}`);
+    if (result.warnings.length > 0) log.dim(`  ${count(result.warnings.length, 'warning')}, see above.`);
 }
 
-module.exports = { build, createFsReader, compileProject, writeOutput };
+module.exports = { build, createFsReader, compileProject, writeOutput, count };
