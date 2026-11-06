@@ -106,7 +106,7 @@ pre {
     background: var(--accent-soft);
 }
 
-/* লেআউটের ছোট কয়েকটা সাধারণ ক্লাস */
+/* লেআউটের ছোট কয়েকটি সাধারণ ক্লাস */
 .container {
     width: min(100% - 2.5rem, var(--page));
     margin-inline: auto;

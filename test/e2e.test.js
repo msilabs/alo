@@ -71,15 +71,15 @@ test('example/ routes, route groups, layouts and 404', (t) => {
     const home = read('index.html');
     assert.match(home, /<header class="site-header"[ >]/);
     assert.match(home, /<a href="\/" aria-current="page">হোম<\/a>/);
-    assert.match(home, /<a href="\/docs\/">শুরু করো<\/a>/);
+    assert.match(home, /<a href="\/docs\/">শুরু করুন<\/a>/);
     assert.match(home, /<footer class="site-footer">/);
-    assert.match(home, /<meta name="description" content="আলো একটা হালকা স্ট্যাটিক ওয়েব ফ্রেমওয়ার্ক।/);
+    assert.match(home, /<meta name="description" content="আলো একটি হালকা স্ট্যাটিক ওয়েব ফ্রেমওয়ার্ক।/);
 
     const docs = read('docs/index.html');
-    assert.match(docs, /<title>শুরু করো \| আলো<\/title>/);
-    assert.match(docs, /<a href="\/docs\/" aria-current="page">শুরু করো<\/a>/);
+    assert.match(docs, /<title>শুরু করুন \| আলো<\/title>/);
+    assert.match(docs, /<a href="\/docs\/" aria-current="page">শুরু করুন<\/a>/);
     assert.match(docs, /<meta name="description" content="পাঁচ মিনিটে আলো দিয়ে প্রথম সাইট বানানোর গাইড।">/);
-    assert.doesNotMatch(docs, /content="আলো একটা হালকা/, 'the page description replaces the layout one');
+    assert.doesNotMatch(docs, /content="আলো একটি হালকা/, 'the page description replaces the layout one');
 
     const about = read('about/index.html');
     assert.equal((about.match(/badge-stable/g) ?? []).length, 0);
@@ -88,15 +88,15 @@ test('example/ routes, route groups, layouts and 404', (t) => {
 
     const blog = read('blog/index.html');
     assert.match(blog, /<main>\s*<div class="blog reading">\s*<p class="eyebrow">ব্লগ<\/p>/);
-    assert.match(blog, /মোট ৪টা লেখা/);
+    assert.match(blog, /মোট ৪টি লেখা/);
 
     const post = read('blog/introducing-alo/index.html');
     assert.match(post, /<title>আলো এল: HTML জানলেই ওয়েবসাইট \| আলো<\/title>/);
-    assert.match(post, /<meta name="description" content="কেন আরেকটা ফ্রেমওয়ার্ক, আর কাদের জন্য আলো বানানো হলো।">/);
+    assert.match(post, /<meta name="description" content="কেন আরেকটি ফ্রেমওয়ার্ক, আর কাদের জন্য আলো বানানো হলো।">/);
     assert.match(post, /<time datetime="2026-11-06">৬ নভেম্বর, ২০২৬<\/time>/);
     assert.match(post, /<h2 id="যা-আলাদা">যা আলাদা<\/h2>/);
     assert.match(post, /<pre><code class="language-bash">npx @msilabs\/alo init my-site/);
-    assert.match(read('blog/components-and-layouts/index.html'), /<th>কোথায় রাখো<\/th>/);
+    assert.match(read('blog/components-and-layouts/index.html'), /<th>কোথায় রাখবেন<\/th>/);
     const deploy = read('blog/deploy-to-github-pages/index.html');
     assert.match(deploy, /<pre><code class="language-yaml">name: Pages/);
     assert.match(deploy, /url: \$\{\{ steps\.deployment\.outputs\.page_url \}\}/, 'post bodies are not templates');
@@ -109,7 +109,7 @@ test('example/ routes, route groups, layouts and 404', (t) => {
     assert.match(launch, /fonts\.googleapis\.com/, 'the root layout wraps route groups too');
 
     const notFound = read('404.html');
-    assert.match(notFound, /<h1>এই পেইজটা পাওয়া যায়নি<\/h1>/);
+    assert.match(notFound, /<h1>এই পেইজটি পাওয়া যায়নি<\/h1>/);
     assert.doesNotMatch(notFound, /site-header/);
     assert.match(notFound, /fonts\.googleapis\.com/, 'not-found gets pages/layout.alo');
 });

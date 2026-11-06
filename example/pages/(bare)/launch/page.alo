@@ -9,8 +9,8 @@
         <Logo />
         <p class="eyebrow">শিগগিরই</p>
         <h1>আলো ১.০ আসছে</h1>
-        <p>সামনে আসছে পেজিনেশন, নামযুক্ত স্লট আর এডিটর এক্সটেনশন। খবর পেতে GitHub-এ রিপোজিটরিটা ফলো করো।</p>
-        <a class="button button-primary" href="{{ data.site.repository }}">GitHub-এ ফলো করো</a>
+        <p>সামনে আসছে পেজিনেশন, নামযুক্ত স্লট আর এডিটর এক্সটেনশন। খবর পেতে GitHub-এ রিপোজিটরিটি ফলো করুন।</p>
+        <a class="button button-primary" href="{{ data.site.repository }}">GitHub-এ ফলো করুন</a>
     </main>
 </template>
 

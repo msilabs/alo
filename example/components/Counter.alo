@@ -1,8 +1,8 @@
 <template>
     <div class="counter" data-start="{{ props.start ?? 0 }}">
-        <button type="button" data-step="-1" aria-label="এক কমাও">−</button>
+        <button type="button" data-step="-1" aria-label="এক কমান">−</button>
         <output aria-live="polite"></output>
-        <button type="button" data-step="1" aria-label="এক বাড়াও">+</button>
+        <button type="button" data-step="1" aria-label="এক বাড়ান">+</button>
     </div>
 </template>
 

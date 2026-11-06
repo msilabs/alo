@@ -10,8 +10,8 @@
     </section>
 
     <div class="cards">
-        <Card title="এই পেইজটা বদলাও">
-            <p>লেখাটা আছে <code>pages/page.alo</code>-এ। বদলে সেভ করো, ব্রাউজার নিজে থেকে রিলোড হবে।</p>
+        <Card title="এই পেইজটি বদলান">
+            <p>লেখাটি আছে <code>pages/page.alo</code>-এ। বদলে সংরক্ষণ করুন, ব্রাউজার নিজে থেকে রিলোড হবে।</p>
         </Card>
         <Card title="নাম আর মেনু">
             <p>সাইটের নাম আর বর্ণনা <code>data/site.json</code>-এ, মেনুর লিংক <code>data/menu.json</code>-এ।</p>

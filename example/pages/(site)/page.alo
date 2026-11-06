@@ -8,12 +8,12 @@
             <p class="eyebrow">হালকা স্ট্যাটিক ওয়েব ফ্রেমওয়ার্ক</p>
             <h1>HTML জানলেই<br>পুরো ওয়েবসাইট</h1>
             <p class="lead">
-                কম্পোনেন্ট, লেআউট আর ব্লগসহ সাইট বানাও সাধারণ HTML, CSS আর JavaScript লিখে।
-                বিল্ড করলে পাবে হালকা, দ্রুত স্ট্যাটিক সাইট, যা যেকোনো হোস্টিংয়ে চলে।
+                কম্পোনেন্ট, লেআউট আর ব্লগসহ সাইট বানান সাধারণ HTML, CSS আর JavaScript লিখে।
+                বিল্ড করলে পাবেন হালকা, দ্রুত স্ট্যাটিক সাইট, যা যেকোনো হোস্টিংয়ে চলে।
             </p>
             <div class="actions">
-                <a class="button button-primary" href="/docs/">শুরু করো</a>
-                <a class="button" href="{{ data.site.repository }}">GitHub-এ দেখো</a>
+                <a class="button button-primary" href="/docs/">শুরু করুন</a>
+                <a class="button" href="{{ data.site.repository }}">GitHub-এ দেখুন</a>
             </div>
             <pre class="install"><code><span class="prompt">$</span> npx @msilabs/alo init my-site</code></pre>
         </div>
@@ -21,7 +21,7 @@
 
     <section class="section container">
         <header class="section-head">
-            <p class="eyebrow">যা যা পাবে</p>
+            <p class="eyebrow">যা যা পাবেন</p>
             <h2>ছোট সাইটের যা লাগে, তার সবটুকু</h2>
         </header>
         <div class="grid">
@@ -34,12 +34,12 @@
     <section class="section container split">
         <div>
             <p class="eyebrow">দেখতে ঠিক HTML-এর মতো</p>
-            <h2>একবার লেখো, সব জায়গায় বসাও</h2>
+            <h2>একবার লিখুন, সব জায়গায় বসান</h2>
             <p>
-                <code>components/</code> ফোল্ডারে একটা ফাইল রাখলেই সেটা কম্পোনেন্ট। কোনো import নেই, কোনো কনফিগ নেই।
-                অ্যাট্রিবিউট দিয়ে যা পাঠাও, কম্পোনেন্টের ভেতরে সেটা পাওয়া যায় <code>props</code>-এ।
+                <code>components/</code> ফোল্ডারে একটি ফাইল রাখলেই সেটি কম্পোনেন্ট। কোনো import নেই, কোনো কনফিগারেশন নেই।
+                অ্যাট্রিবিউট দিয়ে যা পাঠান, কম্পোনেন্টের ভেতরে সেটি পাওয়া যায় <code>props</code>-এ।
             </p>
-            <a href="/docs/">গাইডে আরও দেখো →</a>
+            <a href="/docs/">গাইডে আরও দেখুন →</a>
         </div>
         <div class="code-pair">
             <pre><code><span class="file">components/Card.alo</span>
@@ -63,8 +63,8 @@
             <p class="eyebrow">ইন্টারঅ্যাকটিভ কম্পোনেন্ট</p>
             <h2>দরকার হলে সাধারণ JavaScript</h2>
             <p>
-                এই কাউন্টারটা একটা আলো কম্পোনেন্ট। তার স্ক্রিপ্টে <code>$el</code> হলো কম্পোনেন্টের নিজের এলিমেন্ট,
-                আর শুরুর সংখ্যাটা বিল্ডের সময় আসে <code>data-start</code> অ্যাট্রিবিউট দিয়ে। কোনো রিঅ্যাক্টিভ রানটাইম নেই।
+                এই কাউন্টারটি একটি আলো কম্পোনেন্ট। তার স্ক্রিপ্টে <code>$el</code> হলো কম্পোনেন্টের নিজের এলিমেন্ট,
+                আর শুরুর সংখ্যাটি বিল্ডের সময় আসে <code>data-start</code> অ্যাট্রিবিউট দিয়ে। কোনো রিঅ্যাক্টিভ রানটাইম নেই।
             </p>
         </div>
         <div class="demo">

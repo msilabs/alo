@@ -23,7 +23,7 @@
                 </ul>
             </div>
         </div>
-        <p class="legal container">আলো <a href="https://msilabs.github.io">msilabs</a>-এর একটা ওপেন সোর্স প্রজেক্ট, MIT লাইসেন্সে। এই সাইটটাও আলো দিয়ে বানানো।</p>
+        <p class="legal container">আলো <a href="https://msilabs.github.io">msilabs</a>-এর একটি ওপেন সোর্স প্রজেক্ট, MIT লাইসেন্সে। এই সাইটটিও আলো দিয়ে বানানো।</p>
     </footer>
 </template>
 

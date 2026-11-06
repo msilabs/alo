@@ -6,8 +6,8 @@
     <article class="page">
         <p class="eyebrow">আমাদের কথা</p>
         <h1>আমরা কারা</h1>
-        <p>এখানে তোমার নিজের কথা লেখো। এই পেইজটা আছে <code>pages/about/page.alo</code>-এ, তাই এর ঠিকানা <code>/about/</code>।</p>
-        <p>নতুন পেইজ যোগ করতে <code>pages/</code>-এর ভেতরে একটা ফোল্ডার বানিয়ে তাতে <code>page.alo</code> রাখো, অথবা চালাও <code>node alo new page contact</code>।</p>
+        <p>এখানে আপনার নিজের কথা লিখুন। এই পেইজটি আছে <code>pages/about/page.alo</code>-এ, তাই এর ঠিকানা <code>/about/</code>।</p>
+        <p>নতুন পেইজ যোগ করতে <code>pages/</code>-এর ভেতরে একটি ফোল্ডার বানিয়ে তাতে <code>page.alo</code> রাখুন, অথবা চালান <code>node alo new page contact</code>।</p>
     </article>
 </template>
 

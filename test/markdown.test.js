@@ -58,7 +58,7 @@ test('strikethrough ~~ ~~', () => {
 
 test('raw HTML passes through without sanitizing', () => {
     assert.equal(renderMarkdown('<div class="note">\n\n**হ্যাঁ**\n\n</div>'), '<div class="note">\n<p><strong>হ্যাঁ</strong></p>\n</div>\n');
-    assert.equal(renderMarkdown('এখানে <kbd>Ctrl</kbd> চাপো'), '<p>এখানে <kbd>Ctrl</kbd> চাপো</p>\n');
+    assert.equal(renderMarkdown('এখানে <kbd>Ctrl</kbd> চাপুন'), '<p>এখানে <kbd>Ctrl</kbd> চাপুন</p>\n');
 });
 
 test('{{ }} stays literal in Markdown', () => {
@@ -73,8 +73,8 @@ test('unsupported syntax stays literal text', () => {
 
 test('links, images and nested lists in Bengali text', () => {
     assert.equal(
-        renderMarkdown('দেখো [আমাদের কথা](/about/ "শিরোনাম") আর ![লোগো](/images/logo.svg)\n\n1. এক\n   - ক\n2. দুই'),
-        '<p>দেখো <a href="/about/" title="শিরোনাম">আমাদের কথা</a> আর <img src="/images/logo.svg" alt="লোগো" /></p>\n<ol>\n<li>এক\n<ul>\n<li>ক</li>\n</ul>\n</li>\n<li>দুই</li>\n</ol>\n',
+        renderMarkdown('দেখুন [আমাদের কথা](/about/ "শিরোনাম") আর ![লোগো](/images/logo.svg)\n\n1. এক\n   - ক\n2. দুই'),
+        '<p>দেখুন <a href="/about/" title="শিরোনাম">আমাদের কথা</a> আর <img src="/images/logo.svg" alt="লোগো" /></p>\n<ol>\n<li>এক\n<ul>\n<li>ক</li>\n</ul>\n</li>\n<li>দুই</li>\n</ol>\n',
     );
 });
 

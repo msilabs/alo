@@ -4,7 +4,7 @@
         "Link reference definitions"
     ],
     "reasons": {
-        "reference-link": "reference-style লিংক সাপোর্ট করা হয় না; লেখাটা আক্ষরিক থাকে",
+        "reference-link": "reference-style লিংক সমর্থন করা হয় না; লেখাটি আক্ষরিক থাকে",
         "named-entity": "অজানা নামের entity হুবহু আউটপুটে যায় (ব্রাউজার নিজে decode করে), পুরো entity তালিকা রাখা হয়নি",
         "tab-in-container": "blockquote বা লিস্ট মার্কারের পরের tab-এর কলাম হিসাব সরল করা হয়েছে",
         "lazy-setext": "blockquote-এর lazy লাইনের পরের === setext হেডিং বানায়"

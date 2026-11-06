@@ -6,7 +6,7 @@
 <template>
     <p class="eyebrow">ব্লগ</p>
     <h1>খবর আর গাইড</h1>
-    <p class="lead">মোট {{ new Intl.NumberFormat('bn-BD').format(data.blog.length) }}টা লেখা, নতুনটা আগে।</p>
+    <p class="lead">মোট {{ new Intl.NumberFormat('bn-BD').format(data.blog.length) }}টি লেখা, নতুনটি আগে।</p>
     <Blog.PostList posts="{{ data.blog.toReversed() }}" />
 </template>
 

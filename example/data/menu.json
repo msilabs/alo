@@ -1,6 +1,6 @@
 [
     { "href": "/", "label": "হোম" },
-    { "href": "/docs/", "label": "শুরু করো" },
+    { "href": "/docs/", "label": "শুরু করুন" },
     { "href": "/about/", "label": "কেন আলো" },
     { "href": "/blog/", "label": "ব্লগ" }
 ]

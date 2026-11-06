@@ -1,5 +1,5 @@
 <head>
-    <title>শুরু করো | {{ data.site.name }}</title>
+    <title>শুরু করুন | {{ data.site.name }}</title>
     <meta name="description" content="পাঁচ মিনিটে আলো দিয়ে প্রথম সাইট বানানোর গাইড।">
 </head>
 
@@ -7,27 +7,27 @@
     <article class="guide reading">
         <p class="eyebrow">গাইড</p>
         <h1>পাঁচ মিনিটে প্রথম সাইট</h1>
-        <p class="lead">Node.js ২২ বা নতুন ভার্সন থাকলেই চলবে। নিচের ধাপগুলো শেষ হলে তোমার নিজের ব্লগসহ একটা সাইট চালু থাকবে।</p>
+        <p class="lead">Node.js ২২ বা নতুন ভার্সন থাকলেই চলবে। নিচের ধাপগুলো শেষ হলে আপনার নিজের ব্লগসহ একটি সাইট চালু থাকবে।</p>
 
         <ol class="steps">
             <li>
-                <h2>প্রজেক্ট বানাও</h2>
+                <h2>প্রজেক্ট বানান</h2>
                 <pre><code>npx @msilabs/alo init my-site
 cd my-site
 npm install
 node alo dev</code></pre>
-                <p>ব্রাউজারে খোলো <code>http://localhost:3000</code>। কোনো ফাইল বদলে সেভ করলে পেইজ নিজে থেকে রিলোড হবে।</p>
+                <p>ব্রাউজারে খুলুন <code>http://localhost:3000</code>। কোনো ফাইল বদলে সংরক্ষণ করলে পেইজ নিজে থেকে রিলোড হবে।</p>
             </li>
             <li>
-                <h2>ফোল্ডারগুলো চেনো</h2>
-                <pre><code>pages/        ← প্রতিটা ফোল্ডার একটা URL
+                <h2>ফোল্ডারগুলো চিনুন</h2>
+                <pre><code>pages/        ← প্রতিটি ফোল্ডার একটি URL
 components/   ← &lt;Card /&gt;, &lt;Header /&gt; এর মতো কম্পোনেন্ট
 data/         ← JSON আর Markdown কনটেন্ট
 global/       ← সব পেইজের CSS আর JS
 public/       ← ছবি, ফন্ট, favicon</code></pre>
             </li>
             <li>
-                <h2>নতুন পেইজ যোগ করো</h2>
+                <h2>নতুন পেইজ যোগ করুন</h2>
                 <p><code>pages/contact/page.alo</code> ফাইল বানালেই <code>/contact/</code> ঠিকানায় পেইজ তৈরি হয়:</p>
                 <pre><code>&lt;head&gt;
     &lt;title&gt;যোগাযোগ&lt;/title&gt;
@@ -37,7 +37,7 @@ public/       ← ছবি, ফন্ট, favicon</code></pre>
     &lt;h1&gt;যোগাযোগ&lt;/h1&gt;
     &lt;p&gt;ই-মেইল: &lt;a href="mailto:hello@example.com"&gt;hello@example.com&lt;/a&gt;&lt;/p&gt;
 &lt;/template&gt;</code></pre>
-                <p>অথবা চালাও <code>node alo new page contact</code>।</p>
+                <p>অথবা চালান <code>node alo new page contact</code>।</p>
             </li>
             <li>
                 <h2>তালিকা আর শর্ত</h2>
@@ -53,9 +53,9 @@ public/       ← ছবি, ফন্ট, favicon</code></pre>
 &lt;/template&gt;</code></pre>
             </li>
             <li>
-                <h2>প্রকাশ করো</h2>
+                <h2>প্রকাশ করুন</h2>
                 <pre><code>node alo build</code></pre>
-                <p>পুরো সাইট তৈরি হয় <code>dist/</code> ফোল্ডারে। GitHub Pages-এর মতো সাব-পাথে রাখলে দাও <code>--base /repo-name/</code>। বিস্তারিত আছে <a href="/blog/deploy-to-github-pages/">এই লেখায়</a>।</p>
+                <p>পুরো সাইট তৈরি হয় <code>dist/</code> ফোল্ডারে। GitHub Pages-এর মতো সাব-পাথে রাখলে দিন <code>--base /repo-name/</code>। বিস্তারিত আছে <a href="/blog/deploy-to-github-pages/">এই লেখায়</a>।</p>
             </li>
         </ol>
 

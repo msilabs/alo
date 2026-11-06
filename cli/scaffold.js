@@ -227,7 +227,7 @@ function plan(kind, name) {
         }
     }
     const file = ['data', ...segments, `${today()}-${slug}.md`].join('/');
-    const contents = `---\ntitle: ${slug.replace(/-/g, ' ')}\ndraft: true\n---\n\nএখানে লেখা শুরু করো।\n`;
+    const contents = `---\ntitle: ${slug.replace(/-/g, ' ')}\ndraft: true\n---\n\nএখানে লেখা শুরু করুন।\n`;
     return { file, contents, note: 'Draft: remove `draft: true` to include it in the build' };
 }
 

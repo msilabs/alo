@@ -10,7 +10,7 @@
             <Card title="{{ post.title }}">
                 <p class="meta">
                     <time datetime="{{ post.date }}">{{ new Date(post.date).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) }}</time>
-                    · <a href="/blog/{{ post.slug }}/">পড়ো →</a>
+                    · <a href="/blog/{{ post.slug }}/">পড়ুন →</a>
                 </p>
             </Card>
         </template>
