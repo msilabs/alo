@@ -22,7 +22,7 @@
                 </ul>
             </div>
         </div>
-        <p class="legal container">MIT লাইসেন্স। এই সাইটটাও আলো দিয়ে বানানো।</p>
+        <p class="legal container">আলো <a href="https://msilabs.github.io">msilabs</a>-এর একটা ওপেন সোর্স প্রজেক্ট, MIT লাইসেন্সে। এই সাইটটাও আলো দিয়ে বানানো।</p>
     </footer>
 </template>
 
@@ -73,6 +73,18 @@
         padding-top: 1.5rem;
         border-top: 1px solid var(--border);
         font-size: 0.85rem;
+    }
+
+    .legal a {
+        color: var(--text);
+        text-decoration: underline;
+        text-decoration-color: var(--muted);
+        text-underline-offset: 3px;
+    }
+
+    .legal a:hover {
+        color: var(--accent-strong);
+        text-decoration-color: currentColor;
     }
 
     @media (max-width: 720px) {
