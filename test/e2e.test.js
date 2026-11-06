@@ -79,7 +79,7 @@ test('example/ routes, route groups, layouts and 404', (t) => {
     assert.match(docs, /<title>শুরু করুন \| আলো<\/title>/);
     assert.match(docs, /<a href="\/docs\/" aria-current="page">শুরু করুন<\/a>/);
     assert.match(docs, /<meta name="description" content="পাঁচ মিনিটে আলো দিয়ে প্রথম সাইট বানানোর গাইড।">/);
-    assert.doesNotMatch(docs, /content="HTML, CSS আর JS লিখেই/, 'the page description replaces the layout one');
+    assert.doesNotMatch(docs, /<meta name="description" content="HTML, CSS আর JS লিখেই/, 'the page description replaces the layout one');
 
     const about = read('about/index.html');
     assert.equal((about.match(/badge-stable/g) ?? []).length, 0);

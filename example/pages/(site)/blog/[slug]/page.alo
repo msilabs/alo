@@ -1,7 +1,10 @@
 <head>
     <title>{{ item.title }} | {{ data.site.name }}</title>
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="{{ item.title }}">
     <template if="item.description">
         <meta name="description" content="{{ item.description }}">
+        <meta property="og:description" content="{{ item.description }}">
     </template>
 </head>
 
