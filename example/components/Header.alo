@@ -1,45 +1,74 @@
 <template>
     <header class="site-header">
-        <a class="logo" href="/">{{ data.site.name }}</a>
-        <button class="menu-toggle" type="button" aria-expanded="false">মেনু</button>
-        <nav>
-            <template for="link in data.menu">
-                <a href="{{ link.href }}" aria-current="{{ route.path === link.href ? 'page' : null }}">{{ link.label }}</a>
-            </template>
-        </nav>
+        <div class="bar container">
+            <Logo />
+            <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">মেনু</button>
+            <nav id="site-nav" aria-label="প্রধান মেনু">
+                <template for="link in data.menu">
+                    <a href="{{ link.href }}" aria-current="{{ route.path === link.href ? 'page' : null }}">{{ link.label }}</a>
+                </template>
+                <a class="github" href="{{ data.site.repository }}">GitHub</a>
+            </nav>
+        </div>
     </header>
 </template>
 
 <style>
     .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-bottom: 1px solid var(--border);
+        background: color-mix(in srgb, var(--bg) 85%, transparent);
+        backdrop-filter: blur(12px);
+    }
+
+    .bar {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        max-width: 48rem;
-        margin: 0 auto;
-        padding: 1rem;
+        gap: 1rem;
+        min-height: 4rem;
     }
 
-    .logo {
-        font-size: 1.5rem;
-        font-weight: 700;
+    nav {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    nav a {
+        padding: 0.4rem 0.8rem;
+        border-radius: 999px;
+        color: var(--muted);
+        font-weight: 500;
         text-decoration: none;
+    }
+
+    nav a:hover {
+        color: var(--text);
+    }
+
+    nav a[aria-current='page'] {
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+    }
+
+    .github {
+        margin-left: 0.5rem;
+        border: 1px solid var(--border);
     }
 
     .menu-toggle {
         display: none;
+        padding: 0.4rem 0.9rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface);
     }
 
-    nav a {
-        margin-left: 1rem;
-    }
-
-    nav a[aria-current='page'] {
-        font-weight: 700;
-    }
-
-    @media (max-width: 600px) {
+    @media (max-width: 720px) {
         .menu-toggle {
             display: block;
         }
@@ -47,10 +76,17 @@
         nav {
             display: none;
             width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+            padding-bottom: 1rem;
         }
 
         .open nav {
-            display: block;
+            display: flex;
+        }
+
+        .github {
+            margin-left: 0;
         }
     }
 </style>

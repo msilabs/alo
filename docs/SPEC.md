@@ -997,20 +997,22 @@ alo/
 
 ## ১৯. উদাহরণ সাইট (`example/` আর `init` টেমপ্লেট)
 
-`example/`-এ প্রতিটা ফিচার অন্তত একবার থাকবে। `init` টেমপ্লেট হবে এর একটা ছোট সংস্করণ: হোম, About, Markdown ব্লগ, Header, Footer, Card।
+`example/` হলো Alo-র নিজের ওয়েবসাইট, আসল বাংলা কনটেন্ট আর পেশাদার ডিজাইনসহ। প্রতিটা ফিচার সেখানে অন্তত একবার স্বাভাবিক ব্যবহারে আছে। `init` টেমপ্লেট এর একটা ছোট সংস্করণ, একই ডিজাইনে: হোম, About, Markdown ব্লগ, Header, Footer, Card।
 
-- `(site)` গ্রুপে রুট লেআউট (Header, Footer), আর ব্লগের জন্য নেস্টেড লেআউট।
+- `pages/layout.alo`: সব পেইজের `<head>` (ফন্ট, favicon, বর্ণনা)। `(site)` গ্রুপের লেআউটে Header আর Footer, আর ব্লগের জন্য নেস্টেড লেআউট।
 - `(bare)` গ্রুপে লেআউট ছাড়া একটা `launch` পেইজ, যাতে `noindex` মেটা আছে।
-- হোম, About, ব্লগ তালিকা, 404।
-- ব্লগে ৪টা পোস্ট: ৩টা Markdown, ১টা JSON, আর একটায় `draft: true`।
+- হোম, শুরু করার গাইড (`/docs/`), "কেন আলো" (`/about/`), ব্লগ তালিকা, 404।
+- ব্লগে ৪টা পোস্ট: ৩টা Markdown, ১টা JSON, আর একটায় `draft: true`; তারিখ দেখায় বাংলায়।
 - `Header`: `data.menu` থেকে `<template for>` দিয়ে মেনু, `route.path` দিয়ে active লিংক, মোবাইল মেনুর জন্য `$el` স্ক্রিপ্ট।
+- `Logo`: inline SVG (কেসসহ `radialGradient`), প্রতিটা জায়গায় আলাদা `id`-এর জন্য প্রপ।
 - `Card`: প্রপস, `class` প্রপ, স্লট, স্কোপড CSS।
+- `Feature`: `data/features.json`-এর প্রতিটা ফিচার; আইকন আর অবস্থার ব্যাজ (`চালু` / `পরীক্ষামূলক` / `আসছে`) `if` / `else-if` / `else` দিয়ে।
 - `Blog.PostCard`, `Blog.PostList`; হোমে `Blog.PostList` দিয়ে সর্বশেষ ৩টা পোস্ট।
-- `Faq`: ক্লিকে খোলে আর বন্ধ হয়।
+- `Faq`: `data/faq.json` থেকে; ক্লিকে খোলে আর বন্ধ হয়।
 - `Counter`: `data-*` দিয়ে বিল্ডের মান নিয়ে JS চালায়।
-- `if` / `else-if` / `else`-এর একটা উদাহরণ (যেমন টিমের সদস্যের ভূমিকা অনুযায়ী ব্যাজ)।
-- `data/site.json` (`url` সহ), `data/menu.json`, `data/team.json`।
-- `global/base/01-reset.css`, `global/theme.css`, `global/main.js`।
+- কোডের উদাহরণে `\{{` দিয়ে আক্ষরিক `{{ }}`; Markdown বডির স্টাইলের জন্য `<style global>`।
+- `data/site.json` (`url` সহ), `data/menu.json`, `data/features.json`, `data/faq.json`।
+- `global/base/01-reset.css`, `global/theme.css` (রঙ, ফন্ট, ডার্ক মোড), `global/main.js`।
 - `public/`-এ favicon আর একটা SVG।
 
 **উদাহরণ সাইটটাই স্বীকৃতি টেস্ট।** মাইলস্টোন ২ থেকে প্রতিটা ধাপে `example/`-এ সেই ধাপের ফিচার যোগ হবে, আর end-to-end টেস্ট তার আউটপুট যাচাই করবে।
@@ -1166,7 +1168,7 @@ README Alo-কে নিজের পরিচয়ে চেনায়; অ�
 
 - `npm ls`-এ কোনো dependency নেই। ইউজার প্রজেক্টে কোনো কনফিগ ফাইল লাগে না।
 - `node --test`-এর সব টেস্ট পাস করে, Node 22, 24 আর 26-এ Linux আর Windows-এ, আর Node 24-এ macOS-এ।
-- উদাহরণ সাইটের কোনো `.alo` ফাইলে `import`, `<link rel="stylesheet">` বা লোকাল `<script src>` নেই, তবুও সব কাজ করে।
+- উদাহরণ সাইটের কোনো `.alo` ফাইলে `import`, লোকাল `<link rel="stylesheet">` বা লোকাল `<script src>` নেই, তবুও সব কাজ করে। (বাইরের ফন্টের stylesheet লিংক চলে।)
 - উদাহরণ সাইটে সব লজিক `<template>` ট্যাগে।
 - `example/`-এ `node alo build` এরর ছাড়া চলে, আর `dist/` যেকোনো সাধারণ স্ট্যাটিক সার্ভারে ঠিকমতো কাজ করে: সব পেইজ, স্টাইল, মেনু, FAQ ক্লিক, Counter আর Markdown ব্লগ পোস্ট। খসড়া পোস্ট `dist/`-এ নেই।
 - `node alo build --base /repo/`-এর আউটপুট `/repo/` সাব-পাথে সার্ভ করলে সব লিংক, ছবি, CSS আর JS কাজ করে।

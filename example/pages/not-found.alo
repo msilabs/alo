@@ -1,8 +1,35 @@
 <head>
-    <title>পাওয়া যায়নি | আলো</title>
+    <title>পেইজটা পাওয়া যায়নি | {{ data.site.name }}</title>
 </head>
 
 <template>
-    <h1>পেইজটা পাওয়া যায়নি</h1>
-    <p><a href="/">হোমে ফিরে যাও</a></p>
+    <main class="missing">
+        <p class="code">৪০৪</p>
+        <h1>এই পেইজটা পাওয়া যায়নি</h1>
+        <p>ঠিকানাটা হয়তো বদলে গেছে, অথবা টাইপে ভুল আছে।</p>
+        <a class="button button-primary" href="/">হোমে ফিরে যাও</a>
+    </main>
 </template>
+
+<style>
+    .missing {
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 1rem;
+        min-height: 100vh;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .code {
+        color: var(--accent);
+        font-size: 5rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    p:not(.code) {
+        color: var(--muted);
+    }
+</style>

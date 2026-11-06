@@ -1,9 +1,37 @@
+<!-- (bare) গ্রুপে থাকায় এই পেইজে হেডার-ফুটার নেই; noindex থাকায় sitemap-এও আসে না -->
 <head>
-    <title>শীঘ্রই আসছে | আলো</title>
+    <title>আলো ১.০ আসছে | {{ data.site.name }}</title>
     <meta name="robots" content="noindex">
 </head>
 
 <template>
-    <h1>শীঘ্রই আসছে</h1>
-    <p>এই পেইজে হেডার-ফুটার নেই, কারণ এটা <code>(bare)</code> গ্রুপে।</p>
+    <main class="launch">
+        <Logo />
+        <p class="eyebrow">শিগগিরই</p>
+        <h1>আলো ১.০ আসছে</h1>
+        <p>পেজিনেশন, নামযুক্ত স্লট আর এডিটর এক্সটেনশন নিয়ে কাজ চলছে। খবর পেতে GitHub-এ রিপোজিটরিটা ফলো করো।</p>
+        <a class="button button-primary" href="{{ data.site.repository }}">GitHub-এ ফলো করো</a>
+    </main>
 </template>
+
+<style>
+    .launch {
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 1rem;
+        min-height: 100vh;
+        padding: 2rem;
+        background: radial-gradient(40rem 30rem at 50% 30%, var(--accent-soft), transparent 70%), var(--bg);
+        text-align: center;
+    }
+
+    h1 {
+        font-size: clamp(2.2rem, 6vw, 3.6rem);
+    }
+
+    p:not(.eyebrow) {
+        max-width: 32rem;
+        color: var(--muted);
+    }
+</style>

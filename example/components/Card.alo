@@ -3,22 +3,21 @@
         <template if="props.title">
             <h3>{{ props.title }}</h3>
         </template>
-        <slot>
-            <p>এখানে এখনো কিছু লেখা হয়নি।</p>
-        </slot>
+        <slot />
     </article>
 </template>
 
 <style>
     .card {
-        margin-block: 1rem;
-        padding: 1rem 1.25rem;
-        border: 1px solid #f0e2c8;
+        padding: 1.5rem;
+        border: 1px solid var(--border);
         border-radius: var(--radius);
-        background: var(--color-surface);
+        background: var(--surface);
+        box-shadow: var(--shadow);
     }
 
     h3 {
-        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-size: 1.15rem;
     }
 </style>

@@ -1,8 +1,3 @@
-<head>
-    <meta name="description" content="Alo দিয়ে বানানো উদাহরণ সাইট">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-</head>
-
 <template>
     <Header />
     <main>
@@ -10,11 +5,3 @@
     </main>
     <Footer />
 </template>
-
-<style>
-    main {
-        max-width: 48rem;
-        margin: 0 auto;
-        padding: 0 1rem;
-    }
-</style>

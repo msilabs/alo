@@ -1,0 +1,13 @@
+<!-- সব পেইজের জন্য: ফন্ট, favicon আর সাইটের বর্ণনা। হেডার-ফুটার থাকে (site) গ্রুপের লেআউটে। -->
+<head>
+    <meta name="description" content="{{ data.site.description }}">
+    <meta name="theme-color" content="#f5a524">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap">
+</head>
+
+<template>
+    <slot />
+</template>

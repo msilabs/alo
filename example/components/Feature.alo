@@ -1,0 +1,84 @@
+<template>
+    <article class="feature">
+        <div class="top">
+            <span class="icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <template if="props.feature.icon === 'html'">
+                        <path d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16" />
+                    </template>
+                    <template else-if="props.feature.icon === 'component'">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                    </template>
+                    <template else-if="props.feature.icon === 'content'">
+                        <path d="M6 3h9l4 4v14H6z" />
+                        <path d="M14 3v5h5M9 13h7M9 17h5" />
+                    </template>
+                    <template else-if="props.feature.icon === 'speed'">
+                        <path d="M13 2L4 14h7l-1 8 9-12h-7z" />
+                    </template>
+                    <template else-if="props.feature.icon === 'reload'">
+                        <path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" />
+                    </template>
+                    <template else-if="props.feature.icon === 'deploy'">
+                        <path d="M12 16V4M7 9l5-5 5 5M4 20h16" />
+                    </template>
+                    <template else>
+                        <circle cx="12" cy="12" r="8" />
+                        <path d="M12 8v8M8 12h8" />
+                    </template>
+                </svg>
+            </span>
+            <template if="props.feature.status === 'stable'">
+                <span class="badge badge-stable">চালু</span>
+            </template>
+            <template else-if="props.feature.status === 'beta'">
+                <span class="badge badge-beta">পরীক্ষামূলক</span>
+            </template>
+            <template else>
+                <span class="badge badge-planned">আসছে</span>
+            </template>
+        </div>
+        <h3>{{ props.feature.title }}</h3>
+        <p>{{ props.feature.text }}</p>
+    </article>
+</template>
+
+<style>
+    .feature {
+        height: 100%;
+        padding: 1.5rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+    }
+
+    .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .icon {
+        display: grid;
+        place-items: center;
+        width: 2.6rem;
+        height: 2.6rem;
+        border-radius: 12px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+    }
+
+    h3 {
+        margin-bottom: 0.35rem;
+        font-size: 1.1rem;
+    }
+
+    p {
+        color: var(--muted);
+        font-size: 0.97rem;
+    }
+</style>

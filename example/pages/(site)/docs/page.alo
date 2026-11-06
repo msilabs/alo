@@ -1,0 +1,133 @@
+<head>
+    <title>শুরু করো | {{ data.site.name }}</title>
+    <meta name="description" content="পাঁচ মিনিটে আলো দিয়ে প্রথম সাইট বানানোর গাইড।">
+</head>
+
+<template>
+    <article class="guide reading">
+        <p class="eyebrow">গাইড</p>
+        <h1>পাঁচ মিনিটে প্রথম সাইট</h1>
+        <p class="lead">Node.js ২২ বা নতুন ভার্সন থাকলেই চলবে। নিচের ধাপগুলো শেষ হলে তোমার নিজের ব্লগসহ একটা সাইট চালু থাকবে।</p>
+
+        <ol class="steps">
+            <li>
+                <h2>প্রজেক্ট বানাও</h2>
+                <pre><code>npx @msilabs/alo init my-site
+cd my-site
+npm install
+node alo dev</code></pre>
+                <p>ব্রাউজারে খোলো <code>http://localhost:3000</code>। কোনো ফাইল বদলে সেভ করলে পেইজ নিজে থেকে রিলোড হবে।</p>
+            </li>
+            <li>
+                <h2>ফোল্ডারগুলো চেনো</h2>
+                <pre><code>pages/        ← প্রতিটা ফোল্ডার একটা URL
+components/   ← &lt;Card /&gt;, &lt;Header /&gt; এর মতো কম্পোনেন্ট
+data/         ← JSON আর Markdown কনটেন্ট
+global/       ← সব পেইজের CSS আর JS
+public/       ← ছবি, ফন্ট, favicon</code></pre>
+            </li>
+            <li>
+                <h2>নতুন পেইজ যোগ করো</h2>
+                <p><code>pages/contact/page.alo</code> ফাইল বানালেই <code>/contact/</code> ঠিকানায় পেইজ তৈরি হয়:</p>
+                <pre><code>&lt;head&gt;
+    &lt;title&gt;যোগাযোগ&lt;/title&gt;
+&lt;/head&gt;
+
+&lt;template&gt;
+    &lt;h1&gt;যোগাযোগ&lt;/h1&gt;
+    &lt;p&gt;ই-মেইল: &lt;a href="mailto:hello@example.com"&gt;hello@example.com&lt;/a&gt;&lt;/p&gt;
+&lt;/template&gt;</code></pre>
+                <p>অথবা চালাও <code>node alo new page contact</code>।</p>
+            </li>
+            <li>
+                <h2>তালিকা আর শর্ত</h2>
+                <p>লুপ আর শর্ত লেখা হয় শুধু <code>&lt;template&gt;</code> ট্যাগে। এগুলো চলে বিল্ডের সময়, একবার:</p>
+                <pre><code>&lt;ul&gt;
+    &lt;template for="post in data.blog"&gt;
+        &lt;li&gt;&lt;a href="/blog/\{{ post.slug }}/"&gt;\{{ post.title }}&lt;/a&gt;&lt;/li&gt;
+    &lt;/template&gt;
+&lt;/ul&gt;
+
+&lt;template if="data.blog.length === 0"&gt;
+    &lt;p&gt;এখনো কোনো লেখা নেই।&lt;/p&gt;
+&lt;/template&gt;</code></pre>
+            </li>
+            <li>
+                <h2>প্রকাশ করো</h2>
+                <pre><code>node alo build</code></pre>
+                <p>পুরো সাইট তৈরি হয় <code>dist/</code> ফোল্ডারে। GitHub Pages-এর মতো সাব-পাথে রাখলে দাও <code>--base /repo-name/</code>। বিস্তারিত আছে <a href="/blog/deploy-to-github-pages/">এই লেখায়</a>।</p>
+            </li>
+        </ol>
+
+        <Card title="আরও জানতে" class="next">
+            <p>পুরো ডকুমেন্টেশন আছে <a href="{{ data.site.repository }}#readme">README</a>-তে: কম্পোনেন্টের প্রপস, ডেটা, Markdown, স্কোপড CSS আর ডিপ্লয়।</p>
+        </Card>
+    </article>
+</template>
+
+<style>
+    .guide {
+        padding-top: 4rem;
+    }
+
+    h1 {
+        margin-block: 0.5rem 1rem;
+        font-size: clamp(2rem, 5vw, 2.8rem);
+    }
+
+    .lead {
+        color: var(--muted);
+        font-size: 1.15rem;
+    }
+
+    .steps {
+        margin: 3rem 0;
+        padding: 0;
+        list-style: none;
+        counter-reset: step;
+    }
+
+    .steps > li {
+        position: relative;
+        padding: 0 0 2.5rem 3.25rem;
+        counter-increment: step;
+    }
+
+    .steps > li::before {
+        content: counter(step, bengali);
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: grid;
+        place-items: center;
+        width: 2.2rem;
+        height: 2.2rem;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #1f1a14;
+        font-weight: 700;
+    }
+
+    .steps > li::after {
+        content: '';
+        position: absolute;
+        top: 2.6rem;
+        bottom: 0.4rem;
+        left: 1.05rem;
+        width: 2px;
+        background: var(--border);
+    }
+
+    .steps > li:last-child::after {
+        display: none;
+    }
+
+    h2 {
+        margin-bottom: 0.75rem;
+        font-size: 1.3rem;
+    }
+
+    .steps p {
+        margin-block: 0.75rem;
+    }
+</style>

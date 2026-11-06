@@ -5,3 +5,10 @@
         </template>
     </div>
 </template>
+
+<style>
+    .post-list {
+        display: grid;
+        gap: 1.25rem;
+    }
+</style>

@@ -36,34 +36,31 @@ test('example/ builds its home page', (t) => {
     const result = alo(dir, ['build']);
 
     assert.equal(result.code, 0, result.stderr);
-    assert.match(result.stdout, /Built 8 pages/);
+    assert.match(result.stdout, /Built 9 pages/);
+    assert.doesNotMatch(result.stderr, /⚠/);
+    assert.ok(!fs.existsSync(path.join(dir, '.alo', 'build')), 'the temp folder should not remain');
 
     const html = withoutScope(fs.readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8'));
     assert.match(html, /^<!DOCTYPE html>\n<html lang="bn">/);
-    assert.match(html, /<title>আলো — হালকা স্ট্যাটিক সাইট<\/title>/);
-    assert.match(html, /HTML, CSS আর JS লেখো; বিল্ড করলে পাবে স্ট্যাটিক সাইট।/);
-    assert.match(html, /<code>\/<\/code>/);
-    assert.match(html, /২ \+ ৩ = 5/);
-    assert.match(html, /আক্ষরিক বন্ধনী লিখতে: \{\{ এভাবে \}\}/);
-    assert.match(html, /<!-- এই কমেন্ট আউটপুটে হুবহু যায় -->/);
-    assert.match(html, /<linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">/);
-    assert.match(html, /<stop offset="0" stop-color="#ffd54f"><\/stop>/);
-    assert.match(html, /<p title="তুলনা: বড়">/);
-    assert.match(html, /<pre><code>const আলো = &#39;হালকা&#39;;<\/code><\/pre>/);
-    assert.match(html, /<button type="button" x-data="\{ open: false \}" @click="open = !open" :aria-expanded="open">/);
-    assert.match(html, /<li>1\. HTML<\/li>[\s\S]*<li>2\. CSS<\/li>[\s\S]*<li>3\. JavaScript<\/li>/);
-    assert.match(html, /<p>মাত্র 3টা জিনিস জানলেই চলে।<\/p>/);
-    assert.doesNotMatch(html, /অনেক কিছু|কিছুই লাগে না|<template/);
-    assert.match(html, /<details open>/);
-    assert.match(html, /<button aria-pressed="false">চাপো<\/button>/);
-    assert.match(html, /<article class="card post-card">\s*<h3><a href="\/blog\/hello-world\/">হ্যালো ওয়ার্ল্ড<\/a><\/h3>\s*<time>2026-01-10<\/time>/);
-    assert.match(html, /<ul class="tags">\s*<li>intro<\/li><li>news<\/li>\s*<\/ul>/);
-    assert.match(html, /তৃতীয় লেখা[\s\S]*দ্বিতীয় লেখা[\s\S]*হ্যালো ওয়ার্ল্ড/);
-    assert.doesNotMatch(html, /শীঘ্রই আসছে/);
-    assert.match(html, /<article class="card ">\s*<h3>ফলব্যাক কনটেন্ট<\/h3>\s*<p>এখানে এখনো কিছু লেখা হয়নি।<\/p>/);
-    assert.doesNotMatch(html, /<Card|<Blog\.PostCard|<slot/);
-    assert.doesNotMatch(result.stderr, /⚠/);
-    assert.ok(!fs.existsSync(path.join(dir, '.alo', 'build')), 'the temp folder should not remain');
+    assert.match(html, /<title>আলো: HTML জানলেই পুরো ওয়েবসাইট<\/title>/);
+    assert.match(html, /<h1>HTML জানলেই<br>পুরো ওয়েবসাইট<\/h1>/);
+    assert.match(html, /fonts\.googleapis\.com\/css2\?family=Inter/);
+
+    // Six stable features on the home page, each with its status badge from the if/else-if chain.
+    assert.equal((html.match(/<span class="badge badge-stable">চালু<\/span>/g) ?? []).length, 6);
+    assert.doesNotMatch(html, /badge-planned|badge-beta/);
+
+    // \{{ in a code sample stays a literal {{ in the page.
+    assert.match(html, /&lt;h3&gt;\{\{ props\.title \}\}&lt;\/h3&gt;/);
+
+    // The newest three posts, with Bengali dates; the draft is not there.
+    assert.match(html, /২১ অক্টোবর, ২০২৬[\s\S]*GitHub Pages-এ সাইট প্রকাশ[\s\S]*কম্পোনেন্ট আর লেআউট[\s\S]*আলো এল/);
+    assert.doesNotMatch(html, /সামনে যা আসছে/);
+
+    assert.match(html, /<div class="counter" data-start="10"/);
+    assert.equal((html.match(/<div class="faq"/g) ?? []).length, 4);
+    assert.match(html, /<radialGradient id="logo-glow-header"[\s\S]*<radialGradient id="logo-glow-footer"/);
+    assert.doesNotMatch(html, /<Card|<Blog\.PostCard|<Feature|<slot|<template (for|if|else)/);
 });
 
 test('example/ routes, route groups, layouts and 404', (t) => {
@@ -74,42 +71,44 @@ test('example/ routes, route groups, layouts and 404', (t) => {
     const home = read('index.html');
     assert.match(home, /<header class="site-header"[ >]/);
     assert.match(home, /<a href="\/" aria-current="page">হোম<\/a>/);
-    assert.match(home, /<a href="\/about\/">আমাদের কথা<\/a>/);
-    assert.match(home, /<main>\s*<!-- এই কমেন্ট/);
+    assert.match(home, /<a href="\/docs\/">শুরু করো<\/a>/);
     assert.match(home, /<footer class="site-footer">/);
-    assert.match(home, /<meta name="description" content="Alo দিয়ে বানানো উদাহরণ সাইট">/);
+    assert.match(home, /<meta name="description" content="আলো একটা হালকা স্ট্যাটিক ওয়েব ফ্রেমওয়ার্ক।/);
+
+    const docs = read('docs/index.html');
+    assert.match(docs, /<title>শুরু করো \| আলো<\/title>/);
+    assert.match(docs, /<a href="\/docs\/" aria-current="page">শুরু করো<\/a>/);
+    assert.match(docs, /<meta name="description" content="পাঁচ মিনিটে আলো দিয়ে প্রথম সাইট বানানোর গাইড।">/);
+    assert.doesNotMatch(docs, /content="আলো একটা হালকা/, 'the page description replaces the layout one');
 
     const about = read('about/index.html');
-    assert.match(about, /<title>আমাদের কথা \| আলো<\/title>/);
-    assert.match(about, /<a href="\/about\/" aria-current="page">আমাদের কথা<\/a>/);
-    assert.match(about, /<meta name="description" content="Alo কেন বানানো হলো">/);
-    assert.doesNotMatch(about, /উদাহরণ সাইট"/);
+    assert.equal((about.match(/badge-stable/g) ?? []).length, 0);
+    assert.match(about, /<span class="badge badge-beta">পরীক্ষামূলক<\/span>/);
+    assert.equal((about.match(/<span class="badge badge-planned">আসছে<\/span>/g) ?? []).length, 2);
 
     const blog = read('blog/index.html');
-    assert.match(blog, /<main>\s*<section class="blog">\s*<p class="blog-label">ব্লগ<\/p>\s*<h1>সব লেখা<\/h1>/);
+    assert.match(blog, /<main>\s*<div class="blog reading">\s*<p class="eyebrow">ব্লগ<\/p>/);
+    assert.match(blog, /মোট ৩টা লেখা/);
+
+    const post = read('blog/introducing-alo/index.html');
+    assert.match(post, /<title>আলো এল: HTML জানলেই ওয়েবসাইট \| আলো<\/title>/);
+    assert.match(post, /<meta name="description" content="কেন আরেকটা ফ্রেমওয়ার্ক, আর কাদের জন্য আলো বানানো হলো।">/);
+    assert.match(post, /<time datetime="2026-09-15">১৫ সেপ্টেম্বর, ২০২৬<\/time>/);
+    assert.match(post, /<h2 id="যা-আলাদা">যা আলাদা<\/h2>/);
+    assert.match(post, /<pre><code class="language-bash">npx @msilabs\/alo init my-site/);
+    assert.match(read('blog/components-and-layouts/index.html'), /<th>কোথায় রাখো<\/th>/);
+    assert.match(read('blog/deploy-to-github-pages/index.html'), /একই ফোল্ডারে Markdown আর JSON পাশাপাশি চলে/);
+    assert.ok(!fs.existsSync(path.join(dir, 'dist', 'blog', 'whats-next')), 'draft posts should not be in dist/');
 
     const launch = read('launch/index.html');
     assert.doesNotMatch(launch, /site-header|site-footer/);
     assert.match(launch, /<meta name="robots" content="noindex">/);
-
-    const post = read('blog/hello-world/index.html');
-    assert.match(post, /<title>হ্যালো ওয়ার্ল্ড \| আলো<\/title>/);
-    assert.match(post, /<h1>হ্যালো ওয়ার্ল্ড<\/h1>\s*<time>2026-01-10<\/time>\s*<p>Alo দিয়ে লেখা <strong>প্রথম পোস্ট<\/strong>/);
-    assert.match(post, /<h2 id="যা-যা-লাগে">যা যা লাগে<\/h2>/);
-    assert.match(post, /<pre><code class="language-html">&lt;Card title=&quot;হ্যালো&quot;&gt;/);
-    assert.match(post, /<th style="text-align: left">ফোল্ডার<\/th>/);
-    assert.match(read('blog/second-post/index.html'), /<blockquote>\n<p>Markdown-এর ভেতরে <code>\{\{ \}\}<\/code> প্রসেস হয় না/);
-    assert.match(read('blog/third-post/index.html'), /<p>প্রতিটা ফাইল থেকে নিজে থেকেই একটা পেইজ তৈরি হয়।<\/p>/);
-    assert.match(post, /<section class="blog">/);
-    assert.ok(!fs.existsSync(path.join(dir, 'dist', 'blog', 'coming-soon')), 'draft posts should not be in dist/');
-
-    assert.match(about, /রাহিম\s*<span class="badge">প্রধান<\/span>/);
-    assert.match(about, /সুমি\s*<span class="badge">ডেভেলপার<\/span>/);
-    assert.match(about, /করিম\s*<span class="badge">অতিথি<\/span>/);
+    assert.match(launch, /fonts\.googleapis\.com/, 'the root layout wraps route groups too');
 
     const notFound = read('404.html');
-    assert.match(notFound, /<h1>পেইজটা পাওয়া যায়নি<\/h1>/);
+    assert.match(notFound, /<h1>এই পেইজটা পাওয়া যায়নি<\/h1>/);
     assert.doesNotMatch(notFound, /site-header/);
+    assert.match(notFound, /fonts\.googleapis\.com/, 'not-found gets pages/layout.alo');
 });
 
 // Asset names carry a content hash in build mode: style.3f9a1c2e.css → style.css
@@ -117,8 +116,9 @@ function unhash(url) {
     return url.replace(/\.[0-9a-f]{8}(\.[a-z]+)$/, '$1');
 }
 
+// Local CSS and JS only; the Google Fonts stylesheet is external.
 function linkedAssets(html) {
-    return [...html.matchAll(/<(?:script src|link rel="stylesheet" href)="([^"]+)"/g)].map((m) => m[1]);
+    return [...html.matchAll(/<(?:script src|link rel="stylesheet" href)="(\/[^"]*)"/g)].map((m) => m[1]);
 }
 
 test('example/ CSS: global/ first, scoped styles, minified, linked on every page', (t) => {
@@ -130,8 +130,8 @@ test('example/ CSS: global/ first, scoped styles, minified, linked on every page
     assert.ok(href, 'a hashed stylesheet link is expected');
     const css = read(href[1].slice(1));
 
-    assert.ok(css.indexOf('box-sizing') < css.indexOf('--color-text'), 'reset before theme');
-    assert.ok(css.indexOf('--color-text') < css.indexOf('.site-header['), 'global/ before components');
+    assert.ok(css.indexOf('box-sizing') < css.indexOf('--accent:'), 'reset before theme');
+    assert.ok(css.indexOf('--accent:') < css.indexOf('.site-header['), 'global/ before components');
     assert.doesNotMatch(css, /\/\* global/, 'no comments in build');
     assert.doesNotMatch(css.trimEnd(), /\n/, 'CSS is one line in build');
     const header = /<header class="site-header" (data-a-[0-9a-f]{6})[ >]/.exec(home);
@@ -148,20 +148,19 @@ test('example/ JS: only the scripts a page needs, data-a-c on component roots', 
     const scripts = (html) => [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]);
 
     const home = read('index.html');
-    assert.deepEqual(scripts(home).map(unhash), ['/assets/global.js', '/assets/components.js', '/assets/pages/index.js']);
+    assert.deepEqual(scripts(home).map(unhash), ['/assets/global.js', '/assets/components.js']);
     assert.match(home, /<div class="faq"[^>]* data-a-c="Faq">/);
-    assert.match(home, /<div class="counter" data-start="5"[^>]* data-a-c="Counter">/);
+    assert.match(home, /<div class="counter" data-start="10"[^>]* data-a-c="Counter">/);
     assert.match(home, /<header class="site-header"[^>]* data-a-c="Header">/);
 
     assert.deepEqual(scripts(read('about/index.html')).map(unhash), ['/assets/global.js', '/assets/components.js']);
     assert.deepEqual(scripts(read('launch/index.html')).map(unhash), ['/assets/global.js']);
     assert.deepEqual(scripts(read('404.html')).map(unhash), ['/assets/global.js']);
 
-    const [globalJs, componentsJs, pageJs] = scripts(home).map((src) => read(src.slice(1)));
+    const [globalJs, componentsJs] = scripts(home).map((src) => read(src.slice(1)));
     for (const name of ['Counter', 'Faq', 'Header']) assert.match(componentsJs, new RegExp(`"${name}": function \\(\\$el\\)`));
     assert.doesNotMatch(componentsJs, /"Card"/);
     assert.match(globalJs, /^\/\* global\/main\.js \*\//);
-    assert.match(pageJs, /getElementById\('today'\)/);
 });
 
 test('example/ production output: hashes, sitemap, robots', (t) => {
@@ -179,14 +178,15 @@ test('example/ production output: hashes, sitemap, robots', (t) => {
     const sitemap = read('sitemap.xml');
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
     assert.deepEqual(locs, [
-        'https://example.com/',
-        'https://example.com/about/',
-        'https://example.com/blog/',
-        'https://example.com/blog/hello-world/',
-        'https://example.com/blog/second-post/',
-        'https://example.com/blog/third-post/',
+        'https://msilabs.github.io/',
+        'https://msilabs.github.io/about/',
+        'https://msilabs.github.io/blog/',
+        'https://msilabs.github.io/blog/components-and-layouts/',
+        'https://msilabs.github.io/blog/deploy-to-github-pages/',
+        'https://msilabs.github.io/blog/introducing-alo/',
+        'https://msilabs.github.io/docs/',
     ]);
-    assert.equal(read('robots.txt'), 'User-agent: *\nAllow: /\nSitemap: https://example.com/sitemap.xml\n');
+    assert.equal(read('robots.txt'), 'User-agent: *\nAllow: /\nSitemap: https://msilabs.github.io/sitemap.xml\n');
 });
 
 test('example/ with --base /repo/: every link, image, CSS and JS has the base', (t) => {
@@ -194,30 +194,29 @@ test('example/ with --base /repo/: every link, image, CSS and JS has the base', 
     assert.equal(alo(dir, ['build', '--base', 'repo']).code, 0);
     const read = (file) => fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8');
 
-    const pages = ['index.html', 'about/index.html', 'blog/index.html', 'blog/hello-world/index.html', 'launch/index.html', '404.html'];
+    const pages = ['index.html', 'docs/index.html', 'about/index.html', 'blog/index.html', 'blog/introducing-alo/index.html', 'launch/index.html', '404.html'];
     for (const page of pages) {
         const html = read(page);
         assert.match(html, /<html lang="bn" data-base="\/repo\/">/, page);
-        const rootLinks = [...html.matchAll(/\s(?:href|src)="(\/[^"]*)"/g)].map((m) => m[1]);
+        // Real attributes only; code samples in the docs show escaped HTML as text.
+        const rootLinks = [...html.matchAll(/<[a-z][^<>]*?\s(?:href|src)="(\/[^"]*)"/g)].map((m) => m[1]);
         assert.ok(rootLinks.length > 0, page);
         for (const link of rootLinks) assert.ok(link.startsWith('/repo/'), `${page}: ${link}`);
         for (const url of linkedAssets(html)) assert.ok(fs.existsSync(path.join(dir, 'dist', ...url.slice('/repo/'.length).split('/'))), url);
     }
 
     const home = read('index.html');
-    assert.match(home, /<a href="\/repo\/about\/">আমাদের কথা<\/a>|<a href="\/repo\/about\/"/);
-    assert.match(read('blog/hello-world/index.html'), /<a href="\/repo\/about\/">আমাদের কথা<\/a>/);
+    assert.match(home, /<a href="\/repo\/about\/"[^>]*>কেন আলো<\/a>/);
+    assert.match(read('blog/introducing-alo/index.html'), /<a href="\/repo\/docs\/">শুরু করার গাইড<\/a>/);
     assert.match(home, /aria-current="page"/, 'route.path has no base, so the active link still matches');
-    assert.match(read('sitemap.xml'), /<loc>https:\/\/example\.com\/repo\/about\/<\/loc>/);
-    const about = read('about/index.html');
-    assert.match(about, /<img src="\/repo\/images\/logo\.svg"/);
-    assert.match(about, /<link rel="icon" href="\/repo\/favicon\.svg"/);
+    assert.match(read('sitemap.xml'), /<loc>https:\/\/msilabs\.github\.io\/repo\/about\/<\/loc>/);
+    assert.match(read('about/index.html'), /<link rel="icon" href="\/repo\/favicon\.svg"/);
     assert.ok(fs.existsSync(path.join(dir, 'dist', 'images', 'logo.svg')));
     assert.ok(fs.existsSync(path.join(dir, 'dist', 'favicon.svg')));
-    assert.match(read('robots.txt'), /Sitemap: https:\/\/example\.com\/repo\/sitemap\.xml/);
+    assert.match(read('robots.txt'), /Sitemap: https:\/\/msilabs\.github\.io\/repo\/sitemap\.xml/);
 });
 
-test('example/ .alo files have no import, stylesheet link or local script src; logic only on <template>', () => {
+test('example/ .alo files have no import, local stylesheet link or local script src; logic only on <template>', () => {
     const { parseSfc } = require('../core/sfc.js');
     const files = [];
     const walk = (dir) => {
@@ -238,7 +237,9 @@ test('example/ .alo files have no import, stylesheet link or local script src; l
         const source = fs.readFileSync(file, 'utf8');
         const relative = path.relative(EXAMPLE, file);
         assert.doesNotMatch(source, /^\s*import\s/m, relative);
-        assert.doesNotMatch(source, /<link[^>]+rel=["']?stylesheet/i, relative);
+        for (const link of source.match(/<link[^>]*rel=["']?stylesheet[^>]*>/gi) ?? []) {
+            assert.match(link, /href=["']?https?:/, `${relative}: only external stylesheets may be linked by hand`);
+        }
         assert.doesNotMatch(source, /<script[^>]+src=["']?\/(?!\/)/i, relative);
 
         const sfc = parseSfc(source, relative, relative.includes('components') ? 'component' : relative.endsWith('layout.alo') ? 'layout' : 'page');
@@ -256,14 +257,18 @@ test('example/ .alo files have no import, stylesheet link or local script src; l
     }
 });
 
-test('example/ output keeps Alpine.js attributes and has no reactive runtime', (t) => {
+test('Alpine.js attributes pass through unchanged, and example/ has no reactive runtime', (t) => {
+    const project = tempProject(t);
+    fs.mkdirSync(path.join(project, 'pages'));
+    fs.writeFileSync(path.join(project, 'pages', 'page.alo'), '<template><div x-data="{ open: false }"><button @click="open = !open" :aria-expanded="open" x-on:keyup.enter="go()">মেনু</button></div></template>');
+    assert.equal(alo(project, ['build']).code, 0);
+    assert.match(fs.readFileSync(path.join(project, 'dist', 'index.html'), 'utf8'), /<div x-data="\{ open: false \}"><button @click="open = !open" :aria-expanded="open" x-on:keyup\.enter="go\(\)">মেনু<\/button><\/div>/);
+
     const dir = tempProject(t, EXAMPLE);
     assert.equal(alo(dir, ['build']).code, 0);
-    const home = fs.readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8');
-    assert.match(home, /x-data="\{ open: false \}" @click="open = !open" :aria-expanded="open"/);
-
     const assets = path.join(dir, 'dist', 'assets');
     const scripts = fs.readdirSync(assets, { recursive: true }).filter((file) => String(file).endsWith('.js'));
+    assert.ok(scripts.length > 0);
     for (const file of scripts) {
         const code = fs.readFileSync(path.join(assets, String(file)), 'utf8');
         assert.doesNotMatch(code, /new Proxy|MutationObserver|reactive|createElement\(/, String(file));

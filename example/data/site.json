@@ -1,5 +1,8 @@
 {
     "name": "আলো",
+    "tagline": "HTML জানলেই পুরো ওয়েবসাইট",
+    "description": "আলো একটা হালকা স্ট্যাটিক ওয়েব ফ্রেমওয়ার্ক। সাধারণ HTML, CSS আর JS লিখে কম্পোনেন্ট, লেআউট আর ব্লগসহ সাইট বানাও।",
     "lang": "bn",
-    "url": "https://example.com"
+    "url": "https://msilabs.github.io",
+    "repository": "https://github.com/msilabs/alo"
 }
