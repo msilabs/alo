@@ -20,6 +20,9 @@
         "url": "git+https://github.com/msilabs/alo.git"
     },
     "type": "commonjs",
+    "publishConfig": {
+        "access": "public"
+    },
     "engines": {
         "node": ">=22"
     },
