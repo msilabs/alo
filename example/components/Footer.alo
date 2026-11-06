@@ -19,6 +19,7 @@
                     <li><a href="{{ data.site.repository }}">GitHub</a></li>
                     <li><a href="{{ data.site.repository }}/issues">প্রশ্ন বা সমস্যা</a></li>
                     <li><a href="https://www.npmjs.com/package/@msilabs/alo">npm প্যাকেজ</a></li>
+                    <li><a href="{{ data.site.repository }}/blob/main/LICENSE">লাইসেন্স</a></li>
                 </ul>
             </div>
         </div>
