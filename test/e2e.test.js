@@ -36,7 +36,7 @@ test('example/ builds its home page', (t) => {
     const result = alo(dir, ['build']);
 
     assert.equal(result.code, 0, result.stderr);
-    assert.match(result.stdout, /Built 10 pages/);
+    assert.match(result.stdout, /Built 11 pages/);
     assert.doesNotMatch(result.stderr, /⚠/);
     assert.ok(!fs.existsSync(path.join(dir, '.alo', 'build')), 'the temp folder should not remain');
 
@@ -53,9 +53,9 @@ test('example/ builds its home page', (t) => {
     // \{{ in a code sample stays a literal {{ in the page.
     assert.match(html, /&lt;h3&gt;\{\{ props\.title \}\}&lt;\/h3&gt;/);
 
-    // The newest three posts, with Bengali dates; the draft is not there.
-    assert.match(html, /২৭ নভেম্বর, ২০২৬[\s\S]*GitHub Pages-এ সাইট প্রকাশ[\s\S]*ডেটা থেকে পেইজ[\s\S]*কম্পোনেন্ট আর লেআউট/);
-    assert.doesNotMatch(html, /সামনে যা আসছে/);
+    // The newest three posts, with Bengali dates, newest first.
+    assert.match(html, /৭ নভেম্বর, ২০২৬[\s\S]*সামনে যা আসছে[\s\S]*GitHub Pages-এ সাইট প্রকাশ[\s\S]*ডেটা থেকে পেইজ/);
+    assert.doesNotMatch(html, /<a href="\/blog\/components-and-layouts\/">/);
 
     assert.match(html, /<div class="counter" data-start="10"/);
     assert.equal((html.match(/<div class="faq"/g) ?? []).length, 4);
@@ -73,13 +73,13 @@ test('example/ routes, route groups, layouts and 404', (t) => {
     assert.match(home, /<a href="\/" aria-current="page">হোম<\/a>/);
     assert.match(home, /<a href="\/docs\/">শুরু করুন<\/a>/);
     assert.match(home, /<footer class="site-footer">/);
-    assert.match(home, /<meta name="description" content="আলো একটি হালকা স্ট্যাটিক ওয়েব ফ্রেমওয়ার্ক।/);
+    assert.match(home, /<meta name="description" content="HTML, CSS আর JS লিখেই কম্পোনেন্ট/);
 
     const docs = read('docs/index.html');
     assert.match(docs, /<title>শুরু করুন \| আলো<\/title>/);
     assert.match(docs, /<a href="\/docs\/" aria-current="page">শুরু করুন<\/a>/);
     assert.match(docs, /<meta name="description" content="পাঁচ মিনিটে আলো দিয়ে প্রথম সাইট বানানোর গাইড।">/);
-    assert.doesNotMatch(docs, /content="আলো একটি হালকা/, 'the page description replaces the layout one');
+    assert.doesNotMatch(docs, /content="HTML, CSS আর JS লিখেই/, 'the page description replaces the layout one');
 
     const about = read('about/index.html');
     assert.equal((about.match(/badge-stable/g) ?? []).length, 0);
@@ -88,24 +88,25 @@ test('example/ routes, route groups, layouts and 404', (t) => {
 
     const blog = read('blog/index.html');
     assert.match(blog, /<main>\s*<div class="blog reading">\s*<p class="eyebrow">ব্লগ<\/p>/);
-    assert.match(blog, /মোট ৪টি লেখা/);
+    assert.match(blog, /মোট ৫টি লেখা/);
 
     const post = read('blog/introducing-alo/index.html');
-    assert.match(post, /<title>আলো এল: HTML জানলেই ওয়েবসাইট \| আলো<\/title>/);
+    assert.match(post, /<title>আলো: HTML জানলেই বানান নিজের ওয়েবসাইট \| আলো<\/title>/);
     assert.match(post, /<meta name="description" content="কেন আরেকটি ফ্রেমওয়ার্ক, আর কাদের জন্য আলো বানানো হলো।">/);
-    assert.match(post, /<time datetime="2026-11-06">৬ নভেম্বর, ২০২৬<\/time>/);
+    assert.match(post, /<time datetime="2026-11-05">৫ নভেম্বর, ২০২৬<\/time>/);
     assert.match(post, /<h2 id="যা-আলাদা">যা আলাদা<\/h2>/);
     assert.match(post, /<pre><code class="language-bash">npx @msilabs\/alo init my-site/);
     assert.match(read('blog/components-and-layouts/index.html'), /<th>কোথায় রাখবেন<\/th>/);
     const deploy = read('blog/deploy-to-github-pages/index.html');
     assert.match(deploy, /<pre><code class="language-yaml">name: Pages/);
     assert.match(deploy, /url: \$\{\{ steps\.deployment\.outputs\.page_url \}\}/, 'post bodies are not templates');
-    assert.match(read('blog/data-and-markdown/index.html'), /<time datetime="2026-11-20">২০ নভেম্বর, ২০২৬<\/time>/);
-    assert.ok(!fs.existsSync(path.join(dir, 'dist', 'blog', 'whats-next')), 'draft posts should not be in dist/');
+    assert.match(read('blog/data-and-markdown/index.html'), /<time datetime="2026-11-06">৬ নভেম্বর, ২০২৬<\/time>/);
+    assert.match(read('blog/whats-next/index.html'), /<time datetime="2026-11-07">৭ নভেম্বর, ২০২৬<\/time>/);
 
     const launch = read('launch/index.html');
     assert.doesNotMatch(launch, /site-header|site-footer/);
     assert.match(launch, /<meta name="robots" content="noindex">/);
+    assert.match(launch, /<h1>আলো ১\.০ এসেছে<\/h1>/);
     assert.match(launch, /fonts\.googleapis\.com/, 'the root layout wraps route groups too');
 
     const notFound = read('404.html');
@@ -188,6 +189,7 @@ test('example/ production output: hashes, sitemap, robots', (t) => {
         'https://msilabs.github.io/blog/data-and-markdown/',
         'https://msilabs.github.io/blog/deploy-to-github-pages/',
         'https://msilabs.github.io/blog/introducing-alo/',
+        'https://msilabs.github.io/blog/whats-next/',
         'https://msilabs.github.io/docs/',
     ]);
     assert.equal(read('robots.txt'), 'User-agent: *\nAllow: /\nSitemap: https://msilabs.github.io/sitemap.xml\n');
