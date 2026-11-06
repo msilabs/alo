@@ -83,8 +83,8 @@ test('example/ routes, route groups, layouts and 404', (t) => {
 
     const about = read('about/index.html');
     assert.equal((about.match(/badge-stable/g) ?? []).length, 0);
-    assert.match(about, /<span class="badge badge-beta">পরীক্ষামূলক<\/span>/);
-    assert.equal((about.match(/<span class="badge badge-planned">আসছে<\/span>/g) ?? []).length, 2);
+    assert.doesNotMatch(about, /badge-beta/);
+    assert.equal((about.match(/<span class="badge badge-planned">আসছে<\/span>/g) ?? []).length, 3);
 
     const blog = read('blog/index.html');
     assert.match(blog, /<main>\s*<div class="blog reading">\s*<p class="eyebrow">ব্লগ<\/p>/);

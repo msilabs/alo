@@ -51,6 +51,6 @@
         "icon": "editor",
         "title": "VS Code এক্সটেনশন",
         "text": "{{ }} আর কম্পোনেন্টের নামে অটোকমপ্লিট।",
-        "status": "beta"
+        "status": "planned"
     }
 ]
