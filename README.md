@@ -48,7 +48,7 @@ Claude, ChatGPT, Cursor বা Copilot-এর মতো AI সহকারী Al
 
 1. **পেইজ:** `pages/about/page.alo` মানে `/about/`।
 2. **লেআউট:** `layout.alo` তার ফোল্ডারের সব পেইজকে মোড়ায়। পেইজ বসে `<slot />`-এর জায়গায়।
-3. **কম্পোনেন্ট:** `components/Card.alo` থাকলে লেখা যায় `<Card title="হ্যালো" />`। অ্যাট্রিবিউটই প্রপস; কম্পোনেন্টের ভেতরে পড়ুন `{{ props.title }}`।
+3. **কম্পোনেন্ট:** `components/Card.alo` থাকলে লেখা যায় `<Card title="হ্যালো" />`। ফোল্ডারে থাকলে ট্যাগে আসে ফোল্ডারের নামসহ পুরো নাম: `components/blog/PostCard.alo` মানে `<Blog.PostCard />`। অ্যাট্রিবিউটই প্রপস; কম্পোনেন্টের ভেতরে পড়ুন `{{ props.title }}`।
 4. **ডেটা:** `data/team.json` হয় `data.team`। `data/blog/` ফোল্ডারের JSON বা Markdown ফাইলগুলো হয় `data.blog` অ্যারে।
 5. **টেমপ্লেট:** `{{ }}` দিয়ে মান বসানো। লুপ আর শর্ত লেখা হয় শুধু `<template>` ট্যাগে: `for`, `if`, `else-if`, `else`।
 6. **CSS:** `<style>`-এর CSS শুধু সেই ফাইলে প্রযোজ্য হয়। `global/` ফোল্ডারের CSS প্রযোজ্য হয় সব পেইজে।
@@ -121,13 +121,7 @@ pages/
 
 ## কম্পোনেন্ট আর প্রপস
 
-বড় হাতের অক্ষর দিয়ে শুরু হওয়া ট্যাগ মানেই কম্পোনেন্ট, ছোট হাতের অক্ষর দিয়ে শুরু হলে HTML। ফোল্ডারের নাম Dot Notation অনুযায়ী হয়:
-
-| ফাইল                                 | ট্যাগ                   |
-| ------------------------------------ | ----------------------- |
-| `components/Card.alo`                | `<Card />`              |
-| `components/blog/PostCard.alo`       | `<Blog.PostCard />`     |
-| `components/post-list/Item.alo`      | `<PostList.Item />`     |
+বড় হাতের অক্ষর দিয়ে শুরু হওয়া ট্যাগ মানেই কম্পোনেন্ট, ছোট হাতের অক্ষর দিয়ে শুরু হলে HTML। `components/Card.alo` ফাইলটিই `<Card />`; কোনো `import` লাগে না, আর পেইজ, লেআউট বা অন্য কম্পোনেন্ট, সব জায়গায় চলে। ফোল্ডারে রাখা কম্পোনেন্টের নিয়ম আছে নিচে, [ফোল্ডারে কম্পোনেন্ট](#ফোল্ডারে-কম্পোনেন্ট) অংশে।
 
 ```html
 <!-- components/Card.alo -->
@@ -160,6 +154,74 @@ pages/
 `<slot />`-এ বসে কম্পোনেন্ট ট্যাগের ভেতরের কনটেন্ট। সেই কনটেন্ট রেন্ডার হয় ডাকার জায়গার ভেরিয়েবল দিয়েই। কিছু না পাঠালে দেখায় `<slot>`-এর ভেতরের ফলব্যাক।
 
 ভুল নামের প্রপ পাঠালে Alo সতর্ক করে: "`<Card>`-এ `titel` কোথাও ব্যবহার হয়নি। আপনি কি `title` বোঝাতে চেয়েছিলেন?"
+
+### ফোল্ডারে কম্পোনেন্ট
+
+কম্পোনেন্ট বাড়লে সেগুলো ফোল্ডারে সাজান। তখন ট্যাগের নামের সামনে ডট দিয়ে বসে ফোল্ডারের নাম:
+
+| ফাইল                                 | ট্যাগ                     |
+| ------------------------------------ | ------------------------- |
+| `components/Card.alo`                | `<Card />`                |
+| `components/blog/PostCard.alo`       | `<Blog.PostCard />`       |
+| `components/post-list/Item.alo`      | `<PostList.Item />`       |
+| `components/shop/cart-items/Row.alo` | `<Shop.CartItems.Row />`  |
+
+নিয়ম চারটি:
+
+1. **ফোল্ডারের নাম ছোট হাতের অক্ষরে**, শব্দের মাঝে `-`: `blog`, `post-list`। ট্যাগে সেটি হয় বড় হাতের অক্ষরে শুরু, `-` ছাড়া: `Blog`, `PostList`।
+2. **ফাইলের নাম বড় হাতের অক্ষরে শুরু**, প্রতিটি শব্দও বড় হাতের অক্ষরে: `PostCard.alo`।
+3. **সবসময় পুরো নাম লিখুন**, যেখান থেকেই ডাকুন: পেইজ, লেআউট, অন্য কম্পোনেন্ট, এমনকি **একই ফোল্ডারের** কম্পোনেন্ট থেকেও। বন্ধ করার ট্যাগেও পুরো নাম: `<Blog.PostCard>…</Blog.PostCard>`।
+4. ফোল্ডার যত গভীরেই হোক, নিয়ম একই। ফোল্ডারের ভেতরে `.alo` ছাড়া অন্য ফাইল থাকলে Alo সতর্ক করে আর ফাইলটি বাদ দেয়।
+
+একই ফোল্ডারের দুটি কম্পোনেন্ট, আর একটি পেইজ যা সেগুলো ব্যবহার করে:
+
+```html
+<!-- components/blog/PostCard.alo -->
+<template>
+    <article class="post-card">
+        <h3><a href="/blog/{{ props.post.slug }}/">{{ props.post.title }}</a></h3>
+    </article>
+</template>
+```
+
+```html
+<!-- components/blog/PostList.alo -->
+<template>
+    <div class="post-list">
+        <template for="post in props.posts">
+            <Blog.PostCard post="{{ post }}" />
+        </template>
+    </div>
+</template>
+```
+
+```html
+<!-- pages/blog/page.alo -->
+<template>
+    <h1>ব্লগ</h1>
+    <Blog.PostList posts="{{ data.blog }}" />
+</template>
+```
+
+`PostList` আর `PostCard` একই ফোল্ডারে, তবু `PostList` লেখে `<Blog.PostCard />`, শুধু `<PostCard />` নয়। ফলে একটি কম্পোনেন্টের নাম সব জায়গায় একই থাকে, আর নাম দেখেই বোঝা যায় ফাইলটি কোথায়।
+
+ফোল্ডারসহ নতুন কম্পোনেন্ট বানাতে:
+
+```bash
+node alo new component blog/PostCard   # components/blog/PostCard.alo
+```
+
+সাধারণ ভুলগুলোতে Alo এরর দেখায় আর ঠিক নামটি বলে দেয়:
+
+| যা লিখেছেন                                        | Alo যা বলে                                         | ঠিক যেভাবে                     |
+| ------------------------------------------------- | -------------------------------------------------- | ------------------------------ |
+| `components/blog/PostList.alo`-এ `<PostCard />`   | Did you mean `<Blog.PostCard>`?                    | `<Blog.PostCard />`            |
+| `<blog.PostCard />`                               | `<blog.PostCard>` is not an HTML tag.              | `<Blog.PostCard />`            |
+| `<Blog.PostCard>…</PostCard>`                     | `</PostCard>` has no matching `<PostCard>`.        | `</Blog.PostCard>`             |
+| `components/Blog/PostCard.alo`                    | Component folder name `Blog` is not allowed.       | `components/blog/PostCard.alo` |
+| `components/blog/post-card.alo`                   | Component file name `post-card.alo` is not allowed. | `components/blog/PostCard.alo` |
+
+VS Code এক্সটেনশনে `<` লিখলে ফোল্ডারের কম্পোনেন্টগুলোও পুরো নামসহ তালিকায় আসে।
 
 ## `{{ }}` আর `<template>` লজিক
 
@@ -360,7 +422,7 @@ pages/
 
 প্যারেন্টের স্কোপড CSS চাইল্ড কম্পোনেন্টের ভেতরে পৌঁছায় না। চাইল্ডকে স্টাইল দেওয়ার দুটি উপায়:
 
-- **`class` প্রপ পাঠান:** `<Card class="highlight" />`। কম্পোনেন্টে লেখা থাকে `class="card {{ props.class }}"`, তাই রুটে `highlight` বসে, আর প্যারেন্টের স্টাইল প্রযোজ্য হয়।
+- **`class` প্রপ পাঠান:** `<Card class="highlight" />`। কম্পোনেন্টে লেখা থাকে `class="card {{ props.class }}"`, তাই রুটে `highlight` বসে। সেই class-এর স্টাইল লিখুন কম্পোনেন্টের নিজের `<style>`-এ (`.card.highlight { … }`) অথবা প্যারেন্টের `<style global>`-এ। প্যারেন্টের সাধারণ `<style>` এখানে কাজ করে না, কারণ সেটি শুধু প্যারেন্টের নিজের এলিমেন্টে লাগে।
 - **`<style global>` ব্যবহার করুন।** `{{{ }}}` দিয়ে বসানো Markdown-এর মতো কনটেন্ট স্টাইল করতেও এটিই লাগে।
 
 ## ইন্টারঅ্যাকটিভিটি

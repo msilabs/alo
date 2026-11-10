@@ -40,6 +40,25 @@ public/       ← ছবি, ফন্ট, favicon</code></pre>
                 <p>অথবা চালান <code>node alo new page contact</code>।</p>
             </li>
             <li>
+                <h2>কম্পোনেন্ট বানান</h2>
+                <p>যে অংশ বারবার লাগে, সেটি রাখুন <code>components/</code> ফোল্ডারে। ফাইলের নামই ট্যাগের নাম, আর অ্যাট্রিবিউটগুলো পড়া হয় <code>props</code> থেকে:</p>
+                <pre><code>&lt;!-- components/Badge.alo --&gt;
+&lt;template&gt;
+    &lt;span class="badge"&gt;\{{ props.label }}&lt;/span&gt;
+&lt;/template&gt;</code></pre>
+                <p>এরপর যেকোনো পেইজ, লেআউট বা কম্পোনেন্টে লিখুন <code>&lt;Badge label="নতুন" /&gt;</code>। কোনো <code>import</code> লাগে না।</p>
+                <p>কম্পোনেন্ট ফোল্ডারে রাখলে ট্যাগে আসে ফোল্ডারের নামসহ পুরো নাম:</p>
+                <pre><code>components/Card.alo            → &lt;Card /&gt;
+components/blog/PostCard.alo   → &lt;Blog.PostCard /&gt;
+components/post-list/Item.alo  → &lt;PostList.Item /&gt;</code></pre>
+                <ul class="rules">
+                    <li>ফোল্ডারের নাম ছোট হাতের অক্ষরে (<code>post-list</code>), ফাইলের নাম বড় হাতের অক্ষরে শুরু (<code>PostCard.alo</code>)।</li>
+                    <li>সবসময় পুরো নাম লিখুন, <strong>একই ফোল্ডারের ভেতর থেকেও</strong>: <code>components/blog/PostList.alo</code>-এ লিখুন <code>&lt;Blog.PostCard /&gt;</code>, শুধু <code>&lt;PostCard /&gt;</code> নয়।</li>
+                    <li>বন্ধ করার ট্যাগেও পুরো নাম: <code>&lt;Blog.PostCard&gt;…&lt;/Blog.PostCard&gt;</code>।</li>
+                </ul>
+                <p>নাম ভুল হলে আলো এরর দেখায় আর ঠিক নামটি বলে দেয়। ফোল্ডারসহ নতুন কম্পোনেন্ট বানাতে চালান <code>node alo new component blog/PostCard</code>।</p>
+            </li>
+            <li>
                 <h2>তালিকা আর শর্ত</h2>
                 <p>লুপ আর শর্ত লেখা হয় শুধু <code>&lt;template&gt;</code> ট্যাগে। এগুলো চলে বিল্ডের সময়, একবার:</p>
                 <pre><code>&lt;ul&gt;
@@ -129,5 +148,13 @@ public/       ← ছবি, ফন্ট, favicon</code></pre>
 
     .steps p {
         margin-block: 0.75rem;
+    }
+
+    .rules {
+        padding-left: 1.25rem;
+    }
+
+    .rules li {
+        margin-block: 0.4rem;
     }
 </style>

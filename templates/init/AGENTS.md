@@ -32,6 +32,7 @@ public/                 copied to dist/ byte for byte
 ```
 
 - Component files and folders: `PascalCase.alo` files; a kebab-case folder becomes PascalCase (`post-list/Item.alo` -> `<PostList.Item />`).
+- A component in a folder is always written with its full name, from anywhere, even from a component in the same folder: inside `components/blog/PostList.alo` write `<Blog.PostCard />`, never `<PostCard />`. The closing tag too: `</Blog.PostCard>`.
 - The dynamic folder is always named `[slug]`, one level only, and it must be the last path segment.
 - Start a tag with a capital letter for a component, lower case for HTML.
 
@@ -99,7 +100,7 @@ Up to four top-level blocks, all optional. Nothing else may sit outside them.
 ## CSS and JavaScript
 
 - `<style>` is scoped to its own file. `<style global>` is not scoped. A file may have one of each.
-- A parent's scoped CSS does not reach a child component. Pass `class` as a prop or use `<style global>`.
+- A parent's scoped CSS does not reach a child component, not even its root. Pass `class` as a prop and style that class in the component's own `<style>` (`.card.highlight`) or in the parent's `<style global>`.
 - Scoped styles cannot target `:root`, `html` or `body`. Put those in `global/*.css` or `<style global>`.
 - A component `<script>` runs once per instance. `$el` is the component's root element. Pass build-time data with `data-*`: `data-start="{{ props.start }}"`, read `$el.dataset.start`.
 - Page and layout scripts have no `$el`; use `document.querySelector`.
@@ -131,6 +132,8 @@ node alo new post blog/hello-world
 | `{{ title }}` in a component | `{{ props.title }}` |
 | `<Card :post="post" />` | `<Card post="{{ post }}" />` |
 | `import Card from './Card.alo'` | nothing; `<Card />` just works |
+| `<PostCard />` for `components/blog/PostCard.alo` | `<Blog.PostCard />`, also inside `components/blog/` |
+| `<blog.PostCard />` | `<Blog.PostCard />` |
 | `<link rel="stylesheet" href="style.css">` | put CSS in `<style>` or `global/` |
 | `{{ item.title }}` inside a component | pass `item` as a prop |
 | `href="about"` or `href="/about"` | `href="/about/"` |

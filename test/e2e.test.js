@@ -80,6 +80,8 @@ test('site/ routes, route groups, layouts and 404', (t) => {
     assert.match(docs, /<a href="\/docs\/" aria-current="page">শুরু করুন<\/a>/);
     assert.match(docs, /<meta name="description" content="পাঁচ মিনিটে আলো দিয়ে প্রথম সাইট বানানোর গাইড।">/);
     assert.doesNotMatch(docs, /<meta name="description" content="HTML, CSS আর JS লিখেই/, 'the page description replaces the layout one');
+    assert.match(docs, /<h2>কম্পোনেন্ট বানান<\/h2>[\s\S]*components\/blog\/PostCard\.alo   → &lt;Blog\.PostCard \/&gt;/);
+    assert.match(docs, /&lt;span class="badge"&gt;\{\{ props\.label \}\}&lt;\/span&gt;/, '\\{{ in the component sample stays literal');
 
     const about = read('about/index.html');
     assert.equal((about.match(/badge-stable/g) ?? []).length, 0);
