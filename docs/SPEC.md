@@ -83,7 +83,7 @@ Alo একটি বিল্ড-টাইম টুল। ডেভেলপা
 
 ### পরে ভাবা হবে (আসল ব্যবহারকারীরা চাইলে, আর অংশ ০-এর পরীক্ষা পাস করলে)
 
-পেজিনেশন, নামযুক্ত স্লট, একাধিক লেভেলের ডায়নামিক রাউট, JS মিনিফাই, VS Code এক্সটেনশন, প্রাইভেট কম্পোনেন্ট, প্রপস ঘোষণা।
+পেজিনেশন, নামযুক্ত স্লট, একাধিক লেভেলের ডায়নামিক রাউট, JS মিনিফাই, প্রাইভেট কম্পোনেন্ট, প্রপস ঘোষণা।
 
 ### কখনো না
 
@@ -176,7 +176,7 @@ try {
 }
 ```
 
-`init` আরও বানাবে: উদাহরণ পেইজ, কম্পোনেন্ট, ডেটা আর Markdown পোস্ট; `.gitignore` (`node_modules/`, `dist/`, `.alo/`); `.gitattributes`; `.vscode/settings.json` (অংশ ২১)।
+`init` আরও বানাবে: উদাহরণ পেইজ, কম্পোনেন্ট, ডেটা আর Markdown পোস্ট; `.gitignore` (`node_modules/`, `dist/`, `.alo/`); `.gitattributes`; `.vscode/settings.json` আর `.vscode/extensions.json` (অংশ ২১)।
 
 ---
 
@@ -1073,11 +1073,18 @@ README Alo-কে স্বতন্ত্রভাবে পরিচয় ক
 
 ## ২১. এডিটর সেটিংস (`init` নিজে বানাবে)
 
-`.vscode/settings.json`:
+`.vscode/extensions.json`, যাতে VS Code [Alo এক্সটেনশন](https://marketplace.visualstudio.com/items?itemName=msilabs.alo-vscode) ইনস্টলের প্রস্তাব দেয়:
 
 ```json
 {
-    "files.associations": { "*.alo": "html" },
+    "recommendations": ["msilabs.alo-vscode"]
+}
+```
+
+`.vscode/settings.json`। এখানে `"*.alo": "html"` নেই, কারণ সেটি এক্সটেনশনের `alo` ভাষাকে চাপা দেয় (DECISIONS #৮৯):
+
+```json
+{
     "workbench.editor.customLabels.patterns": {
         "**/pages/**/page.alo": "${dirname} (page)",
         "**/pages/**/layout.alo": "${dirname} (layout)"
@@ -1202,4 +1209,4 @@ README Alo-কে স্বতন্ত্রভাবে পরিচয় ক
 | ১৪  | শুধু CSS মিনিফাই হয়; JS আর HTML হয় না                                                                                | ঝুঁকি বেশি, লাভ কম                      |
 | ১৫  | sitemap তৈরির জন্য `site.url` (শুধু origin) প্রয়োজন; `noindex` পেইজ বাদ; `<lastmod>` নেই                                             | কনফিগারেশন ছাড়া বাদ দেওয়া যায়             |
 | ১৬  | dev-এ প্রতিবার পুরো রিবিল্ড, শুধু বদলানো ফাইলের ক্যাশ বাতিল                                                            | জটিলতা এড়ানো                           |
-| ১৭  | পেজিনেশন, নামযুক্ত স্লট, একাধিক লেভেলের রাউট, JS মিনিফাই, VS Code এক্সটেনশন — পরে, ব্যবহারকারীরা চাইলে                 | আগে আসল ব্যবহার দেখা                    |
+| ১৭  | পেজিনেশন, নামযুক্ত স্লট, একাধিক লেভেলের রাউট, JS মিনিফাই — পরে, ব্যবহারকারীরা চাইলে (VS Code এক্সটেনশন এসেছে, #৮৯)       | আগে আসল ব্যবহার দেখা                    |

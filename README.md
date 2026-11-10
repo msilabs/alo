@@ -395,25 +395,22 @@ node alo --version
   - `public/`-এর সবকিছু হুবহু কপি হয়।
 - এরর হলে পুরনো `dist/` অক্ষত থাকে।
 
-## এডিটর সেটিংস
+## এডিটর
 
-`init` এগুলো নিজেই বানায়। `.vscode/settings.json`:
+VS Code-এর জন্য আছে [Alo এক্সটেনশন](https://marketplace.visualstudio.com/items?itemName=msilabs.alo-vscode):
 
-```json
-{
-    "files.associations": { "*.alo": "html" },
-    "workbench.editor.customLabels.patterns": {
-        "**/pages/**/page.alo": "${dirname} (page)",
-        "**/pages/**/layout.alo": "${dirname} (layout)"
-    }
-}
-```
+- `{{ }}` আর `<template>` লজিকের রঙ, আর কম্পোনেন্ট ট্যাগের আলাদা রঙ।
+- কম্পোনেন্ট, প্রপস, `data.` আর `item.`-এর অটোকমপ্লিট; Ctrl/Cmd-ক্লিকে কম্পোনেন্ট বা ডেটার ফাইল খোলে।
+- লেখার সময়েই Alo-র এরর আর সতর্কবার্তা, সাথে এক ক্লিকের সমাধান, যেমন "`<Crad>` → `<Card>`"।
+- নতুন পেইজ বা কম্পোনেন্ট বানানো, dev সার্ভার আর বিল্ডের কমান্ড।
 
-`.gitattributes`, যাতে GitHub `.alo` ফাইলকে HTML হিসেবে দেখায়:
+`init` দিয়ে বানানো প্রজেক্ট খুললে VS Code নিজেই এক্সটেনশনটি ইনস্টলের প্রস্তাব দেয়। `init` যা বানায়:
 
-```
-*.alo linguist-language=HTML
-```
+- `.vscode/extensions.json`: এক্সটেনশনটির সুপারিশ।
+- `.vscode/settings.json`: ট্যাবে শুধু `page.alo` না দেখিয়ে ফোল্ডারের নাম, যেমন "about (page)"।
+- `.gitattributes`, যাতে GitHub `.alo` ফাইলকে HTML হিসেবে দেখায়: `*.alo linguist-language=HTML`
+
+অন্য এডিটরে `.alo` ফাইল HTML হিসেবে খুলুন।
 
 ## ডিপ্লয়
 
