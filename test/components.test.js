@@ -94,6 +94,12 @@ test('an uppercase HTML tag name gets a lowercase hint', () => {
     assert.match(siteError({ 'pages/page.alo': '<template><Header /></template>' }).hint, /`<header>`/);
 });
 
+test('a bad folder name is a normal error during a build, not a crash', () => {
+    const err = siteError({ 'pages/page.alo': '<template><p>a</p></template>', 'components/Blog/Card.alo': '' });
+    assert.equal(err.message, 'Component folder name `Blog` is not allowed.');
+    assert.equal(err.file, 'components/Blog');
+});
+
 test('without a close name, the hint says which file to create', () => {
     assert.equal(siteError({ 'pages/page.alo': '<template><Blog.Sidebar /></template>' }).hint, 'Create the component: `components/blog/Sidebar.alo`');
 });
