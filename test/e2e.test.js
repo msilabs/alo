@@ -36,7 +36,7 @@ test('site/ builds its home page', (t) => {
     const result = alo(dir, ['build']);
 
     assert.equal(result.code, 0, result.stderr);
-    assert.match(result.stdout, /Built 11 pages/);
+    assert.match(result.stdout, /Built 12 pages/);
     assert.doesNotMatch(result.stderr, /⚠/);
     assert.ok(!fs.existsSync(path.join(dir, '.alo', 'build')), 'the temp folder should not remain');
 
@@ -46,16 +46,17 @@ test('site/ builds its home page', (t) => {
     assert.match(html, /<h1>HTML জানলেই<br>পুরো ওয়েবসাইট<\/h1>/);
     assert.match(html, /fonts\.googleapis\.com\/css2\?family=Inter/);
 
-    // Six stable features on the home page, each with its status badge from the if/else-if chain.
-    assert.equal((html.match(/<span class="badge badge-stable">চালু<\/span>/g) ?? []).length, 6);
+    // Seven stable features on the home page, each with its status badge from the if/else-if chain.
+    assert.equal((html.match(/<span class="badge badge-stable">চালু<\/span>/g) ?? []).length, 7);
+    assert.match(html, /<div class="grid features-grid"/);
     assert.doesNotMatch(html, /badge-planned|badge-beta/);
 
     // \{{ in a code sample stays a literal {{ in the page.
     assert.match(html, /&lt;h3&gt;\{\{ props\.title \}\}&lt;\/h3&gt;/);
 
     // The newest three posts, with Bengali dates, newest first.
-    assert.match(html, /৭ নভেম্বর, ২০২৬[\s\S]*সামনে যা আসছে[\s\S]*GitHub Pages-এ সাইট প্রকাশ[\s\S]*ডেটা থেকে পেইজ/);
-    assert.doesNotMatch(html, /<a href="\/blog\/components-and-layouts\/">/);
+    assert.match(html, /১১ নভেম্বর, ২০২৬[\s\S]*আলোর VS Code এক্সটেনশন এসেছে[\s\S]*সামনে যা আসছে[\s\S]*GitHub Pages-এ সাইট প্রকাশ/);
+    assert.doesNotMatch(html, /<a href="\/blog\/data-and-markdown\/">/);
 
     assert.match(html, /<div class="counter" data-start="10"/);
     assert.equal((html.match(/<div class="faq"/g) ?? []).length, 4);
@@ -90,7 +91,7 @@ test('site/ routes, route groups, layouts and 404', (t) => {
 
     const blog = read('blog/index.html');
     assert.match(blog, /<main>\s*<div class="blog reading">\s*<p class="eyebrow">ব্লগ<\/p>/);
-    assert.match(blog, /মোট ৫টি লেখা/);
+    assert.match(blog, /মোট ৬টি লেখা/);
 
     const post = read('blog/introducing-alo/index.html');
     assert.match(post, /<title>আলো: HTML জানলেই বানান নিজের ওয়েবসাইট \| আলো<\/title>/);
@@ -104,6 +105,9 @@ test('site/ routes, route groups, layouts and 404', (t) => {
     assert.match(deploy, /url: \$\{\{ steps\.deployment\.outputs\.page_url \}\}/, 'post bodies are not templates');
     assert.match(read('blog/data-and-markdown/index.html'), /<time datetime="2026-11-06">৬ নভেম্বর, ২০২৬<\/time>/);
     assert.match(read('blog/whats-next/index.html'), /<time datetime="2026-11-07">৭ নভেম্বর, ২০২৬<\/time>/);
+    const extension = read('blog/vscode-extension/index.html');
+    assert.match(extension, /<time datetime="2026-11-11">১১ নভেম্বর, ২০২৬<\/time>/);
+    assert.match(extension, /<a href="https:\/\/marketplace\.visualstudio\.com\/items\?itemName=msilabs\.alo-vscode">/);
 
     const launch = read('launch/index.html');
     assert.doesNotMatch(launch, /site-header|site-footer/);
@@ -191,6 +195,7 @@ test('site/ production output: hashes, sitemap, robots', (t) => {
         'https://msilabs.github.io/blog/data-and-markdown/',
         'https://msilabs.github.io/blog/deploy-to-github-pages/',
         'https://msilabs.github.io/blog/introducing-alo/',
+        'https://msilabs.github.io/blog/vscode-extension/',
         'https://msilabs.github.io/blog/whats-next/',
         'https://msilabs.github.io/docs/',
     ]);
