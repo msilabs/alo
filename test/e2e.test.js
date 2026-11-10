@@ -49,6 +49,12 @@ test('site/ builds its home page', (t) => {
     // Seven stable features on the home page, each with its status badge from the if/else-if chain.
     assert.equal((html.match(/<span class="badge badge-stable">চালু<\/span>/g) ?? []).length, 7);
     assert.match(html, /<div class="grid features-grid"/);
+    // Only the VS Code card is marked new, with its list of points and a link to its post.
+    assert.equal((html.match(/<span class="badge badge-new">নতুন<\/span>/g) ?? []).length, 1);
+    assert.equal((html.match(/<article class="feature" data-new="true">/g) ?? []).length, 1);
+    assert.equal((html.match(/<article class="feature">/g) ?? []).length, 6, 'no data-new attribute on the other cards');
+    assert.match(html, /<ul class="points">\s*<li>&lt; লিখলেই সব কম্পোনেন্টের তালিকা/);
+    assert.match(html, /<a class="more" href="\/blog\/vscode-extension\/">কীভাবে ইনস্টল আর ব্যবহার করবেন →<\/a>/);
     assert.doesNotMatch(html, /badge-planned|badge-beta/);
 
     // \{{ in a code sample stays a literal {{ in the page.

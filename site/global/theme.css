@@ -172,3 +172,8 @@ pre {
     background: var(--accent-soft);
     color: var(--accent-strong);
 }
+
+.badge-new {
+    background: var(--accent);
+    color: #1f1a14;
+}
