@@ -1,6 +1,8 @@
 # আলো (Alo)
 
+[![npm](https://img.shields.io/npm/v/@msilabs/alo)](https://www.npmjs.com/package/@msilabs/alo)
 [![CI](https://github.com/msilabs/alo/actions/workflows/ci.yml/badge.svg)](https://github.com/msilabs/alo/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/npm/l/@msilabs/alo)](LICENSE)
 
 **হালকা স্ট্যাটিক ওয়েব ফ্রেমওয়ার্ক।** HTML, CSS আর JS লিখুন, সাথে পান কম্পোনেন্ট, লেআউট আর সহজ লুপ ও শর্ত। বিল্ড করলে পাবেন পুরোপুরি স্ট্যাটিক সাইট। Node.js ছাড়া আর কিছু লাগে না।
 
