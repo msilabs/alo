@@ -8,7 +8,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const BIN = path.join(__dirname, '..', 'bin', 'alo.js');
-const EXAMPLE = path.join(__dirname, '..', 'example');
+const EXAMPLE = path.join(__dirname, '..', 'site');
 
 function tempProject(t, from) {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'alo-e2e-'));
@@ -31,7 +31,7 @@ function alo(cwd, args) {
     return { code: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
-test('example/ builds its home page', (t) => {
+test('site/ builds its home page', (t) => {
     const dir = tempProject(t, EXAMPLE);
     const result = alo(dir, ['build']);
 
@@ -63,7 +63,7 @@ test('example/ builds its home page', (t) => {
     assert.doesNotMatch(html, /<Card|<Blog\.PostCard|<Feature|<slot|<template (for|if|else)/);
 });
 
-test('example/ routes, route groups, layouts and 404', (t) => {
+test('site/ routes, route groups, layouts and 404', (t) => {
     const dir = tempProject(t, EXAMPLE);
     assert.equal(alo(dir, ['build']).code, 0);
     const read = (file) => withoutScope(fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8'));
@@ -125,7 +125,7 @@ function linkedAssets(html) {
     return [...html.matchAll(/<(?:script src|link rel="stylesheet" href)="(\/[^"]*)"/g)].map((m) => m[1]);
 }
 
-test('example/ CSS: global/ first, scoped styles, minified, linked on every page', (t) => {
+test('site/ CSS: global/ first, scoped styles, minified, linked on every page', (t) => {
     const dir = tempProject(t, EXAMPLE);
     assert.equal(alo(dir, ['build']).code, 0);
     const read = (file) => fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8');
@@ -145,7 +145,7 @@ test('example/ CSS: global/ first, scoped styles, minified, linked on every page
     assert.match(read('launch/index.html'), /stylesheet/);
 });
 
-test('example/ JS: only the scripts a page needs, data-a-c on component roots', (t) => {
+test('site/ JS: only the scripts a page needs, data-a-c on component roots', (t) => {
     const dir = tempProject(t, EXAMPLE);
     assert.equal(alo(dir, ['build']).code, 0);
     const read = (file) => fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8');
@@ -167,7 +167,7 @@ test('example/ JS: only the scripts a page needs, data-a-c on component roots', 
     assert.match(globalJs, /^\/\* global\/main\.js \*\//);
 });
 
-test('example/ production output: hashes, sitemap, robots', (t) => {
+test('site/ production output: hashes, sitemap, robots', (t) => {
     const dir = tempProject(t, EXAMPLE);
     const result = alo(dir, ['build']);
     assert.equal(result.code, 0);
@@ -195,7 +195,7 @@ test('example/ production output: hashes, sitemap, robots', (t) => {
     assert.equal(read('robots.txt'), 'User-agent: *\nAllow: /\nSitemap: https://msilabs.github.io/sitemap.xml\n');
 });
 
-test('example/ with --base /repo/: every link, image, CSS and JS has the base', (t) => {
+test('site/ with --base /repo/: every link, image, CSS and JS has the base', (t) => {
     const dir = tempProject(t, EXAMPLE);
     assert.equal(alo(dir, ['build', '--base', 'repo']).code, 0);
     const read = (file) => fs.readFileSync(path.join(dir, 'dist', ...file.split('/')), 'utf8');
@@ -222,7 +222,7 @@ test('example/ with --base /repo/: every link, image, CSS and JS has the base', 
     assert.match(read('robots.txt'), /Sitemap: https:\/\/msilabs\.github\.io\/repo\/sitemap\.xml/);
 });
 
-test('example/ .alo files have no import, local stylesheet link or local script src; logic only on <template>', () => {
+test('site/ .alo files have no import, local stylesheet link or local script src; logic only on <template>', () => {
     const { parseSfc } = require('../core/sfc.js');
     const files = [];
     const walk = (dir) => {
@@ -236,7 +236,7 @@ test('example/ .alo files have no import, local stylesheet link or local script 
         }
     };
     walk(EXAMPLE);
-    assert.ok(files.length >= 15, 'the example should have enough .alo files');
+    assert.ok(files.length >= 15, 'the site should have enough .alo files');
 
     const logic = ['for', 'if', 'else-if', 'else'];
     for (const file of files) {
@@ -263,7 +263,7 @@ test('example/ .alo files have no import, local stylesheet link or local script 
     }
 });
 
-test('Alpine.js attributes pass through unchanged, and example/ has no reactive runtime', (t) => {
+test('Alpine.js attributes pass through unchanged, and site/ has no reactive runtime', (t) => {
     const project = tempProject(t);
     fs.mkdirSync(path.join(project, 'pages'));
     fs.writeFileSync(path.join(project, 'pages', 'page.alo'), '<template><div x-data="{ open: false }"><button @click="open = !open" :aria-expanded="open" x-on:keyup.enter="go()">মেনু</button></div></template>');

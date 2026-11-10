@@ -513,7 +513,7 @@ jobs:
 git clone https://github.com/msilabs/alo.git
 cd alo
 npm test
-cd example && node ../bin/alo.js dev
+cd site && node ../bin/alo.js dev
 ```
 
 - পুরো স্পেক: [docs/SPEC.md](docs/SPEC.md)
