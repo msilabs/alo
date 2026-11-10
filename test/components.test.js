@@ -100,6 +100,37 @@ test('a bad folder name is a normal error during a build, not a crash', () => {
     assert.equal(err.file, 'components/Blog');
 });
 
+test('a component in a folder written without the folder suggests its full name', () => {
+    const err = siteError({
+        'pages/page.alo': '<template><Blog.PostList /></template>',
+        'components/blog/PostList.alo': '<template>\n  <PostCard />\n</template>',
+        'components/blog/PostCard.alo': '<template>c</template>',
+    });
+    assert.equal(err.message, 'Component `<PostCard>` not found.');
+    assert.equal(err.hint, 'Did you mean `<Blog.PostCard>`? (components/blog/PostCard.alo)\nA component in a folder is always written with its full name, even inside the same folder.');
+    assert.equal(err.file, 'components/blog/PostList.alo');
+
+    const partly = siteError({ 'pages/page.alo': '<template><Cards.Featured /></template>', 'components/blog/cards/Featured.alo': '' });
+    assert.match(partly.hint, /^Did you mean `<Blog\.Cards\.Featured>`\?/);
+});
+
+test('a name found in several folders lists them all', () => {
+    const err = siteError({
+        'pages/page.alo': '<template><Card /></template>',
+        'components/blog/Card.alo': '',
+        'components/shop/Card.alo': '',
+    });
+    assert.equal(err.hint, 'It could be `<Blog.Card>` or `<Shop.Card>`.\nA component in a folder is always written with its full name, even inside the same folder.');
+});
+
+test('a lowercase tag with a dot is an error with the component spelling', () => {
+    const err = siteError({ 'pages/page.alo': '<template>\n  <blog.PostCard />\n</template>', 'components/blog/PostCard.alo': '' });
+    assert.equal(err.message, '`<blog.PostCard>` is not an HTML tag.');
+    assert.equal(err.hint, 'For the component, write `<Blog.PostCard>` (components/blog/PostCard.alo).');
+    assert.deepEqual([err.line, err.column], [2, 3]);
+    assert.equal(siteError({ 'pages/page.alo': '<template><post-list.item /></template>' }).hint, 'For the component, write `<PostList.Item>`.');
+});
+
 test('without a close name, the hint says which file to create', () => {
     assert.equal(siteError({ 'pages/page.alo': '<template><Blog.Sidebar /></template>' }).hint, 'Create the component: `components/blog/Sidebar.alo`');
 });
