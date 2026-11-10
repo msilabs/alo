@@ -35,7 +35,7 @@ test('init: every project file and the next steps', (t) => {
     assert.match(result.stdout, /cd "My Site"\n {2}npm install\n {2}node alo dev/);
 
     const dir = path.join(cwd, 'My Site');
-    for (const file of ['alo', 'package.json', '.gitignore', '.gitattributes', '.vscode/settings.json', 'pages/page.alo', 'pages/layout.alo', 'pages/blog/[slug]/page.alo', 'components/Header.alo', 'components/Footer.alo', 'components/Card.alo', 'data/site.json', 'data/blog/2026-01-10-hello-world.md', 'public/favicon.svg', 'AGENTS.md']) {
+    for (const file of ['alo', 'package.json', '.gitignore', '.gitattributes', '.vscode/settings.json', '.vscode/extensions.json', 'pages/page.alo', 'pages/layout.alo', 'pages/blog/[slug]/page.alo', 'components/Header.alo', 'components/Footer.alo', 'components/Card.alo', 'data/site.json', 'data/blog/2026-01-10-hello-world.md', 'public/favicon.svg', 'AGENTS.md']) {
         assert.ok(fs.existsSync(path.join(dir, ...file.split('/'))), file);
     }
 
@@ -49,7 +49,10 @@ test('init: every project file and the next steps', (t) => {
     assert.match(read(dir, 'alo'), /^#!\/usr\/bin\/env node\ntry \{\n {4}require\('@msilabs\/alo\/cli'\);/);
     assert.equal(read(dir, '.gitignore'), 'node_modules/\ndist/\n.alo/\n');
     assert.equal(read(dir, '.gitattributes'), '*.alo linguist-language=HTML\n');
-    assert.deepEqual(JSON.parse(read(dir, '.vscode/settings.json'))['files.associations'], { '*.alo': 'html' });
+    const settings = JSON.parse(read(dir, '.vscode/settings.json'));
+    assert.equal(settings['files.associations'], undefined, 'it would override the extension’s `alo` language');
+    assert.equal(settings['workbench.editor.customLabels.patterns']['**/pages/**/page.alo'], '${dirname} (page)');
+    assert.deepEqual(JSON.parse(read(dir, '.vscode/extensions.json')), { recommendations: ['msilabs.alo-vscode'] });
     if (process.platform !== 'win32') assert.ok(fs.statSync(path.join(dir, 'alo')).mode & 0o100, 'the alo file is executable');
 });
 
