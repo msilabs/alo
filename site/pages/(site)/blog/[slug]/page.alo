@@ -18,7 +18,7 @@
                 <span class="tag">{{ tag }}</span>
             </template>
         </p>
-        <div class="body">
+        <div class="prose">
             {{{ item.body }}}
         </div>
     </article>
@@ -53,44 +53,5 @@
         background: var(--accent-soft);
         color: var(--accent-strong);
         font-size: 0.82rem;
-    }
-</style>
-
-<!-- Markdown-এর বডি {{{ }}} দিয়ে বসে, তাই তাতে স্কোপ অ্যাট্রিবিউট থাকে না; স্টাইল দিতে <style global> -->
-<style global>
-    .post .body > * + * {
-        margin-top: 1.1rem;
-    }
-
-    .post .body h2 {
-        margin-top: 2.5rem;
-        font-size: 1.5rem;
-    }
-
-    .post .body ul,
-    .post .body ol {
-        padding-left: 1.4rem;
-    }
-
-    /* ছোট পর্দায় চওড়া টেবিল নিজে স্ক্রল করে, পুরো পেইজ নয় */
-    .post .body table {
-        display: block;
-        max-width: 100%;
-        overflow-x: auto;
-        border-collapse: collapse;
-        font-size: 0.95rem;
-    }
-
-    .post .body th,
-    .post .body td {
-        padding: 0.55rem 0.75rem;
-        border-bottom: 1px solid var(--border);
-        text-align: left;
-    }
-
-    .post .body blockquote {
-        padding: 0.25rem 0 0.25rem 1.25rem;
-        border-left: 3px solid var(--accent);
-        color: var(--muted);
     }
 </style>

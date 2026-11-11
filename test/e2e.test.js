@@ -36,7 +36,7 @@ test('site/ builds its home page', (t) => {
     const result = alo(dir, ['build']);
 
     assert.equal(result.code, 0, result.stderr);
-    assert.match(result.stdout, /Built 12 pages/);
+    assert.match(result.stdout, /Built \d+ pages/);
     assert.doesNotMatch(result.stderr, /⚠/);
     assert.ok(!fs.existsSync(path.join(dir, '.alo', 'build')), 'the temp folder should not remain');
 
@@ -78,17 +78,26 @@ test('site/ routes, route groups, layouts and 404', (t) => {
     const home = read('index.html');
     assert.match(home, /<header class="site-header"[ >]/);
     assert.match(home, /<a href="\/" aria-current="page">হোম<\/a>/);
-    assert.match(home, /<a href="\/docs\/">শুরু করুন<\/a>/);
+    assert.match(home, /<a href="\/docs\/">ডকস<\/a>/);
     assert.match(home, /<footer class="site-footer">/);
     assert.match(home, /<meta name="description" content="HTML, CSS আর JS লিখেই কম্পোনেন্ট/);
 
     const docs = read('docs/index.html');
     assert.match(docs, /<title>শুরু করুন \| আলো<\/title>/);
-    assert.match(docs, /<a href="\/docs\/" aria-current="page">শুরু করুন<\/a>/);
+    assert.match(docs, /<a href="\/docs\/" aria-current="page">ডকস<\/a>/);
+    assert.match(docs, /<a href="\/docs\/" aria-current="page">দ্রুত শুরু<\/a>/, 'the docs sidebar marks the current page');
     assert.match(docs, /<meta name="description" content="পাঁচ মিনিটে আলো দিয়ে প্রথম সাইট বানানোর গাইড।">/);
     assert.doesNotMatch(docs, /<meta name="description" content="HTML, CSS আর JS লিখেই/, 'the page description replaces the layout one');
-    assert.match(docs, /<h2>কম্পোনেন্ট বানান<\/h2>[\s\S]*components\/blog\/PostCard\.alo   → &lt;Blog\.PostCard \/&gt;/);
+    assert.match(docs, /<h2 id="কম্পোনেন্ট-বানান">কম্পোনেন্ট বানান<\/h2>[\s\S]*components\/blog\/PostCard\.alo   → &lt;Blog\.PostCard \/&gt;/);
     assert.match(docs, /&lt;span class="badge"&gt;\{\{ props\.label \}\}&lt;\/span&gt;/, '\\{{ in the component sample stays literal');
+
+    const doc = read('docs/components/index.html');
+    assert.match(doc, /<title>কম্পোনেন্ট আর প্রপস \| ডকস \| আলো<\/title>/);
+    assert.match(doc, /<a href="\/docs\/" aria-current="page">ডকস<\/a>/, 'the menu link stays active on pages below it');
+    assert.match(doc, /<a class="level-2" href="#প্রপস">প্রপস<\/a>\s*<a class="level-3" href="#ভুল-নামের-প্রপ">ভুল নামের প্রপ<\/a>/, 'the "on this page" list comes from the headings of the body');
+    assert.match(doc, /<a class="previous" href="\/docs\/layouts\/">[\s\S]*<a class="next" href="\/docs\/templates\/">/, 'previous and next follow the order of data/docs-nav.json');
+    assert.match(doc, /<span class="crumb">মূল ধারণা<\/span>/);
+    assert.match(docs, /<a class="level-2" href="#কম্পোনেন্ট-বানান">কম্পোনেন্ট বানান<\/a>/, 'a hand-written page passes its headings to <Docs.Toc>');
 
     const about = read('about/index.html');
     assert.equal((about.match(/badge-stable/g) ?? []).length, 0);
@@ -193,7 +202,10 @@ test('site/ production output: hashes, sitemap, robots', (t) => {
 
     const sitemap = read('sitemap.xml');
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-    assert.deepEqual(locs, [
+    const docsNav = JSON.parse(fs.readFileSync(path.join(dir, 'data', 'docs-nav.json'), 'utf8'));
+    const docsLocs = docsNav.flatMap((group) => group.items.map((link) => 'https://msilabs.github.io' + link.href));
+    assert.deepEqual(locs.filter((loc) => loc.includes('/docs/')), docsLocs.toSorted(), 'every docs page is listed in data/docs-nav.json, and nothing else');
+    assert.deepEqual(locs.filter((loc) => !loc.includes('/docs/')), [
         'https://msilabs.github.io/',
         'https://msilabs.github.io/about/',
         'https://msilabs.github.io/blog/',
@@ -203,7 +215,6 @@ test('site/ production output: hashes, sitemap, robots', (t) => {
         'https://msilabs.github.io/blog/introducing-alo/',
         'https://msilabs.github.io/blog/vscode-extension/',
         'https://msilabs.github.io/blog/whats-next/',
-        'https://msilabs.github.io/docs/',
     ]);
     assert.equal(read('robots.txt'), 'User-agent: *\nAllow: /\nSitemap: https://msilabs.github.io/sitemap.xml\n');
 });

@@ -5,7 +5,7 @@
             <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">মেনু</button>
             <nav id="site-nav" aria-label="প্রধান মেনু">
                 <template for="link in data.menu">
-                    <a href="{{ link.href }}" aria-current="{{ route.path === link.href ? 'page' : null }}">{{ link.label }}</a>
+                    <a href="{{ link.href }}" aria-current="{{ (link.href === '/' ? route.path === '/' : route.path.startsWith(link.href)) ? 'page' : null }}">{{ link.label }}</a>
                 </template>
                 <a class="github" href="{{ data.site.repository }}">GitHub</a>
             </nav>

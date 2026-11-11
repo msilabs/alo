@@ -117,6 +117,53 @@ pre {
     margin-inline: auto;
 }
 
+/* Markdown থেকে আসা কনটেন্ট ({{{ item.body }}}): ব্লগ আর ডকস দুটিতেই */
+.prose > * + * {
+    margin-top: 1.1rem;
+}
+
+.prose h2 {
+    margin-top: 2.5rem;
+    font-size: 1.5rem;
+}
+
+.prose h3 {
+    margin-top: 2rem;
+    font-size: 1.2rem;
+}
+
+/* sticky হেডারের নিচে হেডিং ঢাকা পড়ে না */
+.prose :is(h2, h3) {
+    scroll-margin-top: 5.5rem;
+}
+
+.prose ul,
+.prose ol {
+    padding-left: 1.4rem;
+}
+
+/* ছোট পর্দায় চওড়া টেবিল নিজে স্ক্রল করে, পুরো পেইজ নয় */
+.prose table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.prose th,
+.prose td {
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+}
+
+.prose blockquote {
+    padding: 0.25rem 0 0.25rem 1.25rem;
+    border-left: 3px solid var(--accent);
+    color: var(--muted);
+}
+
 .eyebrow {
     color: var(--accent-strong);
     font-size: 0.85rem;
