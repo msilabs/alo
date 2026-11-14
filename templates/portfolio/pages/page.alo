@@ -1,0 +1,88 @@
+<head>
+    <title>{{ data.profile.name }} | {{ data.profile.role }}</title>
+</head>
+
+<template>
+    <section class="hero">
+        <p class="eyebrow">{{ data.profile.role }}</p>
+        <h1>{{ data.profile.name }}</h1>
+        <p class="lead">{{ data.profile.intro }}</p>
+        <p class="actions">
+            <a class="button button-primary" href="/projects/">কাজ দেখুন</a>
+            <a class="button" href="/contact/">যোগাযোগ করুন</a>
+        </p>
+    </section>
+
+    <section>
+        <div class="heading">
+            <h2>বাছাই করা কাজ</h2>
+            <a href="/projects/">সব প্রজেক্ট →</a>
+        </div>
+        <div class="project-grid">
+            <!-- data/projects/-এর প্রথম তিনটি, order অনুযায়ী -->
+            <template for="project in data.projects.toSorted((a, b) => a.order - b.order).slice(0, 3)">
+                <ProjectCard project="{{ project }}" />
+            </template>
+        </div>
+    </section>
+
+    <section>
+        <div class="heading">
+            <h2>দক্ষতা</h2>
+        </div>
+        <dl class="skills">
+            <template for="skill in data.skills">
+                <div>
+                    <dt>{{ skill.group }}</dt>
+                    <dd class="tag-list">
+                        <template for="name in skill.items">
+                            <Tag>{{ name }}</Tag>
+                        </template>
+                    </dd>
+                </div>
+            </template>
+        </dl>
+    </section>
+</template>
+
+<style>
+    h1 {
+        margin-block: 0.4rem 0.75rem;
+        font-size: clamp(2.3rem, 7vw, 3.6rem);
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.75rem;
+    }
+
+    section + section {
+        margin-top: 4rem;
+    }
+
+    .heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .skills {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+        gap: 1.5rem;
+    }
+
+    dt {
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+</style>

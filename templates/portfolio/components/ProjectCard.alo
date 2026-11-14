@@ -1,0 +1,59 @@
+<!-- ব্যবহার: <ProjectCard project="{{ project }}" /> -->
+<template>
+    <article class="project-card">
+        <a class="cover" href="/projects/{{ props.project.slug }}/" tabindex="-1" aria-hidden="true">
+            <img src="{{ props.project.cover }}" alt="" width="640" height="400" loading="lazy">
+        </a>
+        <div class="text">
+            <h3><a href="/projects/{{ props.project.slug }}/">{{ props.project.title }}</a></h3>
+            <p>{{ props.project.summary }}</p>
+            <div class="tag-list">
+                <template for="tag in props.project.tags">
+                    <Tag>{{ tag }}</Tag>
+                </template>
+            </div>
+        </div>
+    </article>
+</template>
+
+<style>
+    .project-card {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+    }
+
+    img {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+    }
+
+    .text {
+        display: grid;
+        gap: 0.6rem;
+        padding: 1.25rem;
+    }
+
+    h3 {
+        font-size: 1.15rem;
+    }
+
+    h3 a {
+        color: var(--text);
+        text-decoration: none;
+    }
+
+    h3 a:hover {
+        color: var(--accent-strong);
+    }
+
+    p {
+        color: var(--muted);
+        font-size: 0.97rem;
+    }
+</style>

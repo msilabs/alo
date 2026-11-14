@@ -1,0 +1,73 @@
+<!-- data/projects/-এর প্রতিটি ফাইল থেকে একটি পেইজ; ফাইলের ডেটা পাওয়া যায় item-এ -->
+<head>
+    <title>{{ item.title }} | {{ data.site.name }}</title>
+    <meta name="description" content="{{ item.summary }}">
+</head>
+
+<template>
+    <article class="project">
+        <a class="back" href="/projects/">← সব প্রজেক্ট</a>
+        <h1 class="page-title">{{ item.title }}</h1>
+        <p class="lead">{{ item.summary }}</p>
+        <div class="tag-list">
+            <template for="tag in item.tags">
+                <Tag>{{ tag }}</Tag>
+            </template>
+        </div>
+
+        <img class="cover" src="{{ item.cover }}" alt="" width="640" height="400">
+
+        <div class="body">
+            {{{ item.body }}}
+        </div>
+
+        <template if="item.link">
+            <p class="visit"><a class="button button-primary" href="{{ item.link }}">প্রজেক্টটি দেখুন →</a></p>
+        </template>
+    </article>
+</template>
+
+<style>
+    .project {
+        max-width: var(--reading);
+    }
+
+    .back {
+        color: var(--muted);
+        text-decoration: none;
+    }
+
+    .page-title {
+        margin-top: 1rem;
+    }
+
+    .tag-list {
+        margin-top: 1rem;
+    }
+
+    .cover {
+        width: 100%;
+        margin-block: 2rem;
+        border-radius: var(--radius);
+    }
+
+    .visit {
+        margin-top: 2rem;
+    }
+</style>
+
+<!-- Markdown-এর বডিতে স্কোপ অ্যাট্রিবিউট থাকে না, তাই এর স্টাইল <style global>-এ -->
+<style global>
+    .project .body > * + * {
+        margin-top: 1rem;
+    }
+
+    .project .body h2 {
+        margin-top: 2.25rem;
+        font-size: 1.35rem;
+    }
+
+    .project .body img {
+        border-radius: var(--radius);
+    }
+</style>

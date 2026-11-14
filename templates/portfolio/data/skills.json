@@ -1,0 +1,5 @@
+[
+    { "group": "ডিজাইন", "items": ["দক্ষতা ১", "দক্ষতা ২", "দক্ষতা ৩"] },
+    { "group": "ডেভেলপমেন্ট", "items": ["HTML", "CSS", "JavaScript"] },
+    { "group": "টুল", "items": ["Git", "Figma"] }
+]

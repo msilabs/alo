@@ -1,0 +1,184 @@
+/* রঙ, ফন্ট আর মাপ: সাইটের সব জায়গায় এই ভেরিয়েবলগুলো ব্যবহার হয় */
+:root {
+    --bg: #f8fafb;
+    --surface: #ffffff;
+    --surface-soft: #eef4f4;
+    --text: #14201f;
+    --muted: #5b6b69;
+    --border: #dfe7e6;
+    --accent: #0f766e;
+    --accent-strong: #0b5a54;
+    --accent-soft: #d9f0ed;
+    --on-accent: #ffffff;
+    --code-bg: #14201f;
+    --code-text: #e6f2f0;
+
+    --font-sans: system-ui, -apple-system, 'Segoe UI', 'Noto Sans Bengali', sans-serif;
+    --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+    --radius: 14px;
+    --radius-small: 8px;
+    --shadow: 0 1px 2px rgb(20 32 31 / 5%), 0 8px 24px rgb(20 32 31 / 6%);
+    --page: 68rem;
+    --reading: 44rem;
+
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #0d1413;
+        --surface: #141d1c;
+        --surface-soft: #1b2726;
+        --text: #e9f1f0;
+        --muted: #9db0ad;
+        --border: #263432;
+        --accent: #5eead4;
+        --accent-strong: #99f6e4;
+        --accent-soft: rgb(94 234 212 / 12%);
+        --on-accent: #0d1413;
+        --code-bg: #080d0c;
+        --code-text: #e9f1f0;
+        --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 8px 24px rgb(0 0 0 / 25%);
+    }
+}
+
+body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+}
+
+a {
+    color: var(--accent-strong);
+    text-underline-offset: 3px;
+}
+
+a:hover {
+    text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+}
+
+:not(pre) > code {
+    padding: 0.1em 0.4em;
+    border-radius: 6px;
+    background: var(--surface-soft);
+}
+
+pre {
+    overflow-x: auto;
+    padding: 1.1rem 1.25rem;
+    border-radius: var(--radius);
+    background: var(--code-bg);
+    color: var(--code-text);
+    font-size: 0.9rem;
+    line-height: 1.65;
+}
+
+::selection {
+    background: var(--accent-soft);
+}
+
+/* লেআউটের ছোট কয়েকটি সাধারণ ক্লাস */
+.container {
+    width: min(100% - 2.5rem, var(--page));
+    margin-inline: auto;
+}
+
+.eyebrow {
+    color: var(--accent-strong);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.page-title {
+    margin-block: 0.4rem 1rem;
+    font-size: clamp(2rem, 5vw, 2.6rem);
+}
+
+.lead {
+    max-width: 40rem;
+    color: var(--muted);
+    font-size: 1.15rem;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.3rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.button:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+}
+
+.button-primary {
+    border-color: transparent;
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+.project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 1.5rem;
+}
+
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+/* প্রিন্ট: about পাতা CV-র মতো ছাপা হয় */
+@media print {
+    :root {
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --text: #000000;
+        --muted: #333333;
+        --border: #cccccc;
+        --accent-strong: #000000;
+    }
+
+    body {
+        font-size: 11pt;
+    }
+
+    .site-header,
+    .site-footer,
+    .no-print {
+        display: none;
+    }
+}

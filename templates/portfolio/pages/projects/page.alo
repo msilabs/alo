@@ -1,0 +1,21 @@
+<head>
+    <title>প্রজেক্ট | {{ data.site.name }}</title>
+</head>
+
+<template>
+    <p class="eyebrow">প্রজেক্ট</p>
+    <h1 class="page-title">সব কাজ</h1>
+    <p class="lead">প্রতিটি প্রজেক্ট <code>data/projects/</code>-এর একটি Markdown ফাইল। নতুন ফাইল রাখলেই এখানে নতুন কার্ড আসে।</p>
+
+    <div class="project-grid">
+        <template for="project in data.projects.toSorted((a, b) => a.order - b.order)">
+            <ProjectCard project="{{ project }}" />
+        </template>
+    </div>
+</template>
+
+<style>
+    .project-grid {
+        margin-top: 2.5rem;
+    }
+</style>

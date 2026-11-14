@@ -1,0 +1,116 @@
+<head>
+    <title>আমার কথা | {{ data.site.name }}</title>
+</head>
+
+<template>
+    <article class="about">
+        <header>
+            <p class="eyebrow">আমার কথা</p>
+            <h1 class="page-title">{{ data.profile.name }}</h1>
+            <p class="meta">{{ data.profile.role }} · {{ data.profile.location }} · <a href="mailto:{{ data.profile.email }}">{{ data.profile.email }}</a></p>
+        </header>
+
+        <section>
+            <p>এখানে নিজের কথা লিখুন: কীভাবে এই কাজে এলেন, কী করতে ভালো লাগে, এখন কী নিয়ে কাজ করছেন। এই পেইজটি আছে <code>pages/about/page.alo</code>-এ।</p>
+            <p class="no-print">এই পাতাটি প্রিন্ট করলে (Ctrl+P) মেনু আর ফুটার ছাড়া CV-র মতো আসে; PDF হিসেবেও সংরক্ষণ করা যায়।</p>
+        </section>
+
+        <section>
+            <h2>অভিজ্ঞতা</h2>
+            <ol class="timeline">
+                <template for="job in data.experience">
+                    <li>
+                        <p class="period">{{ job.period }}</p>
+                        <div>
+                            <h3>{{ job.role }}</h3>
+                            <p class="place">{{ job.place }}</p>
+                            <p>{{ job.summary }}</p>
+                        </div>
+                    </li>
+                </template>
+            </ol>
+        </section>
+
+        <section>
+            <h2>দক্ষতা</h2>
+            <dl class="skills">
+                <template for="skill in data.skills">
+                    <div>
+                        <dt>{{ skill.group }}</dt>
+                        <dd>{{ skill.items.join(', ') }}</dd>
+                    </div>
+                </template>
+            </dl>
+        </section>
+    </article>
+</template>
+
+<style>
+    .about {
+        max-width: var(--reading);
+    }
+
+    .meta,
+    .place,
+    .period {
+        color: var(--muted);
+    }
+
+    section {
+        margin-top: 2.5rem;
+    }
+
+    section > p + p {
+        margin-top: 1rem;
+    }
+
+    h2 {
+        margin-bottom: 1rem;
+        font-size: 1.4rem;
+    }
+
+    .timeline {
+        display: grid;
+        gap: 1.5rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .timeline li {
+        display: grid;
+        grid-template-columns: 9rem 1fr;
+        gap: 0.25rem 1.5rem;
+        break-inside: avoid;
+    }
+
+    .period {
+        font-size: 0.92rem;
+    }
+
+    h3 {
+        font-size: 1.1rem;
+    }
+
+    .skills {
+        display: grid;
+        gap: 0.5rem;
+    }
+
+    .skills div {
+        display: grid;
+        grid-template-columns: 9rem 1fr;
+        gap: 0.25rem 1.5rem;
+    }
+
+    dt {
+        font-weight: 600;
+    }
+
+    @media (max-width: 34rem) {
+        .timeline li,
+        .skills div {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

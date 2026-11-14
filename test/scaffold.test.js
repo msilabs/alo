@@ -189,6 +189,7 @@ const GENERATED = ['alo', 'package.json', '.gitignore', '.gitattributes', '.vsco
 const EXPECTED = {
     default: { pages: 5, file: 'blog/hello-world/index.html', html: /<article/ },
     blank: { pages: 1, file: 'index.html', html: /<h1>আমার সাইট<\/h1>/ },
+    portfolio: { pages: 8, file: 'projects/first-project/index.html', html: /<a href="\/projects\/" aria-current="page"/ },
 };
 const MAX_TEMPLATE_BYTES = 80 * 1024;
 
@@ -252,6 +253,8 @@ for (const name of TEMPLATE_NAMES) {
             assert.doesNotMatch(text, /href\s*=\s*["'](https?:)?\/\/[^"']*\.css/, `${file} loads a remote stylesheet`);
             assert.doesNotMatch(text, /url\(\s*["']?(https?:)?\/\//, `${file} loads a remote file from CSS`);
             assert.doesNotMatch(text, /@import/, `${file} uses @import`);
+            // The default template keeps its web fonts; the others load nothing from outside.
+            if (name !== 'default') assert.doesNotMatch(text, /rel\s*=\s*["']?(stylesheet|preconnect|preload)/, `${file} links a remote file`);
         }
         assert.ok(bytes < MAX_TEMPLATE_BYTES, `${bytes} bytes, the limit is ${MAX_TEMPLATE_BYTES}`);
 
@@ -317,6 +320,24 @@ test('init: a wrong `--template` fails before anything is written', (t) => {
         assert.deepEqual(fs.readdirSync(cwd), [], args.join(' '));
     }
     assert.doesNotMatch(run(cwd, ['init', 'site', '--template', 'shop']).stderr, /Did you mean/);
+});
+
+test('template portfolio: projects in `order`, three on the home page, a link only when there is one', (t) => {
+    const cwd = tempDir(t);
+    run(cwd, ['init', 'site', '--template', 'portfolio']);
+    const dir = path.join(cwd, 'site');
+    fs.writeFileSync(path.join(dir, 'data', 'projects', 'a-new-one.md'), '---\ntitle: নতুন\nsummary: s\ntags: [x]\ncover: /projects/first-project.svg\norder: 0\n---\n\nবডি\n');
+    const result = run(dir, ['build']);
+    assert.equal(result.code, 0, result.stderr);
+    assert.match(result.stdout, /Built 9 pages/);
+
+    const slugs = (html) => [...html.matchAll(/<h3[^>]*><a href="\/projects\/([a-z-]+)\/"/g)].map((match) => match[1]);
+    assert.deepEqual(slugs(read(dir, 'dist/projects/index.html')), ['a-new-one', 'first-project', 'second-project', 'third-project']);
+    assert.deepEqual(slugs(read(dir, 'dist/index.html')), ['a-new-one', 'first-project', 'second-project']);
+
+    assert.match(read(dir, 'dist/projects/first-project/index.html'), /<p class="visit"/);
+    assert.doesNotMatch(read(dir, 'dist/projects/third-project/index.html'), /<p class="visit"/);
+    assert.match(read(dir, 'dist/about/index.html'), /<a href="\/about\/" aria-current="page"/);
 });
 
 test('--help lists every template', (t) => {

@@ -1,0 +1,6 @@
+{
+    "name": "আপনার নাম",
+    "description": "আপনার কাজের পোর্টফোলিও। এই লেখাটি বদলাতে data/site.json খুলুন।",
+    "lang": "bn",
+    "url": "https://example.com"
+}

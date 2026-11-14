@@ -1,0 +1,20 @@
+<!-- এই লেআউট সব পেইজকে মোড়ায়: পেইজের কনটেন্ট বসে <slot />-এর জায়গায় -->
+<head>
+    <meta name="description" content="{{ data.site.description }}">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+</head>
+
+<template>
+    <Header />
+    <main class="container">
+        <slot />
+    </main>
+    <Footer />
+</template>
+
+<style>
+    main {
+        min-height: 60vh;
+        padding-top: 3.5rem;
+    }
+</style>

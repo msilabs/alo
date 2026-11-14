@@ -1,0 +1,6 @@
+[
+    { "href": "/", "label": "হোম" },
+    { "href": "/projects/", "label": "প্রজেক্ট" },
+    { "href": "/about/", "label": "আমার কথা" },
+    { "href": "/contact/", "label": "যোগাযোগ" }
+]
