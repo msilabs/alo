@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { plan, packageName } = require('../cli/scaffold.js');
+const { plan, packageName, TEMPLATES, TEMPLATE_NAMES } = require('../cli/scaffold.js');
 const { version } = require('../package.json');
 
 const REPO = path.join(__dirname, '..');
@@ -179,4 +179,147 @@ test('new: invalid names, duplicate slugs, unknown kinds and running outside a p
     const outside = run(cwd, ['new', 'page', 'x']);
     assert.equal(outside.code, 1);
     assert.match(outside.stderr, /No `pages\/` folder here/);
+});
+
+// ---------------------------------------------------------------- init --template
+
+const TEMPLATES_DIR = path.join(REPO, 'templates');
+const GENERATED = ['alo', 'package.json', '.gitignore', '.gitattributes', '.vscode/settings.json', '.vscode/extensions.json'];
+// Pages each template builds, and one thing to find in its output.
+const EXPECTED = {
+    default: { pages: 5, file: 'blog/hello-world/index.html', html: /<article/ },
+    blank: { pages: 1, file: 'index.html', html: /<h1>আমার সাইট<\/h1>/ },
+};
+const MAX_TEMPLATE_BYTES = 80 * 1024;
+
+// Every file below `dir`, as sorted forward-slash paths.
+function listFiles(dir) {
+    return fs
+        .readdirSync(dir, { recursive: true, withFileTypes: true })
+        .filter((entry) => entry.isFile())
+        .map((entry) => path.relative(dir, path.join(entry.parentPath, entry.name)).split(path.sep).join('/'))
+        .sort();
+}
+
+test('templates: the list in the code matches the folders in templates/', () => {
+    const folders = fs.readdirSync(TEMPLATES_DIR, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+    assert.deepEqual(Object.values(TEMPLATES).sort(), folders.sort());
+    assert.deepEqual(TEMPLATE_NAMES.toSorted(), Object.keys(EXPECTED).sort(), 'add the new template to EXPECTED');
+    assert.equal(TEMPLATES.default, 'init');
+});
+
+for (const name of TEMPLATE_NAMES) {
+    test(`template ${name}: init, then a build without errors or warnings`, (t) => {
+        const cwd = tempDir(t);
+        const created = run(cwd, ['init', 'site', '--template', name]);
+        assert.equal(created.code, 0, created.stderr);
+        assert.match(created.stdout, /Created a new Alo project: site/);
+        if (name === 'default') assert.doesNotMatch(created.stdout, /Template:/);
+        else assert.match(created.stdout, new RegExp(`\\n {2}Template: ${name}\\n`));
+
+        const dir = path.join(cwd, 'site');
+        for (const file of [...GENERATED, 'AGENTS.md', 'pages/page.alo', 'data/site.json', 'public/favicon.svg']) {
+            assert.ok(fs.existsSync(path.join(dir, ...file.split('/'))), file);
+        }
+        assert.equal(read(dir, 'AGENTS.md'), read(TEMPLATES_DIR, 'init/AGENTS.md'));
+
+        const built = run(dir, ['build']);
+        assert.equal(built.code, 0, built.stderr);
+        assert.equal(built.stderr, '');
+        assert.doesNotMatch(built.stdout, /Unused components|warning/);
+        const pages = EXPECTED[name].pages;
+        assert.match(built.stdout, new RegExp(`Built ${pages} page${pages === 1 ? '' : 's'}\\b`));
+        assert.match(read(dir, 'dist/' + EXPECTED[name].file), EXPECTED[name].html);
+    });
+
+    test(`template ${name}: follows the template rules`, () => {
+        const dir = path.join(TEMPLATES_DIR, TEMPLATES[name]);
+        const files = listFiles(dir);
+
+        const allowed = name === 'default' ? ['AGENTS.md'] : [];
+        for (const file of files) {
+            if (allowed.includes(file)) continue;
+            assert.match(file, /^(pages|components|data|global|public)\//, `${file} is not a site file`);
+            assert.doesNotMatch(file, /(^|\/)\./, `${file} is a dotfile`);
+        }
+
+        let bytes = 0;
+        for (const file of files) {
+            bytes += fs.statSync(path.join(dir, file)).size;
+            if (file === 'AGENTS.md') continue;
+            const text = read(dir, file);
+            assert.doesNotMatch(text, /\bsrc\s*=\s*["']?(https?:)?\/\//, `${file} loads a remote file`);
+            assert.doesNotMatch(text, /href\s*=\s*["'](https?:)?\/\/[^"']*\.css/, `${file} loads a remote stylesheet`);
+            assert.doesNotMatch(text, /url\(\s*["']?(https?:)?\/\//, `${file} loads a remote file from CSS`);
+            assert.doesNotMatch(text, /@import/, `${file} uses @import`);
+        }
+        assert.ok(bytes < MAX_TEMPLATE_BYTES, `${bytes} bytes, the limit is ${MAX_TEMPLATE_BYTES}`);
+
+        const reset = 'global/base/01-reset.css';
+        if (files.includes(reset)) assert.equal(read(dir, reset), read(TEMPLATES_DIR, 'init/' + reset));
+        assert.equal(read(dir, 'public/favicon.svg'), read(TEMPLATES_DIR, 'init/public/favicon.svg'));
+    });
+}
+
+test('init: no flag, `--template default` and `--template=default` give the same project', (t) => {
+    const cwd = tempDir(t);
+    const plain = run(cwd, ['init', 'a']);
+    const spaced = run(cwd, ['init', 'b', '--template', 'default']);
+    const equals = run(cwd, ['init', '--template=default', 'c']);
+    for (const result of [plain, spaced, equals]) {
+        assert.equal(result.code, 0, result.stderr);
+        assert.doesNotMatch(result.stdout, /Template:/);
+    }
+    assert.equal(spaced.stdout.replaceAll('b', 'a'), plain.stdout);
+
+    const files = listFiles(path.join(cwd, 'a'));
+    assert.deepEqual(listFiles(path.join(cwd, 'b')), files);
+    assert.deepEqual(listFiles(path.join(cwd, 'c')), files);
+    assert.deepEqual(files.filter((file) => !GENERATED.includes(file)), listFiles(path.join(TEMPLATES_DIR, 'init')));
+});
+
+test('init: a folder named like a template is still just a folder', (t) => {
+    const cwd = tempDir(t);
+    const result = run(cwd, ['init', 'blank']);
+    assert.equal(result.code, 0, result.stderr);
+    assert.doesNotMatch(result.stdout, /Template:/);
+    assert.ok(fs.existsSync(path.join(cwd, 'blank', 'pages', 'blog', 'page.alo')));
+});
+
+test('init: `--template` without a folder uses the current empty folder', (t) => {
+    const cwd = tempDir(t);
+    const result = run(cwd, ['init', '--template', 'blank']);
+    assert.equal(result.code, 0, result.stderr);
+    assert.match(result.stdout, /Template: blank/);
+    assert.doesNotMatch(result.stdout, /cd /);
+    assert.deepEqual(listFiles(path.join(cwd, 'pages')), ['page.alo']);
+    assert.ok(!fs.existsSync(path.join(cwd, 'components')));
+});
+
+test('init: a wrong `--template` fails before anything is written', (t) => {
+    const cwd = tempDir(t);
+    const list = /Templates: `default`, `blank`/;
+    const cases = [
+        [['init', 'site', '--template', 'blnk'], /There is no template `blnk`\./, /Did you mean `blank`\?/],
+        [['init', 'site', '--template', 'blnk'], /There is no template `blnk`\./, list],
+        [['init', 'site', '--template', 'shop'], /There is no template `shop`\./, list],
+        [['init', 'site', '--template=user/repo'], /Templates from a repository are not supported\./, list],
+        [['init', 'site', '--template', 'github:user/repo'], /Templates from a repository are not supported\./, list],
+        [['init', 'site', '--template'], /`--template` needs a value\./, /For example: `--template portfolio`/],
+        [['build', '--template', 'blank'], /`--template` does not work with `alo build`\./, /`--template` only works with `alo init`\./],
+        [['new', 'page', 'x', '--template', 'blank'], /`--template` does not work with `alo new`\./, /only works with `alo init`/],
+    ];
+    for (const [args, message, hint] of cases) {
+        const result = run(cwd, args);
+        assert.equal(result.code, 1, args.join(' '));
+        assert.match(result.stderr, message, args.join(' '));
+        assert.match(result.stderr, hint, args.join(' '));
+        assert.deepEqual(fs.readdirSync(cwd), [], args.join(' '));
+    }
+    assert.doesNotMatch(run(cwd, ['init', 'site', '--template', 'shop']).stderr, /Did you mean/);
+});
+
+test('--help lists every template', (t) => {
+    const result = run(tempDir(t), ['--help']);
+    assert.match(result.stdout, new RegExp(`\\[--template name\\] +${TEMPLATE_NAMES.join(', ')}\\n`));
 });

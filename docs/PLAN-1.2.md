@@ -123,7 +123,7 @@ Next steps:
 
 ```
 pages/page.alo          একটি <h1> আর এক লাইন
-data/site.json          name, lang (url নেই, তাই sitemap তৈরি হয় না)
+data/site.json          name, lang, url (url না থাকলে build সতর্কবার্তা দেয়)
 public/favicon.svg
 ```
 

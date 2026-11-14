@@ -1,0 +1,4 @@
+<template>
+    <h1>{{ data.site.name }}</h1>
+    <p>এই পাতাটি বদলাতে <code>pages/page.alo</code> খুলুন।</p>
+</template>
