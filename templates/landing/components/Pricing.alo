@@ -1,0 +1,96 @@
+<template>
+    <section class="section" id="pricing">
+        <div class="container">
+            <div class="section-head">
+                <p class="eyebrow">দাম</p>
+                <h2>সহজ দাম</h2>
+                <p>পরিকল্পনাগুলো আছে <code>data/plans.json</code>-এ।</p>
+            </div>
+            <!-- featured: true থাকলে পরিকল্পনাটি আলাদা দেখায় -->
+            <div class="plans">
+                <template for="plan in data.plans">
+                    <article class="plan {{ plan.featured ? 'featured' : '' }}">
+                        <template if="plan.featured">
+                            <p class="badge">জনপ্রিয়</p>
+                        </template>
+                        <h3>{{ plan.name }}</h3>
+                        <p class="price"><strong>{{ plan.price }}</strong> <span>{{ plan.period }}</span></p>
+                        <p class="note">{{ plan.note }}</p>
+                        <ul>
+                            <template for="feature in plan.features">
+                                <li>{{ feature }}</li>
+                            </template>
+                        </ul>
+                        <a class="button {{ plan.featured ? 'button-primary' : '' }}" href="{{ plan.href }}">{{ plan.cta }}</a>
+                    </article>
+                </template>
+            </div>
+        </div>
+    </section>
+</template>
+
+<style>
+    .plans {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+        align-items: start;
+        gap: 1.25rem;
+    }
+
+    .plan {
+        position: relative;
+        display: grid;
+        gap: 0.75rem;
+        padding: 1.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+    }
+
+    .featured {
+        border: 2px solid var(--accent);
+        box-shadow: var(--shadow);
+    }
+
+    .badge {
+        position: absolute;
+        top: -0.85rem;
+        inset-inline-start: 1.5rem;
+        padding: 0.1rem 0.75rem;
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--on-accent);
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    h3 {
+        font-size: 1.15rem;
+    }
+
+    .price strong {
+        font-size: 2.2rem;
+        line-height: 1.1;
+    }
+
+    .price span,
+    .note {
+        color: var(--muted);
+        font-size: 0.95rem;
+    }
+
+    ul {
+        display: grid;
+        gap: 0.35rem;
+        margin: 0.25rem 0 0.75rem;
+        padding: 0;
+        list-style: none;
+    }
+
+    li::before {
+        content: '✓';
+        margin-inline-end: 0.5rem;
+        color: var(--accent-strong);
+        font-weight: 700;
+    }
+</style>

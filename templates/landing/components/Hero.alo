@@ -1,0 +1,48 @@
+<template>
+    <section class="hero container">
+        <div class="text">
+            <p class="eyebrow">{{ data.site.name }}</p>
+            <h1>{{ data.site.tagline }}</h1>
+            <p class="lead">{{ data.site.description }}</p>
+            <p class="actions">
+                <a class="button button-primary" href="{{ data.site.cta.href }}">{{ data.site.cta.label }}</a>
+                <a class="button" href="/#features">কী কী আছে দেখুন</a>
+            </p>
+        </div>
+        <!-- নিজের প্রোডাক্টের ছবি রাখুন public/-এ, তারপর এখানে নাম বদলান -->
+        <img src="/hero.svg" alt="" width="640" height="440">
+    </section>
+</template>
+
+<style>
+    .hero {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+        align-items: center;
+        gap: 2.5rem 3rem;
+        padding-block: 3.5rem 4.5rem;
+    }
+
+    h1 {
+        margin-block: 0.5rem 1rem;
+        font-size: clamp(2.2rem, 6vw, 3.4rem);
+    }
+
+    .lead {
+        color: var(--muted);
+        font-size: 1.15rem;
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 2rem;
+    }
+
+    img {
+        width: 100%;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+    }
+</style>

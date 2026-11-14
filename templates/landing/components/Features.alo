@@ -1,0 +1,64 @@
+<template>
+    <section class="section features" id="features">
+        <div class="container">
+            <div class="section-head">
+                <p class="eyebrow">ফিচার</p>
+                <h2>যা যা পাবেন</h2>
+                <p>প্রতিটি কার্ড <code>data/features.json</code>-এর একটি আইটেম।</p>
+            </div>
+            <ul>
+                <template for="(feature, i) in data.features">
+                    <li>
+                        <span class="number" aria-hidden="true">{{ (i + 1).toLocaleString('bn-BD') }}</span>
+                        <h3>{{ feature.title }}</h3>
+                        <p>{{ feature.text }}</p>
+                    </li>
+                </template>
+            </ul>
+        </div>
+    </section>
+</template>
+
+<style>
+    .features {
+        background: var(--surface-soft);
+    }
+
+    ul {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+        gap: 1.25rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    li {
+        padding: 1.5rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+    }
+
+    .number {
+        display: grid;
+        place-items: center;
+        width: 2.4rem;
+        height: 2.4rem;
+        margin-bottom: 0.9rem;
+        border-radius: var(--radius-small);
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-weight: 700;
+    }
+
+    h3 {
+        margin-bottom: 0.35rem;
+        font-size: 1.12rem;
+    }
+
+    li p {
+        color: var(--muted);
+        font-size: 0.97rem;
+    }
+</style>

@@ -1,0 +1,49 @@
+<!-- <details> নিজেই খোলে আর বন্ধ হয়, তাই JavaScript লাগে না -->
+<template>
+    <section class="section faq" id="faq">
+        <div class="container">
+            <div class="section-head">
+                <p class="eyebrow">প্রশ্ন</p>
+                <h2>সাধারণ প্রশ্ন</h2>
+            </div>
+            <div class="list">
+                <template for="entry in data.faq">
+                    <details>
+                        <summary>{{ entry.q }}</summary>
+                        <p>{{ entry.a }}</p>
+                    </details>
+                </template>
+            </div>
+        </div>
+    </section>
+</template>
+
+<style>
+    .faq {
+        background: var(--surface-soft);
+    }
+
+    .list {
+        display: grid;
+        gap: 0.75rem;
+        max-width: var(--reading);
+        margin-inline: auto;
+    }
+
+    details {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-small);
+        background: var(--surface);
+    }
+
+    summary {
+        padding: 0.9rem 1.2rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    details p {
+        padding: 0 1.2rem 1.1rem;
+        color: var(--muted);
+    }
+</style>

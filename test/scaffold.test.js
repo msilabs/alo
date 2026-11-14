@@ -191,6 +191,7 @@ const EXPECTED = {
     blank: { pages: 1, file: 'index.html', html: /<h1>আমার সাইট<\/h1>/ },
     portfolio: { pages: 8, file: 'projects/first-project/index.html', html: /<a href="\/projects\/" aria-current="page"/ },
     docs: { pages: 8, file: 'docs/pages/index.html', html: /<a href="\/docs\/pages\/" aria-current="page"/ },
+    landing: { pages: 2, file: 'index.html', html: /<section class="section features" id="features"/ },
 };
 const MAX_TEMPLATE_BYTES = 80 * 1024;
 
@@ -369,6 +370,25 @@ test('template docs: sidebar by section and `order`, one active link, previous a
     assert.deepEqual(around('install'), [undefined, 'faq']);
     assert.deepEqual(around('pages'), ['faq', 'components']);
     assert.deepEqual(around('deploy'), ['data', undefined]);
+});
+
+test('template landing: one featured plan, a <details> per question, links to every section, no script', (t) => {
+    const cwd = tempDir(t);
+    run(cwd, ['init', 'site', '--template', 'landing']);
+    const dir = path.join(cwd, 'site');
+    assert.equal(run(dir, ['build', '--base', '/repo/']).code, 0);
+    const html = read(dir, 'dist/index.html');
+
+    assert.equal(html.match(/<article class="plan /g).length, 3);
+    assert.equal(html.match(/<article class="plan featured"/g).length, 1);
+    assert.equal(html.match(/<p class="badge"/g).length, 1);
+    assert.equal(html.match(/<details/g).length, JSON.parse(read(dir, 'data/faq.json')).length);
+    for (const id of ['features', 'pricing', 'faq']) {
+        assert.match(html, new RegExp(`<section [^>]*id="${id}"`), id);
+        assert.match(html, new RegExp(`href="/repo/#${id}"`), id);
+    }
+    assert.match(html, /src="\/repo\/hero\.svg"/);
+    assert.doesNotMatch(html, /<script/);
 });
 
 test('--help lists every template', (t) => {

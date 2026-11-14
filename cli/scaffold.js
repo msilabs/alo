@@ -8,7 +8,7 @@ const { version } = require('../package.json');
 
 const TEMPLATES_DIR = path.join(__dirname, '..', 'templates');
 // Template name → folder in templates/. The default keeps its old folder name.
-const TEMPLATES = { default: 'init', blank: 'blank', portfolio: 'portfolio', docs: 'docs' };
+const TEMPLATES = { default: 'init', blank: 'blank', portfolio: 'portfolio', docs: 'docs', landing: 'landing' };
 const TEMPLATE_NAMES = Object.keys(TEMPLATES);
 // A folder holding only these still counts as empty, so `git init` before `alo init` is fine.
 const IGNORABLE = new Set(['.git', '.DS_Store', 'Thumbs.db']);

@@ -1,0 +1,34 @@
+<template>
+    <section class="section container">
+        <div class="cta">
+            <h2>আজই শুরু করুন</h2>
+            <p>শেষবার মনে করিয়ে দিন কেন এখনই শুরু করা ভালো। এই অংশটি আছে <code>components/Cta.alo</code>-এ।</p>
+            <a class="button" href="{{ data.site.cta.href }}">{{ data.site.cta.label }}</a>
+        </div>
+    </section>
+</template>
+
+<style>
+    .cta {
+        display: grid;
+        justify-items: center;
+        gap: 1rem;
+        padding: 3.5rem 1.5rem;
+        border-radius: var(--radius);
+        background: var(--accent);
+        color: var(--on-accent);
+        text-align: center;
+    }
+
+    h2 {
+        font-size: clamp(1.7rem, 4.5vw, 2.3rem);
+    }
+
+    p {
+        max-width: 34rem;
+    }
+
+    code {
+        background: rgb(255 255 255 / 20%);
+    }
+</style>

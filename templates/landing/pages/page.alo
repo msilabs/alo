@@ -1,0 +1,12 @@
+<head>
+    <title>{{ data.site.name }} | {{ data.site.tagline }}</title>
+</head>
+
+<!-- পাতার অংশগুলো এই ক্রমে বসে; সরাতে বা বাদ দিতে লাইনগুলো বদলান -->
+<template>
+    <Hero />
+    <Features />
+    <Pricing />
+    <Faq />
+    <Cta />
+</template>
