@@ -1,6 +1,6 @@
 {
     "name": "@msilabs/alo",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Lightweight static web framework: HTML, CSS, JS with components, layouts, loops and conditions. Zero dependencies.",
     "license": "MIT",
     "keywords": [
