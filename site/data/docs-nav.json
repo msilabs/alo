@@ -29,7 +29,8 @@
         "title": "প্রকাশ",
         "items": [
             { "href": "/docs/build/", "label": "বিল্ড আর আউটপুট" },
-            { "href": "/docs/deploy/", "label": "ডিপ্লয়" }
+            { "href": "/docs/deploy/", "label": "ডিপ্লয়" },
+            { "href": "/docs/backend/", "label": "ব্যাকএন্ড লাগলে" }
         ]
     },
     {
