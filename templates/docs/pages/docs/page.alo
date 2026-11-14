@@ -1,0 +1,56 @@
+<head>
+    <title>ডকস | {{ data.site.name }}</title>
+</head>
+
+<template>
+    <p class="eyebrow">ডকস</p>
+    <h1 class="page-title">সব পাতা</h1>
+
+    <template for="section in data.sections">
+        <section>
+            <h2>{{ section }}</h2>
+            <ul>
+                <template for="doc in data.docs.filter((doc) => doc.section === section).toSorted((a, b) => a.order - b.order)">
+                    <li>
+                        <a href="/docs/{{ doc.slug }}/">{{ doc.title }}</a>
+                        <p>{{ doc.summary }}</p>
+                    </li>
+                </template>
+            </ul>
+        </section>
+    </template>
+</template>
+
+<style>
+    section {
+        margin-top: 2rem;
+    }
+
+    h2 {
+        margin-bottom: 0.75rem;
+        font-size: 1.25rem;
+    }
+
+    ul {
+        display: grid;
+        gap: 0.75rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    li {
+        padding: 0.9rem 1.1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+    }
+
+    li a {
+        font-weight: 600;
+    }
+
+    li p {
+        color: var(--muted);
+        font-size: 0.97rem;
+    }
+</style>

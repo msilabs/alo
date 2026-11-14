@@ -1,0 +1,60 @@
+<template>
+    <header class="site-header">
+        <div class="bar container">
+            <a class="logo" href="/">{{ data.site.name }}</a>
+            <!-- /docs/install/ পাতাতেও "ডকস" লিংকটি সক্রিয় দেখায় -->
+            <nav aria-label="প্রধান মেনু">
+                <template for="link in data.menu">
+                    <a href="{{ link.href }}" aria-current="{{ (link.href === '/' ? route.path === '/' : route.path.startsWith(link.href)) ? 'page' : null }}">{{ link.label }}</a>
+                </template>
+            </nav>
+        </div>
+    </header>
+</template>
+
+<style>
+    .site-header {
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+    }
+
+    .bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem 0.75rem;
+        min-height: 3.75rem;
+        padding-block: 0.5rem;
+    }
+
+    .logo {
+        color: var(--text);
+        font-size: 1.15rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+    nav a {
+        padding: 0.3rem 0.8rem;
+        border-radius: var(--radius-small);
+        color: var(--muted);
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    nav a:hover {
+        color: var(--text);
+    }
+
+    nav a[aria-current='page'] {
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+    }
+</style>

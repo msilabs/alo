@@ -1,0 +1,51 @@
+<!-- ব্যবহার: <Docs.PrevNext slug="{{ item.slug }}" /> -->
+<template>
+    <nav class="prev-next" aria-label="আগের আর পরের পাতা">
+        <!-- order অনুযায়ী সাজানো তালিকায় যে পাতার ঠিক পরে এই পাতা, সেটিই "আগের" -->
+        <template for="doc in data.docs.toSorted((a, b) => a.order - b.order).filter((doc, i, all) => all[i + 1]?.slug === props.slug)">
+            <a class="prev" href="/docs/{{ doc.slug }}/">
+                <span>← আগের</span>
+                <strong>{{ doc.title }}</strong>
+            </a>
+        </template>
+        <template for="doc in data.docs.toSorted((a, b) => a.order - b.order).filter((doc, i, all) => all[i - 1]?.slug === props.slug)">
+            <a class="next" href="/docs/{{ doc.slug }}/">
+                <span>পরের →</span>
+                <strong>{{ doc.title }}</strong>
+            </a>
+        </template>
+    </nav>
+</template>
+
+<style>
+    .prev-next {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 3.5rem;
+    }
+
+    a {
+        display: grid;
+        gap: 0.15rem;
+        padding: 0.9rem 1.1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
+        text-decoration: none;
+    }
+
+    a:hover {
+        border-color: var(--accent);
+    }
+
+    .next {
+        grid-column: 2;
+        text-align: end;
+    }
+
+    span {
+        color: var(--muted);
+        font-size: 0.85rem;
+    }
+</style>

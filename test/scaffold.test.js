@@ -190,6 +190,7 @@ const EXPECTED = {
     default: { pages: 5, file: 'blog/hello-world/index.html', html: /<article/ },
     blank: { pages: 1, file: 'index.html', html: /<h1>আমার সাইট<\/h1>/ },
     portfolio: { pages: 8, file: 'projects/first-project/index.html', html: /<a href="\/projects\/" aria-current="page"/ },
+    docs: { pages: 8, file: 'docs/pages/index.html', html: /<a href="\/docs\/pages\/" aria-current="page"/ },
 };
 const MAX_TEMPLATE_BYTES = 80 * 1024;
 
@@ -338,6 +339,36 @@ test('template portfolio: projects in `order`, three on the home page, a link on
     assert.match(read(dir, 'dist/projects/first-project/index.html'), /<p class="visit"/);
     assert.doesNotMatch(read(dir, 'dist/projects/third-project/index.html'), /<p class="visit"/);
     assert.match(read(dir, 'dist/about/index.html'), /<a href="\/about\/" aria-current="page"/);
+});
+
+test('template docs: sidebar by section and `order`, one active link, previous and next', (t) => {
+    const cwd = tempDir(t);
+    run(cwd, ['init', 'site', '--template', 'docs']);
+    const dir = path.join(cwd, 'site');
+    fs.writeFileSync(path.join(dir, 'data', 'docs', 'faq.md'), '---\ntitle: প্রশ্ন\nsummary: s\nsection: শুরু\norder: 1.5\n---\n\nবডি\n');
+    const result = run(dir, ['build']);
+    assert.equal(result.code, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.match(result.stdout, /Built 9 pages/);
+
+    const page = (slug) => read(dir, `dist/docs/${slug}/index.html`);
+    const sidebar = (html) => html.slice(html.indexOf('<nav class="sidebar"'), html.indexOf('</nav>', html.indexOf('<nav class="sidebar"')));
+    const links = (html) => [...html.matchAll(/href="\/docs\/([a-z-]+)\/"/g)].map((match) => match[1]);
+    const order = ['install', 'faq', 'pages', 'components', 'data', 'deploy'];
+
+    assert.deepEqual(links(sidebar(page('pages'))), order);
+    assert.equal(sidebar(page('pages')).match(/aria-current="page"/g).length, 1);
+    assert.deepEqual(links(sidebar(read(dir, 'dist/docs/index.html'))), order);
+    assert.doesNotMatch(sidebar(read(dir, 'dist/docs/index.html')), /aria-current/);
+    assert.doesNotMatch(read(dir, 'dist/index.html'), /class="sidebar"/);
+
+    const around = (slug) => {
+        const html = page(slug);
+        return [html.match(/class="prev" href="\/docs\/([a-z-]+)\/"/)?.[1], html.match(/class="next" href="\/docs\/([a-z-]+)\/"/)?.[1]];
+    };
+    assert.deepEqual(around('install'), [undefined, 'faq']);
+    assert.deepEqual(around('pages'), ['faq', 'components']);
+    assert.deepEqual(around('deploy'), ['data', undefined]);
 });
 
 test('--help lists every template', (t) => {

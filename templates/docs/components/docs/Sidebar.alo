@@ -1,0 +1,91 @@
+<!-- পাশের মেনু: data/sections.json-এর প্রতিটি অংশ, তার নিচে সেই অংশের পাতাগুলো -->
+<template>
+    <nav class="sidebar" aria-label="ডকসের মেনু">
+        <button class="toggle" type="button" aria-expanded="false">ডকসের মেনু</button>
+        <div class="links">
+            <template for="section in data.sections">
+                <p class="section">{{ section }}</p>
+                <ul>
+                    <template for="doc in data.docs.filter((doc) => doc.section === section).toSorted((a, b) => a.order - b.order)">
+                        <li>
+                            <a href="/docs/{{ doc.slug }}/" aria-current="{{ route.path === '/docs/' + doc.slug + '/' ? 'page' : null }}">{{ doc.title }}</a>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+        </div>
+    </nav>
+</template>
+
+<style>
+    .toggle {
+        display: none;
+    }
+
+    .section {
+        margin-bottom: 0.35rem;
+        color: var(--muted);
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+
+    ul {
+        display: grid;
+        gap: 0.1rem;
+        margin: 0 0 1.5rem;
+        padding: 0;
+        list-style: none;
+    }
+
+    a {
+        display: block;
+        padding: 0.3rem 0.75rem;
+        border-radius: var(--radius-small);
+        color: var(--text);
+        font-size: 0.97rem;
+        text-decoration: none;
+    }
+
+    a:hover {
+        background: var(--surface-soft);
+    }
+
+    a[aria-current='page'] {
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-weight: 600;
+    }
+
+    /* ফোনে মেনু একটি বোতামের পেছনে থাকে; JS না চললে খোলাই থাকে */
+    @media (max-width: 52rem) {
+        .sidebar.ready .toggle {
+            display: block;
+            width: 100%;
+            padding: 0.6rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-small);
+            background: var(--surface-soft);
+            font-weight: 600;
+            text-align: start;
+        }
+
+        .sidebar.ready .links {
+            display: none;
+            padding-top: 1rem;
+        }
+
+        .sidebar.ready.open .links {
+            display: block;
+        }
+    }
+</style>
+
+<script>
+    const toggle = $el.querySelector('.toggle');
+    $el.classList.add('ready');
+    toggle.addEventListener('click', () => {
+        const open = $el.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', String(open));
+    });
+</script>

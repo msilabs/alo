@@ -1,0 +1,38 @@
+<!-- /docs/-এর সব পাতায় বাঁ পাশে মেনু; পাতার কনটেন্ট বসে <slot />-এর জায়গায় -->
+<template>
+    <div class="docs-layout">
+        <Docs.Sidebar />
+        <div class="content">
+            <slot />
+        </div>
+    </div>
+</template>
+
+<style>
+    .docs-layout {
+        display: grid;
+        grid-template-columns: var(--sidebar) minmax(0, 1fr);
+        gap: 3rem;
+        align-items: start;
+    }
+
+    .content {
+        max-width: var(--reading);
+    }
+
+    @media (max-width: 52rem) {
+        .docs-layout {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 1.5rem;
+        }
+    }
+</style>
+
+<style global>
+    @media (min-width: 52.01rem) {
+        .docs-layout > .sidebar {
+            position: sticky;
+            top: 1.5rem;
+        }
+    }
+</style>

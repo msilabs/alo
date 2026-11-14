@@ -1,0 +1,27 @@
+<head>
+    <title>পেইজটি পাওয়া যায়নি | {{ data.site.name }}</title>
+</head>
+
+<template>
+    <div class="missing">
+        <p class="code">৪০৪</p>
+        <h1>এই পেইজটি পাওয়া যায়নি</h1>
+        <a class="button button-primary" href="/docs/">ডকসের সূচিতে যান</a>
+    </div>
+</template>
+
+<style>
+    .missing {
+        display: grid;
+        justify-items: start;
+        gap: 1rem;
+        padding-block: 2rem;
+    }
+
+    .code {
+        color: var(--accent);
+        font-size: 4rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+</style>

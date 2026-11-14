@@ -1,0 +1,55 @@
+<!-- data/docs/-এর প্রতিটি ফাইল থেকে একটি পেইজ; ফাইলের ডেটা পাওয়া যায় item-এ -->
+<head>
+    <title>{{ item.title }} | {{ data.site.name }}</title>
+    <meta name="description" content="{{ item.summary }}">
+</head>
+
+<template>
+    <article class="doc">
+        <p class="eyebrow">{{ item.section }}</p>
+        <h1 class="page-title">{{ item.title }}</h1>
+        <div class="body">
+            {{{ item.body }}}
+        </div>
+        <Docs.PrevNext slug="{{ item.slug }}" />
+    </article>
+</template>
+
+<!-- Markdown-এর বডিতে স্কোপ অ্যাট্রিবিউট থাকে না, তাই এর স্টাইল <style global>-এ -->
+<style global>
+    .doc .body > * + * {
+        margin-top: 1rem;
+    }
+
+    .doc .body h2 {
+        margin-top: 2.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        font-size: 1.4rem;
+    }
+
+    .doc .body h3 {
+        margin-top: 1.75rem;
+        font-size: 1.15rem;
+    }
+
+    .doc .body ul,
+    .doc .body ol {
+        padding-inline-start: 1.4rem;
+    }
+
+    .doc .body li + li {
+        margin-top: 0.35rem;
+    }
+
+    .doc .body blockquote {
+        padding: 0.75rem 1rem;
+        border-inline-start: 3px solid var(--accent);
+        border-radius: var(--radius-small);
+        background: var(--surface-soft);
+    }
+
+    .doc .body img {
+        border-radius: var(--radius);
+    }
+</style>

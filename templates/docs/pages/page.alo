@@ -1,0 +1,74 @@
+<head>
+    <title>{{ data.site.name }}</title>
+</head>
+
+<template>
+    <section class="hero">
+        <p class="eyebrow">ডকুমেন্টেশন</p>
+        <h1>{{ data.site.name }}</h1>
+        <p class="lead">{{ data.site.description }}</p>
+        <p class="actions">
+            <a class="button button-primary" href="/docs/install/">শুরু করুন →</a>
+            <a class="button" href="/docs/">সব পাতা</a>
+        </p>
+    </section>
+
+    <ul class="notes">
+        <li>
+            <h2>পাতা লিখুন Markdown-এ</h2>
+            <p><code>data/docs/</code>-এ একটি <code>.md</code> ফাইল রাখলেই নতুন পাতা তৈরি হয়, মেনুতেও আসে।</p>
+        </li>
+        <li>
+            <h2>অংশে ভাগ করুন</h2>
+            <p>অংশের নাম আর ক্রম <code>data/sections.json</code>-এ; প্রতিটি পাতা বলে সে কোন অংশের।</p>
+        </li>
+        <li>
+            <h2>নিজের মতো সাজান</h2>
+            <p>এই পেইজটি আছে <code>pages/page.alo</code>-এ, আর রঙ ও ফন্ট <code>global/theme.css</code>-এ।</p>
+        </li>
+    </ul>
+</template>
+
+<style>
+    .hero {
+        padding-block: 2rem 3rem;
+    }
+
+    h1 {
+        margin-block: 0.4rem 0.75rem;
+        font-size: clamp(2.2rem, 6vw, 3.2rem);
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.75rem;
+    }
+
+    .notes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+        gap: 1.25rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .notes li {
+        padding: 1.25rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+    }
+
+    h2 {
+        margin-bottom: 0.4rem;
+        font-size: 1.1rem;
+    }
+
+    .notes p {
+        color: var(--muted);
+        font-size: 0.97rem;
+    }
+</style>
