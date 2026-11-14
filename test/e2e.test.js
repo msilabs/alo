@@ -46,13 +46,15 @@ test('site/ builds its home page', (t) => {
     assert.match(html, /<h1>HTML জানলেই<br>পুরো ওয়েবসাইট<\/h1>/);
     assert.match(html, /fonts\.googleapis\.com\/css2\?family=Inter/);
 
-    // Seven stable features on the home page, each with its status badge from the if/else-if chain.
-    assert.equal((html.match(/<span class="badge badge-stable">চালু<\/span>/g) ?? []).length, 7);
+    // Eight stable features on the home page, each with its status badge from the if/else-if chain.
+    assert.equal((html.match(/<span class="badge badge-stable">চালু<\/span>/g) ?? []).length, 8);
     assert.match(html, /<div class="grid features-grid"/);
-    // Only the VS Code card is marked new, with its list of points and a link to its post.
+    // Only the templates card is marked new; the VS Code card keeps its list of points and link to its post.
     assert.equal((html.match(/<span class="badge badge-new">নতুন<\/span>/g) ?? []).length, 1);
-    assert.equal((html.match(/<article class="feature" data-new="true">/g) ?? []).length, 1);
-    assert.equal((html.match(/<article class="feature">/g) ?? []).length, 6, 'no data-new attribute on the other cards');
+    assert.equal((html.match(/<article class="feature" data-new="true" data-highlight="true">/g) ?? []).length, 1);
+    assert.equal((html.match(/<article class="feature" data-highlight="true">/g) ?? []).length, 1, 'the VS Code card is a highlight but not new');
+    assert.equal((html.match(/<article class="feature">/g) ?? []).length, 6, 'no data attributes on the six core cards');
+    assert.equal((html.match(/<div class="highlights">/g) ?? []).length, 1);
     assert.match(html, /<ul class="points">\s*<li>&lt; লিখলেই সব কম্পোনেন্টের তালিকা/);
     assert.match(html, /<a class="more" href="\/blog\/vscode-extension\/">কীভাবে ইনস্টল আর ব্যবহার করবেন →<\/a>/);
     assert.doesNotMatch(html, /badge-planned|badge-beta/);
@@ -61,7 +63,7 @@ test('site/ builds its home page', (t) => {
     assert.match(html, /&lt;h3&gt;\{\{ props\.title \}\}&lt;\/h3&gt;/);
 
     // The newest three posts, with Bengali dates, newest first.
-    assert.match(html, /১১ নভেম্বর, ২০২৬[\s\S]*আলোর VS Code এক্সটেনশন এসেছে[\s\S]*সামনে যা আসছে[\s\S]*GitHub Pages-এ সাইট প্রকাশ/);
+    assert.match(html, /১৫ নভেম্বর, ২০২৬[\s\S]*আলো ১.২: init-এ চারটি টেমপ্লেট[\s\S]*১১ নভেম্বর, ২০২৬[\s\S]*আলোর VS Code এক্সটেনশন এসেছে[\s\S]*সামনে যা আসছে/);
     assert.doesNotMatch(html, /<a href="\/blog\/data-and-markdown\/">/);
 
     assert.match(html, /<div class="counter" data-start="10"/);
@@ -102,11 +104,11 @@ test('site/ routes, route groups, layouts and 404', (t) => {
     const about = read('about/index.html');
     assert.equal((about.match(/badge-stable/g) ?? []).length, 0);
     assert.doesNotMatch(about, /badge-beta/);
-    assert.equal((about.match(/<span class="badge badge-planned">আসছে<\/span>/g) ?? []).length, 3);
+    assert.equal((about.match(/<span class="badge badge-planned">আসছে<\/span>/g) ?? []).length, 2);
 
     const blog = read('blog/index.html');
     assert.match(blog, /<main>\s*<div class="blog reading">\s*<p class="eyebrow">ব্লগ<\/p>/);
-    assert.match(blog, /মোট ৬টি লেখা/);
+    assert.match(blog, /মোট ৭টি লেখা/);
 
     const post = read('blog/introducing-alo/index.html');
     assert.match(post, /<title>আলো: HTML জানলেই বানান নিজের ওয়েবসাইট \| আলো<\/title>/);
@@ -212,6 +214,7 @@ test('site/ production output: hashes, sitemap, robots', (t) => {
         'https://msilabs.github.io/blog/components-and-layouts/',
         'https://msilabs.github.io/blog/data-and-markdown/',
         'https://msilabs.github.io/blog/deploy-to-github-pages/',
+        'https://msilabs.github.io/blog/init-templates/',
         'https://msilabs.github.io/blog/introducing-alo/',
         'https://msilabs.github.io/blog/vscode-extension/',
         'https://msilabs.github.io/blog/whats-next/',

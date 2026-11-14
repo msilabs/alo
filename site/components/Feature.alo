@@ -1,5 +1,5 @@
 <template>
-    <article class="feature" data-new="{{ props.feature.new }}">
+    <article class="feature" data-new="{{ props.feature.new }}" data-highlight="{{ props.feature.highlight }}">
         <div class="top">
             <span class="icon" aria-hidden="true">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -29,6 +29,11 @@
                         <rect x="3" y="4" width="18" height="16" rx="2" />
                         <path d="M3 9h18M7 13l2 2-2 2M12 17h4" />
                     </template>
+                    <template else-if="props.feature.icon === 'template'">
+                        <rect x="3" y="3" width="18" height="6" rx="1.5" />
+                        <rect x="3" y="13" width="8" height="8" rx="1.5" />
+                        <path d="M15 14h6M15 18h6" />
+                    </template>
                     <template else>
                         <circle cx="12" cy="12" r="8" />
                         <path d="M12 8v8M8 12h8" />
@@ -52,6 +57,9 @@
         </div>
         <h3>{{ props.feature.title }}</h3>
         <p>{{ props.feature.text }}</p>
+        <template if="props.feature.command">
+            <pre class="command"><code><span class="prompt">$</span> {{ props.feature.command }}</code></pre>
+        </template>
         <template if="props.feature.points">
             <ul class="points">
                 <template for="point in props.feature.points">
@@ -77,6 +85,69 @@
     .feature[data-new] {
         border-color: var(--accent);
         box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .feature[data-highlight] {
+        display: flex;
+        flex-direction: column;
+        padding: 2rem;
+        background: linear-gradient(160deg, var(--surface-soft), var(--surface) 70%);
+    }
+
+    .feature[data-highlight] .icon {
+        width: 3.2rem;
+        height: 3.2rem;
+        border-radius: 14px;
+    }
+
+    .feature[data-highlight] h3 {
+        font-size: 1.35rem;
+    }
+
+    .feature[data-highlight] .points {
+        grid-template-columns: 1fr;
+        gap: 0.65rem;
+        margin: 1.4rem 0 0;
+        padding: 1.2rem 0 0;
+        border-top: 1px solid var(--border);
+        list-style: none;
+    }
+
+    .feature[data-highlight] .points li {
+        position: relative;
+        padding-left: 1.5rem;
+    }
+
+    .feature[data-highlight] .points li::before {
+        content: "";
+        position: absolute;
+        left: 0.15rem;
+        top: 0.45em;
+        width: 0.4rem;
+        height: 0.7rem;
+        border: solid var(--accent-strong);
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .feature[data-highlight] .more {
+        margin-top: auto;
+        padding-top: 1.4rem;
+    }
+
+    .command {
+        margin: 1.2rem 0 0;
+        padding: 0.7rem 1rem;
+        overflow-x: auto;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        white-space: pre;
+    }
+
+    .command .prompt {
+        margin-right: 0.6rem;
+        color: var(--accent);
+        user-select: none;
     }
 
     .top {

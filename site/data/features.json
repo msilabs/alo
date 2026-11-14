@@ -40,14 +40,13 @@
         "title": "VS Code এক্সটেনশন",
         "text": "এডিটর এখন আলোর প্রজেক্ট চেনে। VS Code-এর Extensions প্যানেলে খুঁজুন Alo, বিনামূল্যে।",
         "status": "stable",
-        "new": true,
+        "highlight": true,
+        "command": "code --install-extension msilabs.alo-vscode",
         "points": [
-            "< লিখলেই সব কম্পোনেন্টের তালিকা, ফোল্ডারেরগুলোসহ",
+            "< লিখলেই সব কম্পোনেন্টের তালিকা, ফোল্ডারের ভেতরেরগুলোসহ",
             "data., props. আর item. লিখলেই key আর মানসহ সাজেশন",
-            "সংরক্ষণের আগেই আলোর এরর, আর এক ক্লিকে সমাধান",
             "কম্পোনেন্ট বা ডেটার নামে Cmd/Ctrl+Click করলে তার ফাইল খোলে",
-            "প্রতিটি পেইজের ওপরে তার URL",
-            "নতুন ফাইল, dev server আর build, সব Command Palette থেকে"
+            "{{ }} আর <template>-এর লজিকে রং, কম্পোনেন্ট ট্যাগ আলাদা রঙে"
         ],
         "link": {
             "href": "/blog/vscode-extension/",
@@ -69,7 +68,20 @@
     {
         "icon": "template",
         "title": "টেমপ্লেট",
-        "text": "নতুন প্রজেক্ট শুরুর সময় পছন্দের টেমপ্লেট বেছে নেওয়া। না বাছলে আগের মতো সাধারণ প্রজেক্ট।",
-        "status": "planned"
+        "text": "নতুন প্রজেক্ট শুরুর সময় পছন্দের টেমপ্লেট বেছে নিন: blank, portfolio, docs বা landing। না বাছলে আগের মতো ছোট উদাহরণ সাইট।",
+        "status": "stable",
+        "new": true,
+        "highlight": true,
+        "command": "npx @msilabs/alo init my-site --template portfolio",
+        "points": [
+            "blank: শুধু একটি পেইজ, শূন্য থেকে শুরু",
+            "portfolio: প্রজেক্ট, about আর যোগাযোগ; about প্রিন্ট করলে CV",
+            "docs: Markdown থেকে ডকুমেন্টেশন, পাশে মেনু",
+            "landing: hero, ফিচার, দাম আর প্রশ্নের এক পাতা"
+        ],
+        "link": {
+            "href": "/blog/init-templates/",
+            "label": "চারটি টেমপ্লেটের পরিচয়"
+        }
     }
 ]

@@ -16,6 +16,10 @@
                 <a class="button" href="{{ data.site.repository }}">GitHub-এ দেখুন</a>
             </div>
             <pre class="install"><code><span class="prompt">$</span> npx @msilabs/alo init my-site</code></pre>
+            <p class="install-note">
+                অন্য ধরনের সাইটের জন্য <code>--template</code> দিন:
+                <a href="/docs/installation/#টেমপ্লেট">blank, portfolio, docs, landing</a>
+            </p>
         </div>
     </section>
 
@@ -25,7 +29,12 @@
             <h2>ছোট সাইটের যা লাগে, তার সবটুকু</h2>
         </header>
         <div class="grid features-grid">
-            <template for="feature in data.features.filter((f) => f.status === 'stable')">
+            <template for="feature in data.features.filter((f) => f.status === 'stable' && !f.highlight)">
+                <Feature feature="{{ feature }}" />
+            </template>
+        </div>
+        <div class="highlights">
+            <template for="feature in data.features.filter((f) => f.status === 'stable' && f.highlight)">
                 <Feature feature="{{ feature }}" />
             </template>
         </div>
@@ -129,6 +138,12 @@
         text-align: left;
     }
 
+    .install-note {
+        margin-top: 0.9rem;
+        font-size: 0.9rem;
+        color: var(--muted);
+    }
+
     .prompt {
         margin-right: 0.6rem;
         color: var(--accent);
@@ -162,6 +177,19 @@
 
     @media (max-width: 600px) {
         .grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .highlights {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+        margin-top: 1.25rem;
+    }
+
+    @media (max-width: 860px) {
+        .highlights {
             grid-template-columns: 1fr;
         }
     }
@@ -202,22 +230,6 @@
     @media (max-width: 860px) {
         .split {
             grid-template-columns: 1fr;
-        }
-    }
-</style>
-
-<style global>
-    /* A scoped style cannot reach the <Feature> roots, so this one is global. */
-    /* When the last card would sit alone in its row, it takes the whole row. */
-    @media (min-width: 961px) {
-        .features-grid > :last-child:nth-child(3n + 1) {
-            grid-column: 1 / -1;
-        }
-    }
-
-    @media (min-width: 601px) and (max-width: 960px) {
-        .features-grid > :last-child:nth-child(odd) {
-            grid-column: 1 / -1;
         }
     }
 </style>
