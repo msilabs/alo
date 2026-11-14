@@ -4,6 +4,8 @@
 
 If you write code for an Alo project, read the AI guide first. It lists the rules and the mistakes AI assistants make most often.
 
+Start a project with `npx @msilabs/alo init my-site`. Add `--template <name>` for another starting point: `default` (small example site), `blank` (one page), `portfolio`, `docs` or `landing`.
+
 - [AI guide (rules for AI assistants)](https://raw.githubusercontent.com/msilabs/alo/main/templates/init/AGENTS.md): hard rules, project layout, templates, data, CSS/JS, commands
 - [Documentation site (Bengali)](https://msilabs.github.io/alo/docs/): the same topics as the README, one page each
 - [README (Bengali)](https://raw.githubusercontent.com/msilabs/alo/main/README.md): full user documentation

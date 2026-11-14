@@ -1,12 +1,13 @@
 ---
 title: কমান্ড
-description: init, dev, build আর new। ফ্ল্যাগ মাত্র দুটি।
+description: init, dev, build আর new। ফ্ল্যাগ মাত্র তিনটি।
 ---
 
 ## সব কমান্ড
 
 ```bash
 node alo init [folder]                # উদাহরণসহ নতুন প্রজেক্ট (npx @msilabs/alo init)
+         [--template name]            # default, blank, portfolio, docs, landing
 node alo dev [--port 3000] [--base /] # dev সার্ভার + লাইভ রিলোড
 node alo build [--base /]             # dist/ এ প্রোডাকশন বিল্ড
 node alo new page blog/first-post     # pages/blog/first-post/page.alo
@@ -25,9 +26,12 @@ node alo --version
 
 ```bash
 npx @msilabs/alo init my-site
+npx @msilabs/alo init my-site --template docs
 ```
 
-উদাহরণ পেইজ, কম্পোনেন্ট, ডেটা আর Markdown পোস্টসহ নতুন প্রজেক্ট বানায়। যে ফোল্ডার ফাঁকা নয়, সেখানে চলে না।
+উদাহরণ পেইজ, কম্পোনেন্ট, ডেটা আর Markdown পোস্টসহ নতুন প্রজেক্ট বানায়। যে ফোল্ডার ফাঁকা নয়, সেখানে চলে না। ফোল্ডারের নাম না দিলে বর্তমান ফাঁকা ফোল্ডারেই বানায়।
+
+`--template` দিয়ে অন্য ধরনের সাইট দিয়ে শুরু করা যায়: `default` (না দিলে এটিই), `blank`, `portfolio`, `docs` আর `landing`। কোনটি কখন নেবেন, তা আছে [ইনস্টল ও প্রজেক্টের গঠন](/docs/installation/#টেমপ্লেট) পেইজে। ভুল নাম দিলে কাছাকাছি নাম আর পুরো তালিকা দেখায়, আর কিছু তৈরি হয় না।
 
 ## `dev`
 
@@ -70,10 +74,11 @@ node alo build --base /my-repo/
 
 ## ফ্ল্যাগ
 
-ফ্ল্যাগ মাত্র দুটি:
+ফ্ল্যাগ মাত্র তিনটি:
 
 | ফ্ল্যাগ | কোথায় | কাজ |
 | --- | --- | --- |
+| `--template` | `init` | নতুন প্রজেক্টের টেমপ্লেট; ডিফল্ট `default` |
 | `--port` | `dev` | dev সার্ভারের পোর্ট; ডিফল্ট `3000` |
 | `--base` | `dev`, `build` | সাইটের সাব-পাথ; ডিফল্ট `/` |
 

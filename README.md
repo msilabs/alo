@@ -25,6 +25,8 @@ node alo dev
 
 ব্রাউজারে খুলুন `http://localhost:3000`। যেকোনো ফাইল বদলে সংরক্ষণ করলে পেইজ নিজে থেকে রিলোড হয়।
 
+অন্য ধরনের সাইট দিয়ে শুরু করতে `--template` দিন, যেমন `npx @msilabs/alo init my-site --template portfolio`। কোনটি কখন নেবেন, তা আছে নিচে [টেমপ্লেট](#টেমপ্লেট) অংশে।
+
 সাইট প্রকাশ করতে:
 
 ```bash
@@ -34,6 +36,61 @@ node alo build
 তৈরি হওয়া সাইট থাকে `dist/` ফোল্ডারে।
 
 একই কমান্ড তিনভাবে চালানো যায়, তিনটিই প্রজেক্টের নিজের ভার্সন চালায়: `node alo dev`, `npm run dev` অথবা `npx alo dev`।
+
+## টেমপ্লেট
+
+`init` পাঁচ ধরনের সাইট দিয়ে শুরু করতে পারে। `--template` না দিলে `default` তৈরি হয়।
+
+```bash
+npx @msilabs/alo init my-site --template docs
+```
+
+| টেমপ্লেট | কখন নেবেন | পেইজ |
+| --- | --- | --- |
+| `default` | প্রথমবার Alo দেখছেন; সব ফিচারের ছোট উদাহরণ চান | হোম, about, ব্লগ, পোস্ট, 404 |
+| `blank` | Alo জানেন, নিজে সাজাবেন | শুধু হোম |
+| `portfolio` | নিজের কাজ দেখাবেন | হোম, প্রজেক্ট, প্রজেক্টের পাতা, about, যোগাযোগ, 404 |
+| `docs` | ডকুমেন্টেশন লিখবেন | হোম, ডকসের সূচি, প্রতিটি পাতা, 404 |
+| `landing` | এক পাতায় একটি প্রোডাক্ট পরিচয় করাবেন | হোম, 404 |
+
+প্রতিটি প্রজেক্টে একই `alo` ফাইল, `package.json`, `.gitignore`, VS Code-এর সেটিংস আর `AGENTS.md` থাকে। টেমপ্লেটে বাইরের কোনো ফন্ট, CDN বা লাইব্রেরি নেই, তাই নতুন প্রজেক্ট অফলাইনেও চলে। নমুনা লেখা নিজেই বলে কোন ফাইল বদলাতে হবে।
+
+**`blank`:** শুধু `pages/page.alo`, `data/site.json` আর `public/favicon.svg`। কোনো CSS, কম্পোনেন্ট বা লেআউট নেই। দরকার হলে `node alo new component Header` দিয়ে বানিয়ে নিন।
+
+**`portfolio`:**
+
+```
+data/profile.json     নাম, পদবি, পরিচয়, ইমেইল
+data/social.json      GitHub, LinkedIn-এর মতো লিংক
+data/skills.json      দক্ষতা
+data/experience.json  অভিজ্ঞতা আর পড়াশোনা
+data/projects/*.md    প্রতিটি প্রজেক্ট: title, summary, tags, link, cover, order
+public/projects/      প্রজেক্টের কভারের ছবি
+```
+
+প্রজেক্টগুলো সাজানো হয় `order` দিয়ে; হোম পেইজে দেখায় প্রথম তিনটি। `about` পাতা প্রিন্ট করলে CV-র মতো আসে।
+
+**`docs`:**
+
+```
+data/sections.json    পাশের মেনুর অংশ, ক্রমে
+data/docs/*.md        প্রতিটি পাতা: title, summary, section, order
+components/docs/      Sidebar আর PrevNext
+```
+
+সব পাতা `/docs/<ফাইলের নাম>/`-এ। পাশের মেনু অংশ ধরে সাজানো, আর প্রতিটি পাতার নিচে আগের ও পরের পাতার লিংক থাকে, দুটোই `order` ধরে। নমুনা পাতাগুলো Alo-র ছোট একটি গাইড।
+
+**`landing`:**
+
+```
+pages/page.alo        <Hero />, <Features />, <Pricing />, <Faq />, <Cta />
+data/site.json        নাম, এক লাইনের পরিচয় (tagline), প্রধান বোতাম (cta)
+data/features.json    ফিচারের কার্ড
+data/plans.json       দামের পরিকল্পনা; featured: true দিলে আলাদা দেখায়
+data/faq.json         প্রশ্ন আর উত্তর
+```
+
+একটি অংশ বাদ দিতে `pages/page.alo` থেকে ট্যাগটি আর `components/` থেকে ফাইলটি মুছে দিন। প্রশ্নগুলো `<details>` দিয়ে খোলে, তাই কোনো JavaScript নেই। ফর্ম নেই; বোতামগুলো সাধারণ লিংক।
 
 ## AI সহকারী দিয়ে কাজ করলে
 
@@ -441,6 +498,7 @@ pages/
 
 ```bash
 node alo init [folder]                # উদাহরণসহ নতুন প্রজেক্ট (npx @msilabs/alo init)
+         [--template name]            # default, blank, portfolio, docs, landing
 node alo dev [--port 3000] [--base /] # dev সার্ভার + লাইভ রিলোড
 node alo build [--base /]             # dist/ এ প্রোডাকশন বিল্ড
 node alo new page blog/first-post     # pages/blog/first-post/page.alo
@@ -519,6 +577,15 @@ jobs:
 ```
 
 টেমপ্লেটে লিংক সবসময় লিখুন `/about/`-এর মতো করে; `--base` দিলে Alo নিজেই `/my-repo/about/` বানায়। JS থেকে base জানতে হলে: `document.documentElement.dataset.base ?? '/'`।
+
+## ব্যাকএন্ড লাগলে
+
+Alo শুধু স্ট্যাটিক ফাইল বানায়। ফর্ম জমা বা ডেটা জমিয়ে রাখার মতো কাজের জন্য আছে জোড়া ফ্রেমওয়ার্ক [Adhar (আধার)](https://github.com/msilabs/adhar): ফোল্ডারে JS ফাংশন লিখলেই JSON API, SQLite ডেটাবেসসহ, কোনো নির্ভরতা ছাড়া। দুটি পথ:
+
+- **আলাদা প্রজেক্ট:** `npx @msilabs/adhar init my-api`। সাইট স্ট্যাটিক হোস্টে থাকে, API আলাদা সার্ভারে।
+- **এক প্রজেক্টে:** `npx @msilabs/adhar init my-app --web`। Alo-র সাইট থাকে Adhar প্রজেক্টের `web/` ফোল্ডারে, দুটো এক পোর্টে চলে, CORS লাগে না।
+
+বিস্তারিত: [ব্যাকএন্ড লাগলে](https://msilabs.github.io/alo/docs/backend/)।
 
 ## FAQ
 
