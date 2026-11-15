@@ -1,5 +1,31 @@
 # পরিবর্তনের তালিকা
 
+## 1.2.1 (২০২৬-১১-১৫)
+
+### নিরাপত্তা
+
+Socket.dev-এর দুটি "potential security risk" সতর্কতার জন্য।
+
+- **Markdown (`core/markdown.js`):**
+  - ইনপুটের raw HTML (ইনলাইন আর ব্লক) এখন ডিফল্টভাবে এস্কেপ হয়। আগে সরাসরি আউটপুটে যেত।
+  - `renderMarkdown(text, { allowHtml: true })` দিলে HTML চলে, তবে একটি allowlist sanitizer-এর ভেতর দিয়ে। `script`, `style`, `iframe`, `svg`, `object`, কমেন্ট, `on...` হ্যান্ডলার আর `style` অ্যাট্রিবিউট বাদ যায়; `href`/`src`-এর URL-ও যাচাই হয়।
+  - লিংকে শুধু `http`, `https`, `mailto` আর ছবিতে শুধু `http`, `https` চলে। relative URL (`/a`, `a/b`, `#x`, `?q`, `//host`) ঠিক থাকে। `javascript:`, `data:`, `vbscript:` আর বাকি স্কিমের লিংক বাদ যায়, লেখাটি থাকে; ছবির বদলে alt লেখা আসে।
+  - স্কিম পড়ার আগে শুরুর whitespace আর control character বাদ যায়; `jav&#x61;script:`, `java\tscript:`, `%20javascript:`-এর মতো লুকানো রূপও ধরা পড়ে।
+  - অ্যাট্রিবিউটের মান সবসময় এস্কেপ হয়।
+- **এক্সপ্রেশন (`core/expression.js`):** `new Function` আর এরর ডায়াগনস্টিকের দ্বিতীয় dynamic evaluation সরানো হয়েছে। এখন নিজস্ব tokenizer, parser আর evaluator চলে।
+  - চলে: সংখ্যা, স্ট্রিং, টেমপ্লেট লিটারাল, regex, `true`/`false`/`null`, array আর object (spread সহ), `.` `?.` `[]`, মেথড কল, `new Date` আর `new Intl.*`, সব সাধারণ অপারেটর, `??`, `? :`, `typeof`, `in`, আর `x => x.title`-এর মতো অ্যারো ফাংশন।
+  - global শুধু `Math`, `JSON`, `Date`, `Intl`, `Number`, `String`, `Boolean`, `Array`, `RegExp`, `Map`, `Set`, `parseInt` ইত্যাদি, আর `Object.keys/values/entries/fromEntries/hasOwn/assign`। `process`, `require`, `globalThis`, `Function`, `eval` নেই।
+  - `__proto__`, `constructor`, `prototype` (আর `__` দিয়ে শুরু যেকোনো নাম) পড়া বা লেখা ব্লক।
+  - এরর মেসেজ এখন শুধু স্ট্যাটিক টেক্সট; এরর খুঁজতে আর কোনো এক্সপ্রেশন চালানো হয় না।
+- **স্ক্রিপ্ট (`core/assets.js`):** `node:vm` সরানো হয়েছে।
+
+### বদল (ভাঙা পরিবর্তন)
+
+- Markdown-এর raw HTML ডিফল্টভাবে লেখা হিসেবে দেখায়। আগের আচরণ ফেরাতে কোডে `allowHtml: true` লাগবে, তবে তখনও sanitizer চলবে (যেমন `<script>`, `style="..."`, `<iframe>` আর অজানা ট্যাগ বাদ যায়)। বর্তমানে `alo` CLI থেকে এই অপশন চালু করার উপায় নেই।
+- Markdown-এর লিংক বা ছবিতে `ftp:`, `tel:`, `data:` ইত্যাদি স্কিম আর চলে না।
+- `<script>` আর `global/*.js`-এর JavaScript syntax এখন বিল্ডের সময় যাচাই হয় না; ভুল থাকলে ধরা পড়ে ব্রাউজারে।
+- এক্সপ্রেশনে `function () {}`, `class`, `this`, `++`/`--`, কমা অপারেটর, block-body অ্যারো ফাংশন (`x => { ... }`) আর `process`/`require`-এর মতো global চলে না। `data.x = 1`-এর মতো লেখা আগের মতোই "cannot be changed" এরর দেয়।
+
 ## 1.2.0 (২০২৬-১১-১৪)
 
 ### নতুন
