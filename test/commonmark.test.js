@@ -24,7 +24,7 @@ for (const example of spec) {
 for (const [section, examples] of sections) {
     test(`CommonMark: ${section}`, () => {
         for (const example of examples) {
-            const actual = renderMarkdown(example.markdown, { headingIds: false });
+            const actual = renderMarkdown(example.markdown, { headingIds: false, allowHtml: true });
             const reason = known.examples[example.example];
             if (reason) {
                 assert.ok(known.reasons[reason], `#${example.example}: reason "${reason}" is missing from reasons`);

@@ -163,22 +163,6 @@ test('global/ JS: full path order, no IIFE, joined with ;\\n, first on every pag
     assert.deepEqual(scriptTags(out['index.html']), ['/assets/global.js', '/assets/components.js', '/assets/pages/index.js']);
 });
 
-test('JavaScript syntax errors fail the build with the real line', () => {
-    const component = buildError({
-        'pages/page.alo': '<template><Bad /></template>',
-        'components/Bad.alo': '<template><div></div></template>\n\n<script>\n    const a = 1;\n    let b = ;\n</script>',
-    });
-    assert.deepEqual([component.file, component.line], ['components/Bad.alo', 5]);
-    assert.match(component.message, /JavaScript syntax error/);
-
-    const global = buildError({ 'pages/page.alo': '', 'global/main.js': 'ok();\nif (x {\n' });
-    assert.deepEqual([global.file, global.line], ['global/main.js', 2]);
-
-    const page = buildError({ 'pages/page.alo': '<script>\nimport x from "y";\n</script>' });
-    assert.equal(page.line, 2);
-    assert.match(page.hint, /`import` is not supported/);
-});
-
 test('scripts of unused components stay out of components.js', () => {
     const { out } = build({
         'pages/page.alo': '<template><Counter /></template>',

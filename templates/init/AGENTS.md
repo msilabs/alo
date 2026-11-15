@@ -81,7 +81,7 @@ Up to four top-level blocks, all optional. Nothing else may sit outside them.
 <template else><span>Sold out</span></template>
 ```
 
-- `{{ }}` holds plain JavaScript. The result is HTML-escaped. `null` and `undefined` print nothing. Write a literal `{{` as `\{{`.
+- `{{ }}` holds a safe part of JavaScript (values, operators, `?.`, method calls, template literals, arrow functions like `x => x.title`; no `function`, `this`, `process` or `require`). The result is HTML-escaped. `null` and `undefined` print nothing. Write a literal `{{` as `\{{`.
 - `{{ }}` is not processed inside `<script>` or `<style>`, and not inside Markdown files.
 - Data is deeply frozen. Do not call `push`, `sort`, `reverse` on it; use `toSorted()`, `toReversed()` or a copy.
 - Attribute whose whole value is one `{{ }}`: `null`/`undefined` removes the attribute; for `disabled`, `checked`, `hidden`, `open` a falsy value removes it.

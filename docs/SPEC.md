@@ -677,7 +677,8 @@ draft: false
 - ফ্রন্ট ম্যাটার ঐচ্ছিক। থাকলে ফাইলের একেবারে প্রথম লাইন হবে `---`, আর শেষ হবে পরের `---` লাইনে।
 - ফলাফল `{ title, tags, draft, body }`। `body` হলো রেন্ডার করা HTML; টেমপ্লেটে বসাতে `{{{ item.body }}}`।
 - Markdown-এর ভেতরে `{{ }}` প্রসেস হয় **না**; কনটেন্ট শুধু ডেটা।
-- Markdown ব্যবহারকারীর নিজের লেখা, তাই raw HTML হুবহু যায় (স্যানিটাইজ করা হয় না)। README-তে এটি বলা থাকবে।
+- raw HTML ডিফল্টভাবে এস্কেপ হয় (1.2.1 থেকে)। `allowHtml: true` দিলে allowlist sanitizer চলে। লিংকে শুধু `http`, `https`, `mailto`, ছবিতে শুধু `http`, `https`; relative URL ঠিক থাকে।
+- `{{ }}` এক্সপ্রেশন `new Function` ছাড়া নিজস্ব parser আর evaluator-এ চলে (1.2.1 থেকে)।
 
 ### YAML সাবসেট (`core/yaml.js`)
 
