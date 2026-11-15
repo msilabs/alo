@@ -7,7 +7,7 @@ if (nodeMajor < MIN_NODE_MAJOR) {
     process.stderr.write(
         '✖ Error: Alo needs Node.js ' + MIN_NODE_MAJOR + ' or newer. ' +
             'You have v' + process.versions.node + '.\n\n' +
-            '  Hint: install a current LTS version from https://nodejs.org\n',
+            '  Hint: install a current LTS version of Node.js.\n',
     );
     process.exit(1);
 }

@@ -121,6 +121,18 @@ test('CSS minify: comments go, /*! stays, strings, url() and custom properties a
     assert.doesNotMatch(min, /\n/);
 });
 
+test('sitemap: the XML namespace and the whole output are unchanged', () => {
+    const { buildSitemap } = require('../core/seo.js');
+    assert.equal(
+        buildSitemap([{ path: '/', html: '<head></head>' }, { path: '/a&b/', html: '<head></head>' }], 'https://example.com', '/'),
+        '<?xml version="1.0" encoding="UTF-8"?>\n' +
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+            '  <url><loc>https://example.com/</loc></url>\n' +
+            '  <url><loc>https://example.com/a&amp;b/</loc></url>\n' +
+            '</urlset>\n',
+    );
+});
+
 test('sitemap: with site.url; 404 and noindex left out; absolute URLs with base', () => {
     const { out } = build({
         'data/site.json': '{ "url": "https://example.com" }',
